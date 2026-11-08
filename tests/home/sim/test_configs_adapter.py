@@ -115,6 +115,7 @@ def test_env_dock_aliases_name_charging():
     assert "room A bed in room A" not in env["bed@room_a"]["aliases"]
 
 
+@pytest.mark.skipif(not HAS_RA, reason="robot_agent not importable")
 def test_korean_choice_question_for_a_refused_reading():
     """q_which_part (robot_agent's dialogue convergence) is said from the pack, in Hangul, without a translator."""
     import re
@@ -123,6 +124,7 @@ def test_korean_choice_question_for_a_refused_reading():
     assert re.search(r"[가-힣]", ko) and not re.search(r"[一-鿿]", ko) and ko.endswith("주세요.")
 
 
+@pytest.mark.skipif(not HAS_RA, reason="robot_agent not importable")
 def test_pack_says_the_restated_readback_lead_in_korean():
     """V1 (lab round 3): the restated read-back is a lead sentence + the ordinary read-back phrase, both data of the pack."""
     from homeloop_robot.configs.adapter import PHRASES

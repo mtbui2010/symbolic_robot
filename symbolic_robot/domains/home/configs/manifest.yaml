@@ -284,3 +284,6 @@ skills:
     interruptible: true
     errors: [hw_fault, software]
     version: "1.0"
+# what is hazardous for this robot (robot_agent docs/safety.md): a household robot's profile, as data
+safety:
+  profile: safety/household.yaml
