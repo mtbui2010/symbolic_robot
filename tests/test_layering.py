@@ -12,7 +12,7 @@ PRIVATE = re.compile("|".join(["kc" + "are", "ka" + "air", "clo" + "bot", "buche
 FROZEN_NAME = re.compile("home" + "loop", re.I)
 # files allowed to name the frozen household package: the wrapper domain, its suite, the bench doc that explains it, its tests, the layering rules
 FROZEN_OK = ("symbolic_robot/domains/home/", "bench/suites/home/", "docs/bench.md", "tests/test_home_parity.py", "tests/test_bench.py", "tests/test_server.py",
-             "tests/test_layering.py", "CLAUDE.md")
+             "tests/test_layering.py")
 # the only file that names a private project: the later-step plan for the sibling simulator (to be removed before publishing)
 PRIVATE_OK = ("docs/migration_" + "kc" + "are_sim.md", "tests/test_layering.py")
 MAX_FUNC, MAX_FILE = 80, 600
