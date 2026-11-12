@@ -17,7 +17,7 @@ HERE = Path(__file__).parent
 WORLD = "assembly_hall"
 # the server's baseline environment = arm A (every arm also sends its options with each run)
 SERVER_ENV = {"ROBOT_AGENT_ASK_SOURCE": "1", "ROBOT_AGENT_ASK_SOURCE_REASK": "0", "ROBOT_AGENT_SEARCH_ROUTE_WEIGHT": "0"}
-SERVER_ARGS = ("--ask-mode", "headless", "--dialogue", "human", "--speedup", "0")
+SERVER_ARGS = ("--ask-mode", "headless", "--dialogue", "human")
 FIX_TASKS = ("t02,t09,t16,t23,t30,t37,t03,t10,t17,t24,t31,t38,t13,t27,t41,t06,t20,t34,t40,t00,t07,t14,t01,t08,t15")
 
 

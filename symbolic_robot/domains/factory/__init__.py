@@ -39,12 +39,6 @@ class Factory(BaseDomain):
     def call_log(self, ep):
         return ep.robot.log
 
-    def layout(self, ep) -> dict:
-        w = ep.world
-        return {"places": [{"id": p.id, "name": p.name, "pos": list(p.pos), "kind": "dock" if p.id == w.dock else p.kind}
-                           for p in w.places.values()],
-                "labels": [{"text": z.replace("_", " "), "pos": list(xy)} for z, xy in w.zones.items()]}
-
     def env(self, ep):
         from .configs.tasks import env_for
         return env_for(ep.world)

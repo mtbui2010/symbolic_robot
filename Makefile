@@ -1,15 +1,14 @@
-# symbolic_robot: a symbolic simulated robot (a domain) as the BACKEND OF BENCHMARK RUNS (not for live demos: those are kept in other repos),
-# and the benchmark suites that run on it.
+# symbolic_robot: simulated robots (domains) served as the HEADLESS BACKEND OF BENCHMARK RUNS, and the benchmark suites (bench/) that run on them.
 #
 #   make list                                   domains, floors / houses, profiles, suites
-#   make run ROBOT=<home|factory> [PORT=8091]   start in the background, wait until it answers, print the URL to add in robotapp
+#   make run ROBOT=<home|factory> [PORT=8091]   start the benchmark backend in the background and wait until it answers
 #   make terminate [PORT=8091]                  stop the instance `make run` started on $(PORT) (by its pid file only: never by name)
 #   make status | logs | test [ROBOT=..] | help
 #   make bench ROBOT=<domain> SUITE=<name> [ARGS=...]   run a benchmark suite (bench/); starts and stops its own server on a free
 #                                               test port (BENCH_PORTS, default 8120-8129); results in results/<domain>_<suite>/
 #
-# Variables: ROBOT=factory  PORT=8091  HOST=0.0.0.0  PROFILE=real|ideal|stress  SEED=0  SPEEDUP=<sim s per real s, 0 = no waiting>
-#   ASK_MODE=voice|text|headless  DIALOGUE=human|sim  OPTS="--floor assembly_hall"  PY=python3  RUN_ROOT=run
+# Variables: ROBOT=factory  PORT=8091  HOST=0.0.0.0  PROFILE=real|ideal|stress  SEED=0
+#   ASK_MODE=headless  DIALOGUE=human|sim  OPTS="--floor assembly_hall"  PY=python3  RUN_ROOT=run
 # This machine's values (PY, ROBOT_AGENT_DIR, ...) go in env.local.mk (not committed). A second instance: make run PORT=8121 ROBOT=home
 
 -include env.local.mk
@@ -19,8 +18,7 @@ PORT       ?= 8091
 HOST       ?= 0.0.0.0
 PROFILE    ?= real
 SEED       ?= 0
-SPEEDUP    ?=
-ASK_MODE   ?= voice
+ASK_MODE   ?= headless
 DIALOGUE   ?= human
 OPTS       ?=
 RUN_ROOT   ?= run
@@ -59,7 +57,7 @@ run:
 	if ss -ltn 2>/dev/null | grep -q ":$(PORT) "; then
 	  echo "port $(PORT) is already in use by another process (not started by this Makefile): choose another PORT=..."; exit 1; fi
 	setsid nohup "$(PY)" -m symbolic_robot run --robot $(ROBOT) --host $(HOST) --port $(PORT) --run-dir "$(SITE_DIR)" \
-	    --profile $(PROFILE) --seed $(SEED) --ask-mode $(ASK_MODE) --dialogue $(DIALOGUE) $(if $(SPEEDUP),--speedup $(SPEEDUP)) $(OPTS) \
+	    --profile $(PROFILE) --seed $(SEED) --ask-mode $(ASK_MODE) --dialogue $(DIALOGUE) $(OPTS) \
 	    > "$(LOG_FILE)" 2>&1 & echo $$! > "$(PID_FILE)"
 	echo "starting $(ROBOT): pid $$(cat $(PID_FILE)), port $(PORT), profile $(PROFILE), seed $(SEED) (log: $(LOG_FILE)) ..."
 	for i in $$(seq 1 90); do
@@ -67,7 +65,7 @@ run:
 	  if curl -s -m 2 -o /dev/null -f "http://127.0.0.1:$(PORT)/agent/mobile_pose/get"; then
 	    echo "up: http://127.0.0.1:$(PORT)"
 	    if [ "$(HOST)" = "0.0.0.0" ]; then echo "    from the network: http://$(LAN_IP):$(PORT)"; fi
-	    echo "    add this URL as a robot in robotapp (Robot Agent -> + Add). Stop: make terminate$(if $(filter-out 8091,$(PORT)), PORT=$(PORT))"; exit 0; fi
+	    echo "    benchmark backend (headless). Stop: make terminate$(if $(filter-out 8091,$(PORT)), PORT=$(PORT))"; exit 0; fi
 	  sleep 1; done
 	echo "no answer after 90 s: see $(LOG_FILE)"; exit 1
 

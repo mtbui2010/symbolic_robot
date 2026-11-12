@@ -31,7 +31,7 @@ def test_sim_command_ops():
     assert st["ok"] and st["isdone"] and len(st["objects"]) == 21 and "wrench" in st["catalog"]["objects"] and st["domain"] == "factory"
     assert c.handle({"cmd": "move_object", "body": "wrench_l", "place": "lathe bench"})["ok"]
     assert lv.world_view()["objects"]["wrench_l"]["at"] == "lathe_bench@machining"
-    assert c.handle({"cmd": "move_object", "name": "wrench_l", "x": 4.5, "y": 5.0})["ok"]             # a point near the pallet stand
+    assert c.handle({"cmd": "move_object", "name": "wrench_l", "place": "pallet_stand@receiving"})["ok"]
     assert lv.world_view()["objects"]["wrench_l"]["at"] == "pallet_stand@receiving"
     sp = c.handle({"cmd": "spawn", "cls": "wrench", "place": "lathe_bench@machining", "variant": "tiny"})
     assert sp["ok"] and sp["id"] == "wrench_1" and lv.world_view()["objects"]["wrench_1"]["label"] == "tiny wrench"
@@ -51,8 +51,6 @@ def test_sim_command_ops():
     assert t["ok"] and t["world"] == "small_workshop" and "objects" in t
 
 
-def test_layout_and_env_for_the_server():
+def test_env_for_the_server():
     lv = live()
-    lay = lv.domain.layout(lv.episode)
-    assert any(p["kind"] == "dock" for p in lay["places"]) and lay["labels"] and len(lay["places"]) == 25
     assert "forklift_lane@main_aisle" not in lv.domain.env(lv.episode)

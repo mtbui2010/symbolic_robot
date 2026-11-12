@@ -53,9 +53,6 @@ class Toy(BaseDomain):
     def view(self, ep):
         return {"objects": {k: {"cls": k, "at": v} for k, v in ep.robot.items.items()}, "robot": {"at": ep.robot.at}}
 
-    def layout(self, ep):
-        return {"places": [{"id": "a", "name": "A", "pos": [0.0, 0.0], "kind": "surface"}, {"id": "b", "name": "B", "pos": [3.0, 0.0], "kind": "surface"}]}
-
     def op_move_object(self, ep, oid, place):
         ep.robot.items[oid] = place
         return {"ok": True, "msg": f"{oid} is now at {place}"}

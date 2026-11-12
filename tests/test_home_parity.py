@@ -57,15 +57,15 @@ def test_live_backend_over_the_wrapper_is_the_same_robot_and_a_realistic_message
     assert a.code == b.code and a.msg.replace(": no such object", "") == b.msg and ": no such object" not in b.msg
 
 
-def test_wrapper_ops_and_layout():
+def test_wrapper_ops():
     dom = registry.get("home")
     lv = LiveBackend(dom, "senior_flat", "ideal", 0)
-    lay = dom.layout(lv.episode)
-    assert lay["regions"] and lay["places"] and all(p["kind"] != "floor" for p in lay["places"]) and lay["doors"]
+    places = [p for p in lv.episode.world.house.places.values() if p.kind == "surface"]
+    assert places
     from symbolic_robot.simcommand import SimCommands
     c = SimCommands(lv)
     oid = next(iter(lv.world_view()["objects"]))
-    target = next(p["id"] for p in lay["places"] if p["id"] != lv.world_view()["objects"][oid]["at"] and p["kind"] == "surface")
+    target = next(p.id for p in places if p.id != lv.world_view()["objects"][oid]["at"])
     assert c.handle({"cmd": "move_object", "body": oid, "place": target})["ok"] and lv.world_view()["objects"][oid]["at"] == target
     sp = c.handle({"cmd": "spawn", "cls": "banana", "place": target})
     assert sp["ok"] and sp["id"] in lv.world_view()["objects"]

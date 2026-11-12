@@ -6,7 +6,7 @@ requires-python = ">=3.10"
 dependencies = ["pyyaml"]
 
 [project.optional-dependencies]
-server = ["fastapi", "uvicorn", "pillow", "requests"]
+server = ["fastapi", "uvicorn"]
 bench = ["websockets"]
 test = ["pytest"]
 

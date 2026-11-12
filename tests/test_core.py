@@ -42,11 +42,9 @@ def test_call_draws_vector_is_stable_per_call():
 
 
 # ---- clock
-def test_clock_speedup():
-    c = SimClock(speedup=10.0, max_wall_s=3.0)
-    assert c.advance(5.0) == 5.0 and c.t == 5.0
-    assert c.wall_for(20.0) == 2.0 and c.wall_for(1000.0) == 3.0
-    assert SimClock().wall_for(50.0) == 0.0
+def test_clock_moves_only_by_reported_durations():
+    c = SimClock()
+    assert c.t == 0.0 and c.advance(5.0) == 5.0 and c.advance(2.5) == 7.5 and c.t == 7.5
 
 
 # ---- result
@@ -72,10 +70,10 @@ def test_live_backend_and_sim_commands_work_for_a_new_domain():
     assert live.world_view()["profile"] == "ideal" and live.t == 2.0              # attribute of the inner robot
     cmds = SimCommands(live)
     st = cmds.handle({"cmd": "state"})
-    assert st["ok"] and st["objects"][0]["body"] == "cup" and st["spots"] == ["a", "b"]
-    assert cmds.handle({"cmd": "move_object", "body": "cup", "x": 2.9, "y": 0.1})["ok"]    # a point near place b
+    assert st["ok"] and st["objects"][0]["body"] == "cup" and st["catalog"]["objects"] == ["cup"]
+    assert cmds.handle({"cmd": "move_object", "body": "cup", "place": "b"})["ok"]
     assert live.world_view()["objects"]["cup"]["at"] == "b"
-    assert not cmds.handle({"cmd": "move_object", "body": "cup", "x": 50, "y": 50})["ok"]
+    assert not cmds.handle({"cmd": "move_object", "body": "cup"})["ok"]                     # no place given
     assert not cmds.handle({"cmd": "spawn", "cls": "x", "place": "a"})["ok"]       # the toy does not support spawn: says so
     assert not cmds.handle({"cmd": "nope"})["ok"]
 

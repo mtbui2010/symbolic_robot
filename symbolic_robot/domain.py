@@ -15,8 +15,7 @@ class BaseDomain:
     pack = ""                    # importable robot_agent pack (<pack>.configs.{adapter,skills_config,tasks,manifest.yaml})
     world_label = "world"        # what this domain calls its worlds: floor, house ... (a CLI flag --<label> is accepted)
     default_model = ""           # name of the local LLM served for planner / reader; empty: no LLM connection is written
-    default_speedup = 0.0        # simulated seconds per real second for a live server (0 = do not wait)
-    live_opts: dict = {}         # episode options a live server applies unless the caller gives them (never used by make_episode itself)
+    live_opts: dict = {}         # episode options the server applies unless the caller gives them (never used by make_episode itself)
 
     # ---- catalogue
     def available(self) -> str | None:
@@ -56,17 +55,8 @@ class BaseDomain:
         return None
 
     # ---- what the server publishes
-    def layout(self, ep) -> dict:
-        """{"places": [{id, name, pos:[x,y], kind}], "regions": [{name, rect:[x0,y0,x1,y1]}], "doors": [{at:[x,y], width}],
-        "labels": [{text, pos}]} for the map picture; empty: no picture."""
-        return {}
-
     def env(self, ep) -> dict | None:
         """The planner's ENV for this world (robot_agent tasks.ENV); None: the pack's own."""
-        return None
-
-    def path(self, ep, a: tuple, b: tuple) -> list | None:
-        """Waypoints from a to b when the world knows a route (the live pose follows it); None: a straight jump."""
         return None
 
     def planner_env(self) -> dict:
@@ -76,10 +66,6 @@ class BaseDomain:
     def sim_user_opts(self) -> dict:
         """make_episode options that turn the simulated person on (for `--dialogue sim`)."""
         return {}
-
-    def speech_lang(self, text: str, lang: str | None) -> str:
-        """The language tag the browser voice should use for `text`."""
-        return lang or "en"
 
     def install_pack(self, live) -> None:
         """Hand the live backend to the pack's skill functions (the pack's set_backend)."""

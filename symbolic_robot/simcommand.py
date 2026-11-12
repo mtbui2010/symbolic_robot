@@ -1,13 +1,9 @@
-"""The generic `sim_command` handler: the ops a dashboard Sim bar (or a test script) sends to any domain.
+"""The generic `sim_command` handler: the ops a test or benchmark script sends to any domain.
 
 Message shape {"cmd": ...} -> {"ok", "msg", ..., "isdone"}. Ops: state, truth, reset, load, move_object, spawn. An op the domain
 does not support answers ok=false with a message; nothing else happens.
 """
 from __future__ import annotations
-
-import math
-
-NEAR_M = 1.2
 
 
 class SimCommands:
@@ -41,17 +37,13 @@ class SimCommands:
 
     # ---- ops
     def op_state(self, cmd):
-        """Shaped like the dashboard Sim bar's SimState (objects with body/surface/pos, furniture, catalog, spots) plus domain fields."""
-        v, lay = self.domain.view(self.ep), self.domain.layout(self.ep)
-        pos = {p["id"]: p["pos"] for p in lay.get("places", [])}
-        objects = [{"body": oid, "name": oid, "ycb": None, "surface": o.get("at") if o.get("at") in pos else None,
-                    "pos": [*pos.get(o.get("at"), [0.0, 0.0]), 0.0], "yaw_deg": 0.0, "quat": [1.0, 0.0, 0.0, 0.0], **o}
-                   for oid, o in v.get("objects", {}).items()]
+        """Objects (body, name, cls, at ...), the catalog of classes, the worlds, the profile and the seed."""
+        v = self.domain.view(self.ep)
+        objects = [{"body": oid, "name": oid, **o} for oid, o in v.get("objects", {}).items()]
         classes = sorted({o["cls"] for o in v.get("objects", {}).values() if o.get("cls")})
         return {"ok": True, "symbolic": True, "domain": self.domain.name, "world": self.live.kw["world"], "worlds": self.domain.worlds(),
-                "scene": self.live.kw["world"], "dirty": False, "scene_def": {}, "scenes": sorted(set(self.domain.worlds()) | set(self.domain.scenes(self.ep))),
-                "objects": objects, "furniture": {}, "catalog": {"furniture": {}, "objects": classes}, "spots": list(pos),
-                "places": lay.get("places", []), "profile": self.live.kw["profile"], "seed": self.live.kw["seed"]}
+                "scenes": sorted(set(self.domain.worlds()) | set(self.domain.scenes(self.ep))), "objects": objects,
+                "catalog": {"objects": classes}, "profile": self.live.kw["profile"], "seed": self.live.kw["seed"]}
 
     def op_truth(self, cmd):
         wv = self.live.world_view()
@@ -77,16 +69,11 @@ class SimCommands:
         out = self.domain.op_load(self.ep, name)
         return out if out is not None else {"ok": False, "msg": f"no world or scene {name!r} (worlds: {', '.join(self.domain.worlds())})"}
 
-    def _place_at(self, x: float, y: float):
-        near = [(math.dist(p["pos"], (x, y)), p["id"]) for p in self.domain.layout(self.ep).get("places", []) if p.get("kind") != "floor"]
-        d, pid = min(near, default=(None, None))
-        return pid if d is not None and d <= NEAR_M else None
-
     def op_move_object(self, cmd):
         oid = cmd.get("body") or cmd.get("name")
-        place = cmd.get("place") or (self._place_at(float(cmd["x"]), float(cmd["y"])) if "x" in cmd and "y" in cmd else None)
+        place = cmd.get("place")
         if not oid or not place:
-            return {"ok": False, "msg": "move_object needs body (or name) and place (or x and y near a place)"}
+            return {"ok": False, "msg": "move_object needs body (or name) and place"}
         out = self.domain.op_move_object(self.ep, str(oid), str(place))
         return out if out is not None else self._unsupported("move_object")
 
