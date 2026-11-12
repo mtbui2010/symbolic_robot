@@ -10,7 +10,7 @@ symbolic_robot/
   cli.py  server.py  server_skills.py        glue: the only core modules that import robot_agent
   domains/<name>/                            a domain: world, skills, profiles, data, and its robot_agent pack (configs/)
   result rng profile clock domain registry   the core: no robot, domain or language fact
-  backend simcommand mapview
+  backend simcommand
 ```
 
 | rule | enforced by |
@@ -28,20 +28,19 @@ symbolic_robot/
 * `Result(ok, msg, code, data, duration_s, truth)`: what a skill returns. `truth` is what really happened; the robot never sees it.
 * `rng`: `Rng` (a draw depends on seed, a key and the n-th use of that key) and `CallDraws` (one vector of 16 uniforms per call, from SHA-256 of seed, skill, arguments and the n-th call with them; each rule reads its own slot). Same seed, same call: same numbers, whatever else happened between.
 * `profile`: one YAML file per profile, each parameter `{kind, value, source, note}`. `ideal` is derived from `real` (every probability 0, durations kept); `stress` only when `real` declares `derive.stress.scale`.
-* `SimClock`: simulated time moves only by reported durations; `speedup` (simulated s per real s) only sets how long a live server really waits.
+* `SimClock`: simulated time moves only by reported durations; nothing ever waits in real time.
 * `BaseDomain` (`domain.py`): the protocol a domain implements, with safe defaults (a hook not overridden does nothing). `registry`: built-in domains (loaded lazily), the entry point group `symbolic_robot.domains`, and `register()` for tests and local plug-ins.
-* `LiveBackend`: wraps a domain's episode so the world can be replaced between runs, logs every call with its truth, paces by `speedup` and follows a route when the domain gives one. It is installed as the pack's robot (`__getattr__` passes everything else to the inner robot).
-* `SimCommands`: the generic `sim_command` handler (`state, truth, reset, load, move_object, spawn`); `load` switches the world. An op a domain does not support answers `ok: false`.
-* `mapview`: a floor-plan PNG and the `MAP` config group (picture, pose, click-to-move, Sim bar) drawn from a domain's `layout()` only.
-* Server glue: `server.build()` seeds the connections (LLM, speech-to-text), creates the robot_agent app for the domain's pack, installs a stub node with the agents `mobile_pose`, `sim_world`, `sim_command`, adds the skills `reset_world`, `move_to`, `spawn_object`, `warmup_servers` and the dialogue skills (`ask`/`say`: voice, text, or headless for experiment scripts), and publishes ENV and MAP for the current world. `ROBOT_AGENT_ROS=off`.
+* `LiveBackend`: wraps a domain's episode so the world can be replaced between runs and logs every call with its truth; `GET /agent/mobile_pose/get` reports the domain's pose. It is installed as the pack's robot (`__getattr__` passes everything else to the inner robot).
+* `SimCommands`: the generic `sim_command` handler (`state, truth, reset, load, move_object by place, spawn`); `load` switches the world. An op a domain does not support answers `ok: false`.
+* Server glue: `server.build()` seeds the connection to the LLM, creates the robot_agent app for the domain's pack, installs a stub node with the agents `mobile_pose`, `sim_world`, `sim_command`, adds the skills `reset_world`, `spawn_object` and the headless dialogue skills (`ask`: waits for the answer the benchmark's scripted person posts to `/agent/listen/<id>`; `say`: logged only), and publishes ENV for the current world. No map, no voice, no display pacing. `ROBOT_AGENT_ROS=off`.
 
 ## How the three earlier engines were unified
 
 | engine | reused | dropped or left for later |
 |---|---|---|
 | the small factory simulator | all of it: world, skills, outcomes, user policies, messy scripts, task generator, floors, profile values, pack, experiment code (now `bench/`). Its keyed `Rng` is the core `Rng` bit for bit. | its flat profile format (now params with source labels); the server and live backend (now generic) |
-| the sibling symbolic simulator (uncommitted work, a public repo) | the design: per-call 16-slot draws (`CallDraws`), per-parameter `kind/value/source/note`, ideal derived from real, `sim_command` ops, stub node with three agents, ENV/MAP/connections written by the launcher, speedup pacing, check of dependencies | its house layout, objects and skills (they are one robot's facts; they stay for its own domain), scene save/load/delete, furniture edits, device fault states with retry clearing, clutter-indexed failure maps: see the later-step plan, the `docs/migration_*` file |
-| the household live server | the live backend with a route-following display pose, the `reset_world` / `spawn_object` / `move_to` / warm-up skills, the dashboard dialogue skills, connections seeding, the PNG plan with doors | its measured-apartment layout and picture (private layout: not brought), its video recorders and run scripts |
+| the sibling symbolic simulator (uncommitted work, a public repo) | the design: per-call 16-slot draws (`CallDraws`), per-parameter `kind/value/source/note`, ideal derived from real, `sim_command` ops, stub node with three agents, ENV/connections written by the launcher, check of dependencies (its MAP and speedup pacing were not kept: this repo is for benchmark runs) | its house layout, objects and skills (they are one robot's facts; they stay for its own domain), scene save/load/delete, furniture edits, device fault states with retry clearing, clutter-indexed failure maps: see the later-step plan, the `docs/migration_*` file |
+| the household live server | the backend, the `reset_world` / `spawn_object` skills, the headless dialogue skills, connections seeding (its route-following display pose, `move_to`, warm-up and voice skills, and the PNG plan were removed: live-only) | its measured-apartment layout and picture (private layout: not brought), its video recorders and run scripts |
 
 ## Parity checks
 

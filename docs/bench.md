@@ -3,7 +3,7 @@
 `bench/` is a separate package with a strictly one-way dependency: `bench -> symbolic_robot`. The core, the domains and the evaluated system
 never import it (`tests/test_layering.py`). It holds everything that judges or scores: success from the simulator's truth, distance, paired
 sign tests, bootstrap intervals, per-policy tables, the pre-registered protocol hash. It drives a running server over HTTP and WebSocket
-exactly as the dashboard does, so what it measures is the planner on the symbolic robot, never the robot's own claim.
+exactly as any robot_agent client does, so what it measures is the planner on the symbolic robot, never the robot's own claim.
 
 ```
 python -m bench list

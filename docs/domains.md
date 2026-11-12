@@ -18,18 +18,16 @@ class Toy(BaseDomain):
     def view(self, ep): return {"objects": {id: {"cls": ..., "at": ...}}, "robot": {...}}
 ```
 
-`tests/toy.py` is a complete example written only against this protocol; `tests/test_core.py` serves it through the live backend and `sim_command`.
+`tests/toy.py` is a complete example written only against this protocol; `tests/test_core.py` serves it through the backend and `sim_command`.
 
 ## What each hook buys
 
 | hook | without it |
 |---|---|
-| `make_episode`, `robot`, `pose`, `view` | no live server |
-| `layout(ep)` (places, regions, doors, labels) | no map picture, no click-to-move, `sim_command state` has no places |
+| `make_episode`, `robot`, `pose`, `view` | no server |
 | `env(ep)` | the pack's own ENV |
-| `path(ep, a, b)` | the displayed pose jumps instead of following a route |
 | `op_move_object`, `op_spawn`, `op_load`, `scenes` | the matching `sim_command` ops answer `ok: false` |
-| `planner_env()`, `default_model`, `default_speedup`, `sim_user_opts()`, `speech_lang()`, `live_opts` | the core defaults (no planner options, no LLM connection, no waiting) |
+| `planner_env()`, `default_model`, `sim_user_opts()`, `live_opts` | the core defaults (no planner options, no LLM connection) |
 | `available()` | return a reason string when an optional dependency is missing: the domain is listed as "not available" and nothing else breaks |
 
 ## Facts are data

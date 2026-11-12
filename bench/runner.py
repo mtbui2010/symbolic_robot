@@ -1,4 +1,4 @@
-"""Domain-neutral experiment runner. It drives a running robot_agent server over HTTP + WebSocket exactly as the dashboard does
+"""Domain-neutral experiment runner. It drives a running robot_agent server over HTTP + WebSocket exactly as any robot_agent client does
 (/skill/reset_world, /ws/agent, /agent/listen/<id>, /agent/sim_world/get) and measures from the simulator's own truth, never from the
 robot's claim. A suite (bench.suite.Suite) supplies the arms (run options), the simulated person and the distance measure."""
 from __future__ import annotations
