@@ -1,0 +1,29 @@
+[project]
+name = "symbolic_robot"
+version = "0.1.0"
+description = "One engine for symbolic simulated robots (outcomes drawn from declared probabilities over a small symbolic world), pluggable domains, and a separate benchmark package"
+requires-python = ">=3.10"
+dependencies = ["pyyaml"]
+
+[project.optional-dependencies]
+server = ["fastapi", "uvicorn", "pillow", "requests"]
+bench = ["websockets"]
+test = ["pytest"]
+
+[project.scripts]
+symbolic-robot = "symbolic_robot.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["symbolic_robot*", "bench*"]
+
+[tool.setuptools.package-data]
+"symbolic_robot.domains.factory" = ["floors/*.yaml", "profiles/*.yaml", "configs/*.yaml", "configs/safety/*.yaml"]
+bench = ["suites/*/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["parity: replays recorded episodes of another repository (needs SHOPFLOOR_RESULTS)", "slow: slow statistical tests"]
