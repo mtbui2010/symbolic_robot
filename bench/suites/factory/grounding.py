@@ -1,5 +1,5 @@
 """Post-hoc descriptive look at where the robot went first (NOT part of the pre-registered measures; messy.md).
-python -m bench analyze factory messy --grounding <dir>   (needs detail/, which is not committed; writes grounding.json)
+python -m bench.suites.factory.grounding <dir>   (needs detail/, which is not committed; writes grounding.json)
 first move = the first successful `move` target that is not the task's destination; "straight" = it is the true place; "same zone" = it is in the
 true place's zone/room (the part of the place id after '@'); "visited" = the true place is among the moves at all; "asked again" = 2+ where-questions."""
 from __future__ import annotations

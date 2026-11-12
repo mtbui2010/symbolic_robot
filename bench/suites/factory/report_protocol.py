@@ -1,4 +1,4 @@
-"""Markdown tables from <results dir>/summary.json of the protocol suite: python -m bench report factory protocol <dir> [more dirs]"""
+"""Markdown tables from <results dir>/summary.json of the protocol suite: python -m bench report --domain factory --suite protocol <dir> [more dirs]"""
 from __future__ import annotations
 
 import json

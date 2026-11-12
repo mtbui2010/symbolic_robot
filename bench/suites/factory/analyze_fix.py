@@ -1,5 +1,5 @@
 """Analysis of the messy-fix re-run (arms A, D, E on the failed tasks; docs/findings.md item 9).
-python -m bench analyze factory messy_fix <dir>   (needs detail/ for the dialogue and the first move; writes summary.json)
+python -m bench analyze --domain factory --suite messy_fix <dir>   (needs detail/ for the dialogue and the first move; writes summary.json)
 Paired counts per task (measures averaged over the repeats), combined criterion as in analyze.py; descriptive only (a few tasks per group)."""
 from __future__ import annotations
 

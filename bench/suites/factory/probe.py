@@ -1,4 +1,4 @@
-"""Generalisation probe: the same tasks, arm A, one repeat, two readers. python -m bench analyze factory protocol --probe <dir_lora> <dir_stock> [repeat]
+"""Generalisation probe: the same tasks, arm A, one repeat, two readers. python -m bench.suites.factory.probe <dir_lora> <dir_stock> [repeat]
 Compares what the reader understood (the first `understand` event against the task's object, destination and source) and the outcome."""
 from __future__ import annotations
 

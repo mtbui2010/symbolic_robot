@@ -1,4 +1,4 @@
-"""Markdown tables from <results dir>/summary.json: python -m bench report factory messy <dir> [more dirs]"""
+"""Markdown tables from <results dir>/summary.json: python -m bench report --domain factory --suite messy <dir> [more dirs]"""
 from __future__ import annotations
 
 import json
