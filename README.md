@@ -1,5 +1,9 @@
 # symbolic_robot
 
+> **Scope: benchmark runs only. This repo is not for live demos.** The server below exists so the benchmark runner can drive a simulated
+> robot through `robot_agent`. Live use with the dashboard (a map, voice dialogue, videos) belongs to the live launchers kept elsewhere
+> (the household live launcher and the simulator's own symbolic mode); do not add live features here.
+
 A shared engine for **symbolic simulated robots**. A skill does not move anything: it checks the preconditions on a small symbolic world,
 draws its outcome (success, or a failure with a code) from declared probabilities, applies the effect, advances a simulated clock and returns
 the result together with a hidden `truth` record. The same engine serves different **domains** and is served to a planner
@@ -7,7 +11,7 @@ the result together with a hidden `truth` record. The same engine serves differe
 
 ```
 python -m symbolic_robot list                        # domains, floors / houses, profiles
-make run ROBOT=factory                               # background server on port 8091, prints the URL to add in the dashboard
+make run ROBOT=factory                               # background server on port 8091 for a benchmark run (not a live demo)
 make run ROBOT=home PORT=8121 ASK_MODE=text          # a second one (home needs the household package installed)
 make terminate PORT=8121
 make bench ROBOT=factory SUITE=protocol ARGS="--tasks 3 --seeds 1 --arms A,B"

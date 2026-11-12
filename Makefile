@@ -1,4 +1,5 @@
-# symbolic_robot: serve a symbolic simulated robot (a domain) to the robotapp dashboard, and run benchmark suites on it.
+# symbolic_robot: a symbolic simulated robot (a domain) as the BACKEND OF BENCHMARK RUNS (not for live demos: those are kept in other repos),
+# and the benchmark suites that run on it.
 #
 #   make list                                   domains, floors / houses, profiles, suites
 #   make run ROBOT=<home|factory> [PORT=8091]   start in the background, wait until it answers, print the URL to add in robotapp

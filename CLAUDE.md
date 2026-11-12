@@ -1,6 +1,7 @@
 # symbolic_robot
 
 One engine for SYMBOLIC simulated robots: skills do not run for real, each returns an outcome drawn from declared probabilities over a small symbolic world.
+Scope: this repo runs BENCHMARKS (the server is the benchmark's backend, not a live demo launcher; live demos live in other repos).
 Domains (factory, home, ...) plug in; benchmark suites live in a separate package `bench/` that depends on the engine, never the other way.
 Docs: [architecture](docs/architecture.md), [domains](docs/domains.md) (how to add one), [bench](docs/bench.md), [CHANGELOG](docs/CHANGELOG.md).
 

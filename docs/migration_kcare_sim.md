@@ -1,4 +1,6 @@
-# Later step: moving the sibling simulator's symbolic mode onto the core (gap list, nothing done yet)
+# NOT PLANNED: moving the sibling simulator's symbolic mode onto the core (gap list kept for reference)
+
+Decision (2026-11-12): this repo is for benchmark runs only; the live symbolic mode stays in the sibling simulator's repository. The list below is only a reference if that changes.
 
 This file names a private project on purpose (it is the plan for it); delete it before publishing the repository. Observed on the uncommitted work in `kcare_sim/symbolic/` (modules rng, profile, outcomes, layout, world, robot, perceive, manip, skills, sim_command, site, serve; 2,872 lines with tests). That repository was not modified.
 
