@@ -42,3 +42,15 @@ def test_probability_maps_and_missing_source(tmp_path):
     with pytest.raises(ValueError):
         P.load(tmp_path, "bad")
     assert P.load(tmp_path, "real").get("zzz", 5) == 5
+
+
+def test_helpers_and_the_keep_flag(tmp_path):
+    (tmp_path / "real.yaml").write_text(yaml.safe_dump({"profile": "real", "derive": {"stress": {"scale": 2}}, "params": {
+        "fail": {"kind": "prob_map", "value": {"low": 0.1, "high": 0.2}, "source": "s"},
+        "retry": {"kind": "prob", "value": 0.4, "source": "s", "ideal": "keep"},
+        "dur": {"kind": "range", "value": [2.0, 4.0], "source": "s"},
+        "split": {"kind": "split", "value": {"blocked": 0.25, "unreachable": 0.75}, "source": "s"}}}))
+    real, ideal, stress = (P.load(tmp_path, n) for n in ("real", "ideal", "stress"))
+    assert real.by("fail", "high") == 0.2 and real.uniform("dur", 0.25) == 2.5
+    assert [real.choose("split", u) for u in (0.0, 0.24, 0.26, 0.99, 1.0)] == ["blocked", "blocked", "unreachable", "unreachable", "unreachable"]
+    assert ideal.get("retry") == 0.4 and stress.get("retry") == 0.4 and ideal.by("fail", "low") == 0.0 and stress.by("fail", "low") == pytest.approx(0.2)

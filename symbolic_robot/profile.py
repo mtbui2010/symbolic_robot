@@ -6,8 +6,10 @@
     params:
       slip: {kind: prob, value: 0.05, source: "<where the number comes from>", note: "<what it means>"}
 
-Kinds: `prob` and `prob_map` are probabilities (the `ideal` profile sets them to 0 when it has no file: no failures);
-`split`, `number`, `map` are kept as they are. Every parameter needs a value and a source label. Nothing here knows any robot.
+Kinds: `prob` and `prob_map` are probabilities (the `ideal` profile sets them to 0 when it has no file: no failures; a parameter that
+is a probability of recovering after a failure, not of failing, says `ideal: keep` and is left alone by `ideal` and `stress`);
+`split` (shares of failure codes), `range` (a [low, high] drawn uniformly), `number`, `map` are kept as they are.
+Every parameter needs a value and a source label. Nothing here knows any robot.
 """
 from __future__ import annotations
 
@@ -30,6 +32,24 @@ class Profile:
             if default is not None:
                 return default
             raise KeyError(f"profile {self.name!r} has no parameter {key!r}") from None
+
+    def by(self, key: str, label: str):
+        """The entry `label` of a map-valued parameter (a probability by clutter, by class ...)."""
+        return self.get(key)[label]
+
+    def uniform(self, key: str, u: float) -> float:
+        """A value in the [low, high] range parameter `key` from the uniform u."""
+        a, b = self.get(key)
+        return float(a) + (float(b) - float(a)) * u
+
+    def choose(self, key: str, u: float) -> str:
+        """A label from a `split` parameter (shares per label): inverse CDF over the sorted labels."""
+        split, acc = self.get(key), 0.0
+        for k in sorted(split):
+            acc += float(split[k])
+            if u < acc:
+                return k
+        return sorted(split)[-1]
 
     def source(self, key: str) -> str:
         return str(self.params[key].get("source", ""))
@@ -61,7 +81,7 @@ def derived(real: "Profile", name: str) -> "Profile":
         fn = lambda v: min(1.0, float(v) * scale)                    # noqa: E731
         note = f"{name} profile: probabilities of real x{scale:g}, capped at 1"
     for p in params.values():
-        if p.get("kind") in PROB_KINDS:
+        if p.get("kind") in PROB_KINDS and p.get("ideal") != "keep":
             p["value"] = _map(p["value"], fn)
             p["source"] = f"{note} (real: {p.get('source', '')})"
     return Profile(name, params, real.derive)
