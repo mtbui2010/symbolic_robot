@@ -1,0 +1,23 @@
+# Fault model of the `real` profile: probabilities per skill call, drawn from the seed (symbolic_robot.rng). Every number is
+# invented (round numbers for a simulated factory robot); none is measured. `ideal` (no failures) is derived from this file.
+profile: real
+derive:
+  stress: {scale: 3.0}
+params:
+  speed_mps:
+    {kind: number, value: 0.8, source: "invented", note: "base speed in m/s"}
+  detector_miss:
+    {kind: prob, value: 0.10, source: "invented, round number", note: "find: the object is in view and is not seen"}
+  slip:
+    {kind: prob, value: 0.05, source: "invented, round number", note: "pick: the grip fails, the object stays"}
+  drop:
+    {kind: prob, value: 0.03, source: "invented, round number", note: "place / put_in: the object falls to the floor beside the place"}
+  hw_fault:
+    {kind: prob, value: 0.02, source: "invented, round number", note: "any motion or manipulation call: a transient hardware fault, nothing happens"}
+  persistent_fault:
+    {kind: prob, value: 0.04, source: "invented, round number", note: "per episode: from some call on, one skill always fails with hw_fault"}
+  durations_s:
+    kind: map
+    value: {find: 3.0, pick: 6.0, place: 5.0, put_in: 6.0, open: 5.0, close: 4.0, say: 2.0, ask: 4.0, grasp_check: 0.5, pose: 0.2, move_overhead: 4.0}
+    source: "invented"
+    note: "simulated seconds per skill; a move also takes distance / speed_mps"

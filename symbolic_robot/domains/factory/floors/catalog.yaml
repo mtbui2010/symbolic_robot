@@ -1,0 +1,21 @@
+# Object classes shared by the floors: weight (kg) and whether the part is hot when freshly made. Invented values for a simulation.
+classes:
+  wrench: {weight_kg: 0.8}
+  torque wrench: {weight_kg: 1.1}
+  caliper: {weight_kg: 0.3}
+  screwdriver: {weight_kg: 0.2}
+  work gloves: {weight_kg: 0.2}
+  safety glasses: {weight_kg: 0.1}
+  bearing: {weight_kg: 0.4}
+  gasket: {weight_kg: 0.1}
+  bolt box: {weight_kg: 1.5}
+  motor housing: {weight_kg: 12.0}
+  circuit board: {weight_kg: 0.2}
+  defective part: {weight_kg: 0.6}
+  welded bracket: {weight_kg: 0.9, hot: true}
+  painted bracket: {weight_kg: 0.7, hot: true}
+  tape roll: {weight_kg: 0.2}
+  label roll: {weight_kg: 0.3}
+  cable ties: {weight_kg: 0.1}
+  marker pen: {weight_kg: 0.05}
+  gauge block: {weight_kg: 0.5}

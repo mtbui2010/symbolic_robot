@@ -1,0 +1,66 @@
+# A simulated assembly hall (invented for this repo; not a real plant). Positions in metres, x right, y up, hall about 44 x 30 m.
+# Every fact of the factory is here; the engine code reads it and holds none of it.
+floor: assembly_hall
+dock: charging_dock@receiving
+payload_kg: 5.0
+zones:
+  receiving:   {x: 3,  y: 4}
+  parts_store: {x: 3,  y: 24}
+  machining:   {x: 16, y: 25}
+  welding:     {x: 30, y: 26}
+  assembly_a:  {x: 14, y: 12}
+  assembly_b:  {x: 28, y: 12}
+  test_bay:    {x: 41, y: 14}
+  packing:     {x: 40, y: 3}
+  tool_crib:   {x: 22, y: 3}
+  main_aisle:  {x: 21, y: 18}
+# kind: surface (things are put on it) | bin | container (must be opened to see inside or put in) | lane (forbidden to stop in)
+# pos: where the robot stands for the place.  slots: how many objects fit.  category: the class name the robot's map knows.
+places:
+  - {id: charging_dock@receiving,    name: charging dock,      pos: [2.0, 3.0],   kind: surface, slots: 0}
+  - {id: pallet_stand@receiving,     name: pallet stand,       pos: [4.5, 5.0],   kind: surface, slots: 6, aliases: [inbound pallet]}
+  - {id: inbound_rack@receiving,     name: inbound rack,       pos: [6.0, 3.0],   kind: surface, slots: 6}
+  - {id: parts_rack_a@parts_store,   name: parts rack A,       pos: [2.0, 25.0],  kind: surface, slots: 6, aliases: [rack A]}
+  - {id: parts_rack_b@parts_store,   name: parts rack B,       pos: [5.0, 22.0],  kind: surface, slots: 6, aliases: [rack B]}
+  - {id: bolt_bin@parts_store,       name: bolt bin,           pos: [4.0, 27.0],  kind: bin, slots: 8}
+  - {id: locked_cabinet@parts_store, name: locked cabinet,     pos: [1.5, 21.0],  kind: container, slots: 6, locked: true, aliases: [calibration cabinet]}
+  - {id: lathe_bench@machining,      name: lathe bench,        pos: [14.0, 26.0], kind: surface, slots: 5}
+  - {id: milling_table@machining,    name: milling table,      pos: [18.0, 27.0], kind: surface, slots: 5}
+  - {id: scrap_bin@machining,        name: scrap bin,          pos: [17.0, 23.0], kind: bin, slots: 8}
+  - {id: weld_table@welding,         name: weld table,         pos: [29.0, 27.0], kind: surface, slots: 4, category: hot_zone}
+  - {id: cooling_rack@welding,       name: cooling rack,       pos: [32.0, 25.0], kind: surface, slots: 4, category: hot_zone}
+  - {id: assembly_bench_1@assembly_a, name: assembly bench 1,  pos: [13.0, 13.0], kind: surface, slots: 5, aliases: [bench 1]}
+  - {id: fixture_table_1@assembly_a, name: fixture table 1,    pos: [16.0, 11.0], kind: surface, slots: 4}
+  - {id: assembly_bench_2@assembly_b, name: assembly bench 2,  pos: [27.0, 13.0], kind: surface, slots: 5, aliases: [bench 2]}
+  - {id: fixture_table_2@assembly_b, name: fixture table 2,    pos: [30.0, 11.0], kind: surface, slots: 4}
+  - {id: test_bench@test_bay,        name: test bench,         pos: [41.0, 15.0], kind: surface, slots: 5}
+  - {id: defect_bin@test_bay,        name: defect bin,         pos: [42.0, 12.0], kind: bin, slots: 8, aliases: [reject bin]}
+  - {id: packing_table@packing,      name: packing table,      pos: [39.0, 4.0],  kind: surface, slots: 6}
+  - {id: label_shelf@packing,        name: label shelf,        pos: [41.5, 2.5],  kind: surface, slots: 6}
+  - {id: outbound_pallet@packing,    name: outbound pallet,    pos: [37.0, 2.0],  kind: surface, slots: 8}
+  - {id: tool_wall@tool_crib,        name: tool wall,          pos: [21.0, 2.0],  kind: surface, slots: 8, aliases: [tool board]}
+  - {id: tool_cabinet@tool_crib,     name: tool cabinet,       pos: [24.0, 2.0],  kind: container, slots: 8}
+  - {id: toolbox@tool_crib,          name: toolbox,            pos: [23.0, 5.0],  kind: container, slots: 6}
+  - {id: forklift_lane@main_aisle,   name: forklift lane,      pos: [21.0, 18.0], kind: lane, slots: 0, category: forklift_lane}
+objects:   # id, class (catalog.yaml), variant (a word that tells two of a class apart), where it is at the start
+  - {id: wrench_l,   cls: wrench,          variant: large,    at: tool_wall@tool_crib}
+  - {id: wrench_s,   cls: wrench,          variant: small,    at: toolbox@tool_crib}
+  - {id: torque_w,   cls: torque wrench,   at: tool_cabinet@tool_crib}
+  - {id: caliper,    cls: caliper,         at: lathe_bench@machining}
+  - {id: sd_flat,    cls: screwdriver,     variant: flat,     at: toolbox@tool_crib}
+  - {id: sd_phil,    cls: screwdriver,     variant: phillips, at: tool_wall@tool_crib}
+  - {id: gloves,     cls: work gloves,     at: tool_cabinet@tool_crib}
+  - {id: glasses,    cls: safety glasses,  at: assembly_bench_1@assembly_a}
+  - {id: bearing_s,  cls: bearing,         variant: steel,    at: parts_rack_a@parts_store}
+  - {id: bearing_b,  cls: bearing,         variant: bronze,   at: parts_rack_b@parts_store}
+  - {id: gasket,     cls: gasket,          at: parts_rack_b@parts_store}
+  - {id: bolt_box,   cls: bolt box,        at: bolt_bin@parts_store}
+  - {id: housing,    cls: motor housing,   at: pallet_stand@receiving}
+  - {id: board,      cls: circuit board,   at: test_bench@test_bay}
+  - {id: defect,     cls: defective part,  at: fixture_table_2@assembly_b}
+  - {id: bracket,    cls: welded bracket,  at: cooling_rack@welding}
+  - {id: tape,       cls: tape roll,       at: packing_table@packing}
+  - {id: labels,     cls: label roll,      at: label_shelf@packing}
+  - {id: ties,       cls: cable ties,      at: inbound_rack@receiving}
+  - {id: marker,     cls: marker pen,      at: milling_table@machining}
+  - {id: cal_gauge,  cls: gauge block,     at: locked_cabinet@parts_store}

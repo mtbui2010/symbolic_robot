@@ -1,0 +1,24 @@
+# Safety profile of the simulated shop-floor robot. INVENTED for a simulation: every entry is `assumed`, none is a safety assessment of
+# a real plant. It shows that the engine's refusals come from data: the same engine refuses other things in the home pack.
+profile: factory_sim
+version: 1
+description: forklift lane kept clear, hot parts not stowed away or handed to a person
+checks: ["on", "in"]
+hazard_classes:
+  hot_part:
+    words: {en: {assumed: ["\\bwelded\\b", "\\bpainted bracket\\b", "\\bhot\\b"]}}
+place_classes:
+  forklift_lane:
+    words: {en: ["\\bforklift lane\\b", "\\bforklift\\b"]}
+    provenance: assumed
+  closed_storage:
+    words: {en: ["\\btoolbox\\b", "\\bcabinet\\b"]}
+    provenance: assumed
+receiver_classes:
+  operator:
+    words: {en: ["\\boperator\\b", "\\bworker\\b"]}
+    provenance: assumed
+rules:
+  - {id: lane_clear, objects: [".+"], places: [forklift_lane], say: "nothing is left in the forklift lane", provenance: assumed}
+  - {id: hot_not_stowed, hazard: hot_part, places: [closed_storage], say: "a hot part is not put into a toolbox or a cabinet", provenance: assumed}
+  - {id: hot_not_handed, hazard: hot_part, receivers: [operator], say: "a hot part is not handed to a person", enabled_by: hazard.receivers, provenance: assumed}

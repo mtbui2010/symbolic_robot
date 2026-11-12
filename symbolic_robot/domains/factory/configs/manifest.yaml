@@ -1,0 +1,153 @@
+# What the simulated shop-floor robot can do, for robot_agent's planner. Check: python -m robot_agent.contract.check_manifest symbolic_robot.domains.factory --strict
+robot: shopfloor
+version: "1.0"
+language: en
+description: "A mobile manipulator with one arm and gripper, a camera, a speaker and a microphone, working on a factory floor."
+capabilities: {base: true, arms: 1, hands: [right], lift: true, head: true, drawer: true, voice: true, find_reaches: false}
+geometry: {arrive_tol_m: 0.3, reach_m: 0.78, reach_far_m: 1.0}
+planner:
+  llm_budget: 22
+  translate_budget: 8
+  input_pivot: none
+  search_legs: true
+  detector_miss_rate: 0.1
+  notes:
+    - "Open a container before PutIn; close it after."
+    - "Find an object at its place before Pick."
+limits:
+  payload_kg: 5.0
+safety:
+  profile: safety/factory.yaml
+skills:
+  - name: move
+    action: MoveTo
+    description: "Drive to a place."
+    params: {type: object, properties: {inputs: {type: string, description: "place id or name"}}, required: [inputs]}
+    pre: []
+    hold: []
+    effects: ["arrived(?inputs)"]
+    verify: [{kind: symbolic}, {kind: sensor, skill: pose}]
+    interruptible: true
+    errors: [unreachable, blocked, hw_fault, cancelled, software]
+    version: "1.0"
+  - name: find
+    action: Find
+    description: "Look for an object at the current place."
+    params: {type: object, properties: {inputs: {type: string, description: "object name, e.g. 'small wrench'"}}, required: [inputs]}
+    pre: []
+    hold: []
+    effects: ["found(?inputs)"]
+    verify: [{kind: symbolic}]
+    interruptible: true
+    errors: [absent, perception_unavailable, hw_fault, cancelled, software]
+    version: "1.0"
+  - name: pick
+    action: Pick
+    description: "Pick up an object found at the current place."
+    params: {type: object, properties: {inputs: {type: string, description: "the object found here"}}, required: [inputs]}
+    pre: ["found(?inputs)", "hand_empty()"]
+    hold: []
+    effects: ["holding(?inputs)", "not found(?inputs)", "not hand_empty()"]
+    verify: [{kind: symbolic}, {kind: sensor, skill: grasp_check}]
+    interruptible: true
+    errors: [absent, blocked, grasp_failed, hw_fault, cancelled, software]
+    version: "1.0"
+  - name: place
+    action: Place
+    description: "Put the held object on the place the robot is at."
+    params: {type: object, properties: {inputs: {type: string, description: "the place the robot is at"}}, required: [inputs]}
+    pre: ["arrived(?inputs)", "not hand_empty()"]
+    hold: []
+    effects: ["hand_empty()", "not holding(*)"]
+    verify: [{kind: symbolic}, {kind: sensor, skill: grasp_check, expect: false}]
+    interruptible: true
+    errors: [dropped, blocked, unreachable, hw_fault, cancelled, software]
+    version: "1.0"
+  - name: put_in
+    action: PutIn
+    description: "Put the held object into the open container the robot is at."
+    params: {type: object, properties: {inputs: {type: string, description: "the open container the robot is at"}}, required: [inputs]}
+    pre: ["arrived(?inputs)", "opened(?inputs)", "not hand_empty()"]
+    hold: []
+    effects: ["hand_empty()", "not holding(*)"]
+    verify: [{kind: symbolic}, {kind: sensor, skill: grasp_check, expect: false}]
+    interruptible: true
+    errors: [dropped, blocked, unreachable, hw_fault, cancelled, software]
+    version: "1.0"
+  - name: open
+    action: Open
+    description: "Open a container (cabinet, toolbox) the robot is at."
+    params: {type: object, properties: {inputs: {type: string, description: "the container"}}, required: [inputs]}
+    pre: ["arrived(?inputs)", "hand_empty()"]
+    hold: []
+    effects: ["opened(?inputs)"]
+    verify: [{kind: symbolic}]
+    interruptible: true
+    errors: [unreachable, blocked, hw_fault, cancelled, software]
+    version: "1.0"
+  - name: close
+    action: Close
+    description: "Close a container the robot is at."
+    params: {type: object, properties: {inputs: {type: string, description: "the container"}}, required: [inputs]}
+    pre: ["arrived(?inputs)", "hand_empty()", "opened(?inputs)"]
+    hold: []
+    effects: ["not opened(?inputs)"]
+    verify: [{kind: symbolic}]
+    interruptible: true
+    errors: [unreachable, blocked, hw_fault, cancelled, software]
+    version: "1.0"
+  - name: say
+    action: Say
+    description: "Say a sentence to the people nearby."
+    params: {type: object, properties: {inputs: {type: string, description: "the sentence"}, lang: {type: string, default: en}}, required: [inputs]}
+    pre: []
+    hold: []
+    effects: []
+    verify: [{kind: symbolic}]
+    interruptible: true
+    errors: [hw_fault, software]
+    version: "1.0"
+  - name: ask
+    action: Ask
+    description: "Ask a question and listen for the answer."
+    params: {type: object, properties: {inputs: {type: string, description: "the question"}, lang: {type: string, default: en}, retries: {type: integer, default: 0}}, required: [inputs]}
+    pre: []
+    hold: []
+    effects: []
+    verify: [{kind: symbolic}]
+    interruptible: true
+    errors: [timeout, cancelled, hw_fault, software]
+    version: "1.0"
+  - name: look
+    action: Look
+    description: "Describe what the camera sees here."
+    params: {type: object, properties: {}, required: []}
+    pre: []
+    hold: []
+    effects: []
+    verify: []
+    interruptible: true
+    errors: [perception_unavailable, hw_fault, software]
+    version: "1.0"
+  - name: grasp_check
+    action: Verify
+    description: "Read the gripper sensor: isdone = something is held."
+    params: {type: object, properties: {}, required: []}
+    pre: []
+    hold: []
+    effects: []
+    verify: []
+    interruptible: true
+    errors: [hw_fault, software]
+    version: "1.0"
+  - name: pose
+    action: Observe
+    description: "Read the localization pose [x, y, yaw_deg]."
+    params: {type: object, properties: {}, required: []}
+    pre: []
+    hold: []
+    effects: []
+    verify: []
+    interruptible: true
+    errors: [hw_fault, software]
+    version: "1.0"
