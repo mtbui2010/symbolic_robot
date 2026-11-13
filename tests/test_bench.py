@@ -10,7 +10,7 @@ import pytest
 
 from bench import campaign, orchestrate, protocol, stats
 from bench.suites import registry
-from bench.suites.home import command
+from bench.suites.home.delegate_legacy import command
 
 
 def test_sign_test_exact_values():

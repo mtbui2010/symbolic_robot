@@ -6,7 +6,7 @@ import importlib
 from ..suite import Suite
 
 _SUITES: dict = {}
-MODULES = ("bench.suites.factory", "bench.suites.home")
+MODULES = ("bench.suites.factory", "bench.suites.home.delegate_legacy")
 
 
 def register(s: Suite) -> Suite:
