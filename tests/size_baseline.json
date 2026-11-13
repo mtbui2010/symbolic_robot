@@ -54,8 +54,8 @@
    "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
   },
   "bench/suites/home/planners/robot_agent_adapter.py": {
-   "max": 1385,
-   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+   "max": 1389,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move; +4 lines (2026-11-13): the D1 planners name their own translator (overlay) and the bench reads it"
   },
   "bench/suites/home/planners/robot_agent_adapter.py::run": {
    "max": 138,

@@ -668,7 +668,7 @@ class _RobotAgentPlanner:
         """What summary.json ``config.planner_config`` records: the variant, its seed pool (path, sha256, size),
         people tracking, the translate model and the loop options (SAGE-v2 round 3)."""
         info = seed_pool_info() if cls.seed_pool else {"seed_pool": None, "seed_pool_sha": None, "seed_pool_n": 0}
-        mp = manifest_planner() if cls.loop_kind == "assist" else {}
+        mp = {**manifest_planner(), **((cls.manifest_overlay or {}).get("planner") or {})} if cls.loop_kind == "assist" else {}
         return {"variant": "rag" if cls.seed_pool else "norag", "loop": cls.loop_kind, "generator": cls.ra_planner,
                 "live_memory": "per episode (deleted after it)", **info,
                 "people_tracking": bool(cls.people_tracking),
@@ -737,7 +737,7 @@ class _RobotAgentPlanner:
             env._llm = CountingLLM(fk.FakeUnderstandLLM(), env.budgets.max_llm_calls)
         client = RAClient(env.llm())
         env.llm_calls_translate = 0
-        tm = str(manifest_planner().get("translate_model") or "") if self.loop_kind == "assist" else ""
+        tm = str({**manifest_planner(), **((self.manifest_overlay or {}).get("planner") or {})}.get("translate_model") or "") if self.loop_kind == "assist" else ""
         tr_client = RAClient(TranslateCounter(env, tm, None if fake else translator_inner(env, tm))) if tm else None
 
         um_clients: dict = {}
@@ -1248,6 +1248,8 @@ class SageS8nD1Planner(SageS8nPlanner):
     in total (inside the skill, ``retry.py``: one call for the planner, not counted in its budget), and ``confirm_look`` (a sighting after a miss at the goal check needs a third look).
     Every other option stays as in ``sage_s8n``."""
     name = "robot_agent:sage_s8n_d1"
+    # translator = the reader itself (the pack's 30B translator is not on this machine's Ollama; the user's decision)
+    manifest_overlay = {**S8_OVERLAY, "planner": {**S8_OVERLAY["planner"], "translate_model": "qwen3-vl:8b-instruct"}}
     loop_options = {**SageS8nPlanner.loop_options, **_D1_SEARCH, **_D1_CONFIRM}
     skill_attempts = 2
 
@@ -1255,6 +1257,8 @@ class SageS8nD1Planner(SageS8nPlanner):
 class SageS8nFtD1Planner(SageS8nFtPlanner):
     """D (pre-registered): ``sage_s8n_ft`` with the same new setup as ``sage_s8n_d1``."""
     name = "robot_agent:sage_s8n_ft_d1"
+    # translator = the fine-tuned reader (same reason and decision as sage_s8n_d1)
+    manifest_overlay = {**S8_OVERLAY, "planner": {**S8_OVERLAY["planner"], "translate_model": SageS8nFtPlanner.loop_options["understand_model"]}}
     loop_options = {**SageS8nFtPlanner.loop_options, **_D1_SEARCH, **_D1_CONFIRM}
     skill_attempts = 2
 
