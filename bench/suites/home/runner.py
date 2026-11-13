@@ -16,8 +16,8 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from homeloop_robot.rng import r6
-from homeloop_robot.types import _round_tree
+from symbolic_robot.domains.home.rng import r6
+from symbolic_robot.domains.home.types import _round_tree
 
 from .env import Budgets, EpisodeEnv, give_up_text, task_dict
 from .llm import BudgetExceeded, CacheMiss, CachedLLM, FakeLLM, LLMError, llm_kind, make_llm
@@ -140,7 +140,7 @@ def check_fresh_tasks(records: list, path, allow_stale: bool = False) -> None:
 
 def load_tasks(split: Optional[str] = None, limit: Optional[int] = None, tasks_file: Optional[str] = None,
                allow_stale: bool = False) -> list:
-    """Tasks of a split (``homeloop_bench.tasks.load_split``) or of a JSONL file, first ``limit``. A file whose
+    """Tasks of a split (``bench.suites.home.tasks.load_split``) or of a JSONL file, first ``limit``. A file whose
     records differ from the packaged ones with the same id is refused (:class:`StaleTasksError`) unless
     ``allow_stale``."""
     if tasks_file:
@@ -158,7 +158,7 @@ def load_tasks(split: Optional[str] = None, limit: Optional[int] = None, tasks_f
         try:
             from .tasks import load_split
         except ImportError as e:
-            raise RuntimeError("homeloop_bench.tasks is missing (bench data not installed); use --tasks FILE") from e
+            raise RuntimeError("bench.suites.home.tasks is missing (bench data not installed); use --tasks FILE") from e
         out = list(load_split(split))
     if limit is not None:
         out = out[: int(limit)]
@@ -188,12 +188,12 @@ def git_commit(path) -> Optional[str]:
 def _versions(planner_name: str = "") -> dict:
     import importlib.util
 
-    import homeloop_robot
+    import symbolic_robot.domains.home
 
     from . import __version__ as hb
-    out = {"homeloop_bench": hb, "homeloop_robot": getattr(homeloop_robot, "__version__", ""),
+    out = {"homeloop_bench": hb, "homeloop_robot": getattr(symbolic_robot.domains.home, "__version__", ""),
            "homeloop_bench_git": git_commit(Path(__file__).parent),
-           "homeloop_robot_git": git_commit(Path(homeloop_robot.__file__).parent)}
+           "homeloop_robot_git": git_commit(Path(symbolic_robot.domains.home.__file__).parent)}
     if planner_name.startswith("robot_agent:"):
         for mod in ("robot_agent", "embodiplan"):
             try:
@@ -242,7 +242,7 @@ def run_many(planner_name: str, split: Optional[str], limit: Optional[int], prof
     returns the summary. ``shard=(k, n)``: only the tasks at index ``i % n == k`` of the run's task list (same
     order, seeds and settings), written to DIR/shard<k>/ with a shard.json for :func:`merge_shards`."""
     from .metrics import summarize
-    from homeloop_robot import load_profile
+    from symbolic_robot.domains.home import load_profile
 
     check_llm(planner_name, llm_spec if llm is None else "given")
     check_planner(planner_name)

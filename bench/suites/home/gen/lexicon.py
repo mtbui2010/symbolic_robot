@@ -8,7 +8,7 @@ the family house calls her husband "Dad" in front of the robot, as the household
 
 from __future__ import annotations
 
-from homeloop_robot.catalog import CLASSES, COLORS, place_category
+from symbolic_robot.domains.home.catalog import CLASSES, COLORS, place_category
 
 from .ko import josa
 

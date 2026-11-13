@@ -8,9 +8,9 @@ import pytest
 pytest.importorskip("robot_agent")
 
 from fixtures import fixture_tasks  # noqa: E402
-from homeloop_bench.env import EpisodeEnv  # noqa: E402
-from homeloop_bench.planners.robot_agent_adapter import seed_memory  # noqa: E402
-from homeloop_bench.runner import run_episode  # noqa: E402
+from bench.suites.home.env import EpisodeEnv  # noqa: E402
+from bench.suites.home.planners.robot_agent_adapter import seed_memory  # noqa: E402
+from bench.suites.home.runner import run_episode  # noqa: E402
 from robot_agent.core.planning import search as S  # noqa: E402
 
 TASKS = {t["id"]: t for t in fixture_tasks()}

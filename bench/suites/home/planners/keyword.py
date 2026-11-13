@@ -1,4 +1,4 @@
-"""The rule-based brain behind :class:`homeloop_bench.llm.FakeLLM` (tests and CI only).
+"""The rule-based brain behind :class:`bench.suites.home.llm.FakeLLM` (tests and CI only).
 
 It reads ONLY the prompt text a planner sends (the ``MODE:`` line, the instruction, the house / memory /
 history lines of :func:`prompts.render_observation`) plus catalog common sense (object names, aliases,
@@ -19,7 +19,7 @@ import json
 import re
 import unicodedata
 
-from homeloop_robot.catalog import CLASSES, COLORS, MESSAGE_TEXT, MESSAGES
+from symbolic_robot.domains.home.catalog import CLASSES, COLORS, MESSAGE_TEXT, MESSAGES
 
 # ── prompt parsing ─────────────────────────────────────────────────────────────────────────────────────
 
@@ -609,7 +609,7 @@ def apply_events(atoms: list, info: dict, lang: str) -> list:
 
 
 def goal_atoms_from_string(s: str) -> list:
-    from homeloop_robot import goals as G
+    from symbolic_robot.domains.home import goals as G
     try:
         g = G.parse(s)
     except Exception:  # noqa: BLE001 - an unparsable interpretation -> nothing
@@ -707,7 +707,7 @@ def _program_answer(info: dict) -> str:
 
 
 def _options_answer(info: dict) -> dict:
-    from homeloop_robot import goals as G
+    from symbolic_robot.domains.home import goals as G
     atoms, b, u = plan_state(info)
     if u["refused"] and not atoms:
         return {"options": ["refuse"]}

@@ -2,7 +2,7 @@
 
 import copy
 
-from homeloop_bench.gen import resplit as R
+from bench.suites.home.gen import resplit as R
 
 
 def _rec(i, house, obj, split, text_en, text_ko, tpl="rearrange.feasible.00", kind="feasible"):

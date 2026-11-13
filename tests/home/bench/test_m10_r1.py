@@ -3,7 +3,7 @@ import pytest
 
 pytest.importorskip("robot_agent")
 
-from homeloop_bench.planners import robot_agent_adapter as ad  # noqa: E402
+from bench.suites.home.planners import robot_agent_adapter as ad  # noqa: E402
 
 
 def test_a_stopped_run_never_says_an_english_placeholder_in_korean():

@@ -7,9 +7,9 @@ import json
 import pytest
 
 from fixtures import feasible_tasks, fixture_tasks, special_tasks, write_jsonl
-from homeloop_bench.env import EpisodeEnv
-from homeloop_bench.metrics import clustered, compare, summarize, wilson
-from homeloop_bench.runner import InfraError, PlannerConfigError, run_episode, run_many
+from bench.suites.home.env import EpisodeEnv
+from bench.suites.home.metrics import clustered, compare, summarize, wilson
+from bench.suites.home.runner import InfraError, PlannerConfigError, run_episode, run_many
 
 
 def _task(tid):
@@ -17,7 +17,7 @@ def _task(tid):
 
 
 def _solve(env, goal):
-    from homeloop_robot import oracle
+    from symbolic_robot.domains.home import oracle
     for c in oracle.solve(env._world, goal):
         assert env.call(c.skill, **c.args)["ok"]
 
@@ -86,7 +86,7 @@ def test_llm_args_named_skill_or_self_are_a_software_failure():
     for bad in ({"skill": "x"}, {"self": "x"}):
         r = env.call("move", **bad)
         assert not r["ok"] and r["code"] == "software" and "unexpected keyword" in r["msg"]
-    from homeloop_robot import make_episode
+    from symbolic_robot.domains.home import make_episode
     ep = make_episode("senior_flat", 0, "ideal", 0)
     assert ep.robot.call("look", skill="x").code.value == "software"
 
@@ -152,21 +152,21 @@ def test_unreachable_llm_aborts_the_run(tmp_path, monkeypatch):
         run_many("progprompt_like", None, None, "ideal", 1, "en", "http://127.0.0.1:1", tmp_path / "o",
                  tasks=feasible_tasks(2))
     assert not (tmp_path / "o" / "summary.json").exists()
-    from homeloop_bench.cli import main
+    from bench.suites.home.cli import main
     f = write_jsonl(tmp_path / "t.jsonl", feasible_tasks(2))
     assert main(["run", "--planner", "progprompt_like", "--llm", "http://127.0.0.1:1", "--tasks", f,
                  "--out", str(tmp_path / "c")]) == 3
 
 
 def test_unavailable_robot_agent_refuses_to_start(tmp_path, monkeypatch):
-    import homeloop_bench.planners as P
+    import bench.suites.home.planners as P
     monkeypatch.setattr(P, "robot_agent_available", lambda: False)
     with pytest.raises(PlannerConfigError, match="robot_agent not importable"):
         run_many("robot_agent:sage", None, None, "ideal", 1, "en", "fake", tmp_path / "o", tasks=feasible_tasks(1))
 
 
 def test_cli_exits_non_zero_when_episodes_crash(tmp_path):
-    from homeloop_bench.cli import main
+    from bench.suites.home.cli import main
     f = write_jsonl(tmp_path / "t.jsonl", feasible_tasks(2))
     assert main(["run", "--planner", "test_scoring_rules:_Crash", "--tasks", f, "--out", str(tmp_path / "c")]) == 4
     s = json.loads((tmp_path / "c" / "summary.json").read_text())
@@ -207,7 +207,7 @@ def test_limit_run_is_marked_smoke_and_reweighted(tmp_path):
 
 
 def test_third_party_planner_spec(tmp_path):
-    from homeloop_bench.planners import is_spec, needs_llm, planner_available
+    from bench.suites.home.planners import is_spec, needs_llm, planner_available
     assert is_spec("test_scoring_rules:_Crash") and not is_spec("robot_agent:sage") and not is_spec("oracle")
     assert needs_llm("test_scoring_rules:_Crash") is False
     assert planner_available("no_such_mod:Planner")[0] is False

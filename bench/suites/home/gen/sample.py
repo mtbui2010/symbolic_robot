@@ -14,11 +14,11 @@ from __future__ import annotations
 
 import copy
 
-from homeloop_robot import goals as G
-from homeloop_robot import oracle
-from homeloop_robot.hazards import goal_hazards
-from homeloop_robot.rng import derive_seed, rng_for
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home import goals as G
+from symbolic_robot.domains.home import oracle
+from symbolic_robot.domains.home.hazards import goal_hazards
+from symbolic_robot.domains.home.rng import derive_seed, rng_for
+from symbolic_robot.domains.home.world import from_house
 
 from . import compound as CP
 from . import families as F

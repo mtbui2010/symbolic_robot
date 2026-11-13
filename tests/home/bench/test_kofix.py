@@ -4,12 +4,12 @@ import random
 
 import pytest
 
-from homeloop_bench.gen import compound as CP
-from homeloop_bench.gen import kofix
-from homeloop_bench.gen.lexicon import Lex
-from homeloop_bench.tasks import read_records
-from homeloop_robot.houses import list_houses
-from homeloop_robot.world import from_house
+from bench.suites.home.gen import compound as CP
+from bench.suites.home.gen import kofix
+from bench.suites.home.gen.lexicon import Lex
+from bench.suites.home.tasks import read_records
+from symbolic_robot.domains.home.houses import list_houses
+from symbolic_robot.domains.home.world import from_house
 
 
 @pytest.mark.parametrize("text,hit", [

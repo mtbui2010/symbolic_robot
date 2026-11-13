@@ -1,6 +1,6 @@
 """Planner interface (docs/planners.md).
 
-A planner drives one episode through :class:`homeloop_bench.env.EpisodeEnv` and ends it with
+A planner drives one episode through :class:`bench.suites.home.env.EpisodeEnv` and ends it with
 ``env.finish(status, say)``. :class:`StepPlanner` is the helper for planners that choose one call at a
 time; :class:`PlanPlanner` for planners that write a whole plan and then execute it.
 """

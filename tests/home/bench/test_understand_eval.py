@@ -9,9 +9,9 @@ import pytest
 pytest.importorskip("robot_agent")
 
 from fixtures import fixture_tasks, write_jsonl  # noqa: E402
-from homeloop_bench import understand_eval as ue  # noqa: E402
-from homeloop_bench.cli import main  # noqa: E402
-from homeloop_bench.env import EpisodeEnv  # noqa: E402
+from bench.suites.home import understand_eval as ue  # noqa: E402
+from bench.suites.home.cli import main  # noqa: E402
+from bench.suites.home.env import EpisodeEnv  # noqa: E402
 
 TASKS = {t["id"]: t for t in fixture_tasks()}
 
@@ -202,7 +202,7 @@ def test_probe_through_the_real_loop_with_a_scripted_backend(tmp_path):
 
 def test_the_probe_never_plans_or_moves(tmp_path):
     """The run stops at the understand event: the robot made no skill call and the planner was never built."""
-    from homeloop_bench.planners import make_planner
+    from bench.suites.home.planners import make_planner
     env = EpisodeEnv(TASKS["fx-feas-010"], "ideal", 0, "en", llm=Scripted(ANSWERS))
     p = make_planner("robot_agent:sage", llm=env.llm())
     p.until = ue.STOP_EVENTS
@@ -212,7 +212,7 @@ def test_the_probe_never_plans_or_moves(tmp_path):
 
 def test_clean_and_asr_text_conditions(tmp_path):
     """asr = the text the robot hears after the profile's speech recognition; clean = the task's own words."""
-    from homeloop_robot import load_profile  # noqa: F401
+    from symbolic_robot.domains.home import load_profile  # noqa: F401
     out = {}
     for mode in ("clean", "asr"):
         r = ue.probe(TASKS["fx-feas-010"], "robot_agent:sage", "real", 3, "en", mode, Scripted({"": ans(G("on", "blue mug", "kitchen_sink@kitchen"))}))
@@ -223,7 +223,7 @@ def test_clean_and_asr_text_conditions(tmp_path):
 
 
 def test_llm_calls_are_cached_in_the_run_dir(tmp_path, monkeypatch):
-    from homeloop_bench import llm as L
+    from bench.suites.home import llm as L
     seen = []
 
     def fake_chat(self, messages, temperature=0.0, seed=0, format=None, prompt=""):
@@ -276,7 +276,7 @@ def test_M2_class_id_head_noun_and_plural_are_names():
     assert c.object_class("mug") == ("mug", "")                                                      # a full name still wins
     assert c.object_class("flux capacitor")[0] == "?flux capacitor"                                  # unknown: still unknown
     # a head noun two classes share is not a name
-    from homeloop_robot.catalog import CLASSES, class_names
+    from symbolic_robot.domains.home.catalog import CLASSES, class_names
     heads: dict = {}
     for cid in CLASSES:
         for n in class_names(cid, "en"):
@@ -326,10 +326,10 @@ def test_understand_calls_are_counted_apart_from_translation(tmp_path):
 
 def test_understand_model_equal_to_the_translator_is_still_understanding(tmp_path):
     """The translator's model is the 30B model too; the ROLE routes the call, so it is not counted as translation."""
-    from homeloop_bench.planners.robot_agent_adapter import manifest_planner
+    from bench.suites.home.planners.robot_agent_adapter import manifest_planner
     assert manifest_planner().get("translate_model") == "qwen3-vl:30b-a3b-instruct"
     env_probe = {}
-    import homeloop_bench.planners.robot_agent_adapter as ad
+    import bench.suites.home.planners.robot_agent_adapter as ad
     orig = ad.UnderstandCounter.chat
 
     def spy(self, *a, **k):
@@ -373,7 +373,7 @@ def test_cli_understand_model_flag(tmp_path):
 
 
 def test_the_new_variants_are_registered_and_say_what_they_set():
-    from homeloop_bench.planners import REGISTRY, planner_class
+    from bench.suites.home.planners import REGISTRY, planner_class
     for n in ("sage_um", "sage_um_ko", "sage_um_strict", "sage_um_give", "sage_um_verdict", "sage_m1", "sage_m2"):
         assert f"robot_agent:{n}" in REGISTRY
     cfg = planner_class("robot_agent:sage_um").run_config()
@@ -387,7 +387,7 @@ def test_the_new_variants_are_registered_and_say_what_they_set():
 def test_run_episodes_of_an_understand_model_variant_record_the_calls_and_fallbacks(tmp_path):
     """The episode path (``run``): the understand model's calls are counted apart on the episode cap, the record and the summary
     say so, and a variant without one has none of those keys (--llm fake, the fake answers every prompt)."""
-    from homeloop_bench.runner import run_many
+    from bench.suites.home.runner import run_many
     tasks = fixture_tasks()[:3]
     s = run_many("robot_agent:sage_um", None, None, "ideal", 1, "en", "fake", tmp_path / "um", tasks=tasks)
     eps = [json.loads(l) for l in (tmp_path / "um" / "episodes.jsonl").read_text().splitlines()]

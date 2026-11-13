@@ -10,9 +10,9 @@ import pytest
 pytest.importorskip("robot_agent")
 
 from fixtures import fixture_tasks  # noqa: E402
-from homeloop_bench.llm import OllamaHTTP  # noqa: E402
-from homeloop_bench.planners import REGISTRY, planner_class  # noqa: E402
-from homeloop_bench.planners.robot_agent_adapter import SageGround2Planner, SagePlanner  # noqa: E402
+from bench.suites.home.llm import OllamaHTTP  # noqa: E402
+from bench.suites.home.planners import REGISTRY, planner_class  # noqa: E402
+from bench.suites.home.planners.robot_agent_adapter import SageGround2Planner, SagePlanner  # noqa: E402
 
 REMOVED = ("sage_m9", "sage_mk", "sage_m9t", "sage_m9b", "sage_m9k8", "sage_s45m", "sage_s45m8", "sage_s45mk", "sage_s45m8k",
            "sage_s4", "sage_s45")
@@ -66,7 +66,7 @@ def test_the_other_variants_record_nothing_new():
 
 @pytest.mark.parametrize("lang", ["en", "ko"])
 def test_episodes_of_the_role_variants_under_fake(tmp_path, lang):
-    from homeloop_bench.runner import run_many
+    from bench.suites.home.runner import run_many
     tasks = fixture_tasks()[:3]
     for n, roles in ((SPEC, True), ("robot_agent:sage_s5", False)):
         d = tmp_path / n.replace(":", "_")

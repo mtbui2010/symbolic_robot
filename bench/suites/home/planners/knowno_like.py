@@ -16,8 +16,8 @@ import math
 import re
 from pathlib import Path
 
-from homeloop_robot import goals as G
-from homeloop_robot.catalog import COLORS
+from symbolic_robot.domains.home import goals as G
+from symbolic_robot.domains.home.catalog import COLORS
 
 from .base import ask_json, give_up_text, refusal_text
 from .inner_monologue_like import LLMStepPlanner

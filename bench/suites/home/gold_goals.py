@@ -11,7 +11,7 @@ Documented in docs/planners.md ("robot_agent:sage_gold") and docs/understand_eva
 
 from __future__ import annotations
 
-from homeloop_robot.catalog import CLASSES, COLORS, MESSAGE_TEXT
+from symbolic_robot.domains.home.catalog import CLASSES, COLORS, MESSAGE_TEXT
 
 
 def _obj_name(world, oid: str, lang: str = "en") -> str:
@@ -89,7 +89,7 @@ def understand_goals(env, with_source: bool = True) -> list:
 
 
 def _person_key(world, pid: str) -> str:
-    from homeloop_robot.configs.tasks import person_key
+    from symbolic_robot.domains.home.configs.tasks import person_key
     return person_key(world, pid)
 
 

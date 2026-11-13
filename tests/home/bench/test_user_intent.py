@@ -7,11 +7,11 @@ import re
 
 import pytest
 
-from homeloop_bench import user_intent as UI
-from homeloop_bench.env import EpisodeEnv
-from homeloop_bench.llm import CachedLLM, CountingLLM, FakeLLM, LLMError, cache_key
-from homeloop_bench.tasks import task_by_id
-from homeloop_robot import intent
+from bench.suites.home import user_intent as UI
+from bench.suites.home.env import EpisodeEnv
+from bench.suites.home.llm import CachedLLM, CountingLLM, FakeLLM, LLMError, cache_key
+from bench.suites.home.tasks import task_by_id
+from symbolic_robot.domains.home import intent
 
 MILK = "hl-dev-000003"           # korean_apt_59, clarify: put the milk away -> into the kimchi fridge
 TELL = "hl-dev-000013"           # couple_flat: let my husband know we're leaving in ten minutes
@@ -152,7 +152,7 @@ def test_classifier_server_failure_is_not_a_result():
 # ── planners that declare a meaning ────────────────────────────────────────────────────────────────────
 @pytest.mark.parametrize("lang", ["en", "ko"])
 def test_oracle_gold_question_is_structured(lang):
-    from homeloop_bench.runner import run_episode
+    from bench.suites.home.runner import run_episode
     e = run_episode(task_by_id(MILK), "oracle", "ideal", 0, lang, None)
     asks = [c for c in e["calls"] if c["skill"] == "ask"]
     assert asks and asks[0]["args"]["meaning"]["qtype"] == "which_place"
@@ -161,17 +161,17 @@ def test_oracle_gold_question_is_structured(lang):
 
 
 def test_planner_qtype_declarations():
-    from homeloop_bench.planners.knowno_like import KnowNoLike
-    from homeloop_bench.planners.naive import NaivePlanner
-    from homeloop_bench.planners.oracle import OraclePlanner
-    from homeloop_robot.intent import QTYPES
+    from bench.suites.home.planners.knowno_like import KnowNoLike
+    from bench.suites.home.planners.naive import NaivePlanner
+    from bench.suites.home.planners.oracle import OraclePlanner
+    from symbolic_robot.domains.home.intent import QTYPES
     for cls in (OraclePlanner, NaivePlanner, KnowNoLike):
         assert set(cls.qtypes) <= set(QTYPES)
     assert "help" in OraclePlanner.qtypes and NaivePlanner.qtypes == ()
 
 
 def test_knowno_meaning_object_and_place():
-    from homeloop_bench.planners.knowno_like import meaning
+    from bench.suites.home.planners.knowno_like import meaning
     env = _env(MILK, "ko")
     obs = env.observe()
     m = meaning(["in(milk_1, fridge@kitchen)", "in(milk_1, kimchi_fridge@kitchen)"], obs)
@@ -181,7 +181,7 @@ def test_knowno_meaning_object_and_place():
 
 
 def test_oracle_help_request_is_structured():
-    from homeloop_robot.oracle import HELP_QUESTION, recovery_call
+    from symbolic_robot.domains.home.oracle import HELP_QUESTION, recovery_call
     env = _env(TELL)
     c = recovery_call("blocked", "move", env._world, env.user, 0.0, "en")
     assert c.skill == "ask" and c.args["meaning"] == {"qtype": "help"} and c.args["question"] == HELP_QUESTION["en"]
@@ -195,7 +195,7 @@ def test_sage_template_questions_are_structured(lang, monkeypatch):
     reads the same way. A question robot_agent did not translate (the English went out as is) is not followed:
     structured_mismatch (homeloop_robot docs/user_model.md "Heard-text check")."""
     pytest.importorskip("robot_agent")
-    from homeloop_bench.runner import run_episode
+    from bench.suites.home.runner import run_episode
     if lang == "ko":
         import ko_fake_translation
         ko_fake_translation.install(monkeypatch)
@@ -230,7 +230,7 @@ def test_sage_template_questions_are_structured(lang, monkeypatch):
 
 
 def test_summary_has_classifier_flag_and_path_shares(tmp_path):
-    from homeloop_bench.runner import run_many
+    from bench.suites.home.runner import run_many
     s = run_many("oracle", "dev", 6, "real", 1, "en", None, tmp_path / "o")
     assert s["config"]["user_classifier"] == "rules"
     assert set(s["dialog_paths"]) >= {"n"}

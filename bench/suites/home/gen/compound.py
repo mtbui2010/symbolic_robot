@@ -13,9 +13,9 @@ Subtask: {"kind", "capability", "ambiguity", "goal", ...} plus, where it applies
 
 from __future__ import annotations
 
-from homeloop_robot import goals as G
-from homeloop_robot.catalog import CLASSES, COLORS, place_category
-from homeloop_robot.hazards import goal_hazards
+from symbolic_robot.domains.home import goals as G
+from symbolic_robot.domains.home.catalog import CLASSES, COLORS, place_category
+from symbolic_robot.domains.home.hazards import goal_hazards
 
 from . import families as F
 from . import templates_en as EN

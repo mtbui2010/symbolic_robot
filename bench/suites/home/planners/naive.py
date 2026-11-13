@@ -8,9 +8,9 @@ state.
 
 from __future__ import annotations
 
-from homeloop_robot import goals as G
-from homeloop_robot import make_episode
-from homeloop_robot import oracle as _oracle
+from symbolic_robot.domains.home import goals as G
+from symbolic_robot.domains.home import make_episode
+from symbolic_robot.domains.home import oracle as _oracle
 
 from .oracle import note_refusals, observed_modes, solve_target, task_kinds
 from .base import give_up_text, refusal_text

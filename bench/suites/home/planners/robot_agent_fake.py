@@ -4,7 +4,7 @@
   robot_agent's understand JSON (clarify tasks: "ambiguous" + the gold question until the dialogue holds an
   answer; refuse tasks: "unsafe" / "infeasible"), echoes translation prompts, and writes ``skill::input``
   programs for the direct planner (``llm_direct``) from the oracle's plan.
-* :class:`GoalPlanner`: a plug-in planner (``homeloop_bench.planners.robot_agent_fake:GoalPlanner``,
+* :class:`GoalPlanner`: a plug-in planner (``bench.suites.home.planners.robot_agent_fake:GoalPlanner``,
   loaded by name through robot_agent's registry) that plans the gold goals with the oracle from the current
   true world, as abstract steps (MoveTo, Find, Pick, ...).
 
@@ -18,8 +18,8 @@ from __future__ import annotations
 import json
 import re
 
-from homeloop_robot import oracle as _oracle
-from homeloop_robot.catalog import MESSAGE_TEXT
+from symbolic_robot.domains.home import oracle as _oracle
+from symbolic_robot.domains.home.catalog import MESSAGE_TEXT
 
 from ..gold_goals import _modes, _obj_name, _person_key, gold_goals, understand_goals  # noqa: F401  (moved there)
 

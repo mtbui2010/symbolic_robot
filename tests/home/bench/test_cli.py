@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 from fixtures import fixture_tasks, write_jsonl
-from homeloop_bench.cli import main
+from bench.suites.home.cli import main
 
 NAMES = ("oracle", "naive", "saycan_like", "inner_monologue_like", "progprompt_like", "knowno_like",
          "robot_agent:sage", "robot_agent:grace", "robot_agent:llm_direct")
@@ -19,7 +19,7 @@ def test_planners_listing(capsys):
 
 
 def test_listing_does_not_import_robot_agent():
-    code = ("import sys; from homeloop_bench.cli import main; main(['planners']); "
+    code = ("import sys; from bench.suites.home.cli import main; main(['planners']); "
             "print('RA' if 'robot_agent' in sys.modules else 'NO')")
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout
     assert out.strip().splitlines()[-1] == "NO"

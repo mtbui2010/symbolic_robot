@@ -22,14 +22,14 @@ from .textcheck import words
 
 @functools.lru_cache(maxsize=1)
 def _object_names() -> tuple:
-    from homeloop_robot.catalog import CLASSES, class_names
+    from symbolic_robot.domains.home.catalog import CLASSES, class_names
     names = {n for c in CLASSES for n in class_names(c, "ko") if n}
     return tuple(sorted(names, key=lambda s: (-len(s), s)))
 
 
 @functools.lru_cache(maxsize=None)
 def _place_names(house: str) -> frozenset:
-    from homeloop_robot.houses import load_house
+    from symbolic_robot.domains.home.houses import load_house
     h = load_house(house)
     out = set()
     for p in h.places.values():

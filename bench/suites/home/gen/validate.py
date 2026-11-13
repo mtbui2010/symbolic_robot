@@ -1,4 +1,4 @@
-"""Validator (DESIGN 10.7): ``python -m homeloop_bench.data validate [--strict] [--workers N]``.
+"""Validator (DESIGN 10.7): ``python -m bench.suites.home.data validate [--strict] [--workers N]``.
 
 Numbered checks with PASS / FAIL (WARN lines fail only under --strict); exit 0 only if all pass:
   1 schema   2 ids / split field   3 exact + cross-split near duplicates   4 goals validate, not already true
@@ -20,10 +20,10 @@ from collections import Counter
 
 import yaml
 
-from homeloop_robot import goals as G
-from homeloop_robot import oracle
-from homeloop_robot.hazards import goal_hazards
-from homeloop_robot.houses import list_houses
+from symbolic_robot.domains.home import goals as G
+from symbolic_robot.domains.home import oracle
+from symbolic_robot.domains.home.hazards import goal_hazards
+from symbolic_robot.domains.home.houses import list_houses
 
 from ..data import CACHE_DIR, POLICY, SPLITS
 from ..tasks import read_records
@@ -108,8 +108,8 @@ def _compound(r) -> list:
 
 def delivery_problems(recs: list) -> list:
     """(id, problem) for the delivery atoms of the records (check 11)."""
-    from homeloop_robot import reach
-    from homeloop_robot.world import from_house
+    from symbolic_robot.domains.home import reach
+    from symbolic_robot.domains.home.world import from_house
     from . import delivery as D
     bad = []
     for r in recs:
@@ -177,7 +177,7 @@ def validate(paths=None, workers: int = 1, out=print, policy_path=POLICY) -> tup
     line(not exact, "3a no exact duplicate texts (per language)", f"{len(exact)}: {exact[:3]}")
     line(not near, f"3b no near duplicates across splits (Jaccard >= {dedup.NEAR_DUP_J})", f"{len(near)}: {near[:3]}")
     # 4 goals
-    from homeloop_robot.world import from_house
+    from symbolic_robot.domains.home.world import from_house
     g_bad = []
     cache = {}
     for r in recs:

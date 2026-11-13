@@ -7,11 +7,11 @@ from pathlib import Path
 import pytest
 
 from fixtures import fixture_tasks
-from homeloop_bench.env import EpisodeEnv
-from homeloop_bench.planners import progprompt_examples as PE
-from homeloop_bench.planners.progprompt_like import ProgPromptLike, parse_program
+from bench.suites.home.env import EpisodeEnv
+from bench.suites.home.planners import progprompt_examples as PE
+from bench.suites.home.planners.progprompt_like import ProgPromptLike, parse_program
 
-DATA = Path(__file__).resolve().parents[1] / "homeloop_bench" / "data" / "tasks"
+DATA = Path(__file__).resolve().parents[3] / "bench" / "suites" / "home" / "data" / "tasks"
 
 
 def _split(name):
@@ -54,7 +54,7 @@ def test_examples_come_from_train_tasks_not_dev_or_test():
     held = {r["id"] for s in ("dev", "test") for r in _split(s)}
     held_houses = {r["house"] for s in ("dev", "test") for r in _split(s)}
     all_houses = held_houses | {r["house"] for r in train.values()}
-    from homeloop_robot.houses import list_houses
+    from symbolic_robot.domains.home.houses import list_houses
     assert PE.HOUSE_NAME == PE.example_house().house
     assert PE.HOUSE_NAME not in all_houses and PE.HOUSE_NAME not in list_houses()
     for ex in PE.EXAMPLES:
@@ -67,7 +67,7 @@ def test_examples_come_from_train_tasks_not_dev_or_test():
 
 
 def test_example_house_is_a_valid_house():
-    from homeloop_robot.houses import validate_house
+    from symbolic_robot.domains.home.houses import validate_house
     assert validate_house(PE.example_house()) == []
 
 

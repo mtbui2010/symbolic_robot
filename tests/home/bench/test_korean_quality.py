@@ -4,9 +4,9 @@ import re
 
 import pytest
 
-from homeloop_bench.gen.paraphrase import KO_WRITER, ko_banmal_end
-from homeloop_bench.gen.textcheck import sentences
-from homeloop_bench.tasks import read_records
+from bench.suites.home.gen.paraphrase import KO_WRITER, ko_banmal_end
+from bench.suites.home.gen.textcheck import sentences
+from bench.suites.home.tasks import read_records
 
 RECS = [r for s in ("train", "dev", "test") for r in read_records(s)]
 

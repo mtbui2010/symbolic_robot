@@ -1,4 +1,4 @@
-from homeloop_bench.gen.dedup import NearDupIndex, jaccard, near_dup_pairs, norm, shingles
+from bench.suites.home.gen.dedup import NearDupIndex, jaccard, near_dup_pairs, norm, shingles
 
 
 def test_norm():

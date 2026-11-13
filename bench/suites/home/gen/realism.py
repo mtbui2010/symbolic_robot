@@ -1,6 +1,6 @@
 """Realism rules R-a .. R-h on the task data (DESIGN 13.2; docs/realism.md).
 
-Robot-side rules (catalog R-a / R-d, houses R-b / R-c / R-h) come from ``homeloop_robot.realism``; this module adds
+Robot-side rules (catalog R-a / R-d, houses R-b / R-c / R-h) come from ``symbolic_robot.domains.home.realism``; this module adds
 the task-side checks: goal destinations (R-b, R-c), robot ability (R-d), activity provenance (R-e), kind
 semantics (R-f) and language (R-g). Refuse requests with a sourced hazard are intentional: the requested
 placement is never part of a goal, so it is reported under ``intentional`` and does not count as a violation.
@@ -10,11 +10,11 @@ from __future__ import annotations
 
 import re
 
-from homeloop_robot import goals as G
-from homeloop_robot import realism as RR
-from homeloop_robot.catalog import CLASSES
-from homeloop_robot.hazards import HAZARD_CODES, goal_hazards
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home import goals as G
+from symbolic_robot.domains.home import realism as RR
+from symbolic_robot.domains.home.catalog import CLASSES
+from symbolic_robot.domains.home.hazards import HAZARD_CODES, goal_hazards
+from symbolic_robot.domains.home.world import from_house
 
 from .dedup import norm
 from .lexicon import Lex
@@ -199,7 +199,7 @@ def report(records: list) -> dict:
     """The JSON report: per rule the violation count and up to 20 examples, plus intentional cases."""
     viol, inten = [], []
     viol += [dict(v, id=None) for v in RR.check_catalog()]
-    from homeloop_robot.houses import list_houses, load_house
+    from symbolic_robot.domains.home.houses import list_houses, load_house
     for h in list_houses():
         viol += [dict(v, id=None) for v in RR.check_house(load_house(h))]
     n_assumed_cond = 0

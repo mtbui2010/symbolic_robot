@@ -19,8 +19,8 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from homeloop_robot.rng import r6
-from homeloop_robot.types import _round_tree
+from symbolic_robot.domains.home.rng import r6
+from symbolic_robot.domains.home.types import _round_tree
 
 from .env import Budgets, EpisodeEnv, resolve_subtasks, task_dict
 from .llm import BudgetExceeded, LLMError, make_llm
@@ -61,7 +61,7 @@ def _class_index(world) -> dict:
     M2 (docs/understand_eval.md): the class id itself is a name ("snack" for a class whose names are "snack bag" and
     "chips"), and the head noun of a multi-word name ("soup" of "can of soup") is a name when no full name and no other
     class claims it. Both only ADD names a robot may use; a full name always wins."""
-    from homeloop_robot.catalog import CLASSES, class_names
+    from symbolic_robot.domains.home.catalog import CLASSES, class_names
     idx: dict = {}
     heads: dict = {}
     for cid in CLASSES:
@@ -86,7 +86,7 @@ def _class_index(world) -> dict:
 
 
 def _color_words() -> dict:
-    from homeloop_robot.catalog import COLORS
+    from symbolic_robot.domains.home.catalog import COLORS
     return {_words(v[lg]): c for c, v in COLORS.items() for lg in ("en", "ko") if v.get(lg)}
 
 
@@ -94,7 +94,7 @@ class Context:
     """What the common form needs of one episode's world (the start state): classes, colours, people, places."""
 
     def __init__(self, world):
-        from homeloop_robot.configs.tasks import env_for
+        from symbolic_robot.domains.home.configs.tasks import env_for
         self.world = world
         self.user = world.user_id()
         self.classes = _class_index(world)

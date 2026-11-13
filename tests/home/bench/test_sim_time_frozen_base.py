@@ -9,11 +9,11 @@ import pytest
 pytest.importorskip("robot_agent")
 
 from fixtures import fixture_tasks  # noqa: E402
-from homeloop_bench.planners import robot_agent_adapter as A  # noqa: E402
-from homeloop_bench.planners.robot_agent_adapter import SageGround2Planner, SimTime  # noqa: E402
-from homeloop_bench.runner import run_episode  # noqa: E402
-from homeloop_robot.episode import make_episode  # noqa: E402
-from homeloop_robot.types import FailureCode, FaultState  # noqa: E402
+from bench.suites.home.planners import robot_agent_adapter as A  # noqa: E402
+from bench.suites.home.planners.robot_agent_adapter import SageGround2Planner, SimTime  # noqa: E402
+from bench.suites.home.runner import run_episode  # noqa: E402
+from symbolic_robot.domains.home.episode import make_episode  # noqa: E402
+from symbolic_robot.domains.home.types import FailureCode, FaultState  # noqa: E402
 
 TASKS = {t["id"]: t for t in fixture_tasks()}
 

@@ -2,12 +2,12 @@ import json
 
 import yaml
 
-from homeloop_bench.gen.delivery import rewrite_all
-from homeloop_bench.gen.realism import report
-from homeloop_bench.gen.sample import Gen
-from homeloop_bench.gen.resplit import resplit
-from homeloop_bench.gen.split import assign_ids
-from homeloop_bench.gen.validate import validate
+from bench.suites.home.gen.delivery import rewrite_all
+from bench.suites.home.gen.realism import report
+from bench.suites.home.gen.sample import Gen
+from bench.suites.home.gen.resplit import resplit
+from bench.suites.home.gen.split import assign_ids
+from bench.suites.home.gen.validate import validate
 
 
 def test_small_generated_dataset_validates(tmp_path):

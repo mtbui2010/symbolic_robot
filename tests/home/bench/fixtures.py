@@ -9,12 +9,12 @@ from __future__ import annotations
 
 import json
 
-from homeloop_robot import from_house, goals as G, list_houses, oracle
-from homeloop_robot.rng import rng_for
-from homeloop_robot.selftest import random_goal
+from symbolic_robot.domains.home import from_house, goals as G, list_houses, oracle
+from symbolic_robot.domains.home.rng import rng_for
+from symbolic_robot.domains.home.selftest import random_goal
 
 def _obj_phrase(w, oid, lang):
-    from homeloop_robot.catalog import CLASSES, COLORS
+    from symbolic_robot.domains.home.catalog import CLASSES, COLORS
     o = w.objects[oid]
     n = CLASSES[o.cls].name[lang]
     col = o.attrs.get("color")
@@ -30,7 +30,7 @@ def _person_phrase(w, pid, lang):
 
 
 def _clause(w, a, lang):
-    from homeloop_robot.catalog import MESSAGE_TEXT
+    from symbolic_robot.domains.home.catalog import MESSAGE_TEXT
     p, args = a["pred"], a["args"]
     if lang == "en":
         if p == "on":

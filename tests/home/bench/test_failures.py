@@ -1,6 +1,6 @@
-"""Primary-cause rules of the failure analysis (homeloop_bench.failures, docs/experiments.md)."""
+"""Primary-cause rules of the failure analysis (bench.suites.home.failures, docs/experiments.md)."""
 
-from homeloop_bench.failures import CAUSES, analyse, cause
+from bench.suites.home.failures import CAUSES, analyse, cause
 
 
 def ep(**kw):

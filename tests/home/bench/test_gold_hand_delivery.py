@@ -9,10 +9,10 @@ import pytest
 
 pytest.importorskip("robot_agent")
 
-from homeloop_bench.env import EpisodeEnv  # noqa: E402
-from homeloop_bench.gold_goals import understand_goals  # noqa: E402
+from bench.suites.home.env import EpisodeEnv  # noqa: E402
+from bench.suites.home.gold_goals import understand_goals  # noqa: E402
 
-DEV = Path(__file__).resolve().parents[1] / "homeloop_bench" / "data" / "tasks" / "dev.jsonl"
+DEV = Path(__file__).resolve().parents[3] / "bench" / "suites" / "home" / "data" / "tasks" / "dev.jsonl"
 
 
 def _task(tid):

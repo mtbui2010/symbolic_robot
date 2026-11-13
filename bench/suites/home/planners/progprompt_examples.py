@@ -79,7 +79,7 @@ def examples_text() -> str:
 
 def example_house():
     import yaml
-    from homeloop_robot.houses import parse_house
+    from symbolic_robot.domains.home.houses import parse_house
     return parse_house(yaml.safe_load(HOUSE_FILE.read_text(encoding="utf-8")))
 
 
@@ -90,7 +90,7 @@ class ExampleEnv:
     def __init__(self, profile: str = "ideal", seed: int = 0):
         import types
 
-        from homeloop_robot.episode import make_episode
+        from symbolic_robot.domains.home.episode import make_episode
         ep = make_episode(example_house(), 0, profile, seed, lang="en", key="progprompt_example")
         self.world, self.robot = ep.world, ep.robot
         self.status = None
@@ -118,7 +118,7 @@ class ExampleEnv:
 
 def run_example(ex: dict, profile: str = "ideal") -> tuple:
     """(env, goal_holds) after running example ``ex`` with the planner's interpreter."""
-    from homeloop_robot.goals import evaluate
+    from symbolic_robot.domains.home.goals import evaluate
 
     from .progprompt_like import ProgPromptLike, parse_program
     env = ExampleEnv(profile)

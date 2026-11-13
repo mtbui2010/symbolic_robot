@@ -1,9 +1,9 @@
 """The simulated user's LLM intent classifier (R2-7a "C", homeloop_robot docs/user_model.md).
 
 A robot question with no structured meaning goes to the user model's rules first. Only when the rules do not
-understand it (``homeloop_robot.intent.NOT_CONFIDENT``) is this classifier asked: a deterministic LLM call
+understand it (``symbolic_robot.domains.home.intent.NOT_CONFIDENT``) is this classifier asked: a deterministic LLM call
 (temperature 0, seed 0, the fixed prompt below, JSON output) that maps the question onto the frozen qtype list
-(``homeloop_robot.intent.QTYPES``) plus slots. It only classifies; the answer always comes from the task script
+(``symbolic_robot.domains.home.intent.QTYPES``) plus slots. It only classifies; the answer always comes from the task script
 (``intent.answer_structured``).
 
 Classifications are cached per run in ``<out>/llm_cache/user_intent.jsonl`` (``llm.CachedLLM`` lines), so a
@@ -12,7 +12,7 @@ rerun gives the same episodes without the server. With no LLM (or ``--llm fake``
 
 CLI (the audit, docs/user_model.md "Accuracy audit")::
 
-    python -m homeloop_bench.user_intent interpret --questions Q.jsonl --out OUT.jsonl [--llm URL] [--model M]
+    python -m bench.suites.home.user_intent interpret --questions Q.jsonl --out OUT.jsonl [--llm URL] [--model M]
 
 reads ``{qid, lang, question, task_id, ...}`` lines and writes how the user simulator reads each question
 (path, qtype, rule) in that task's episode (profile ideal, seed 0).
@@ -27,7 +27,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from homeloop_robot.intent import QTYPES, clean
+from symbolic_robot.domains.home.intent import QTYPES, clean
 
 from .llm import CachedLLM, FakeLLM, LLMError, parse_json, shared_cache_path
 
@@ -160,7 +160,7 @@ def classifier_kind(llm_spec: Optional[str]) -> str:
 def interpret(rows: list, llm=None, profile: str = "ideal") -> list:
     """For each ``{qid, lang, question, task_id}``: the user simulator's reading (path, qtype, rule) in that
     task's episode. Answers' randomness is not used (the reading does not depend on it)."""
-    from homeloop_robot.dialog import GoalView
+    from symbolic_robot.domains.home.dialog import GoalView
 
     from .env import EpisodeEnv, task_dict
     from .tasks import load_split
@@ -191,7 +191,7 @@ def interpret(rows: list, llm=None, profile: str = "ideal") -> list:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog="python -m homeloop_bench.user_intent")
+    ap = argparse.ArgumentParser(prog="python -m bench.suites.home.user_intent")
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("interpret")
     p.add_argument("--questions", required=True)

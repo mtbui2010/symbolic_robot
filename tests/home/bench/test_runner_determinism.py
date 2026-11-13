@@ -3,7 +3,7 @@
 import json
 
 from fixtures import fixture_tasks
-from homeloop_bench.runner import read_episodes, run_many
+from bench.suites.home.runner import read_episodes, run_many
 
 TASKS = fixture_tasks()
 

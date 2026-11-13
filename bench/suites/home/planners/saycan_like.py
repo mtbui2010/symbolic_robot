@@ -9,7 +9,7 @@ deviation). The prompt carries the state only: no failure text and no replanning
 
 from __future__ import annotations
 
-from homeloop_robot.catalog import MESSAGE_TEXT
+from symbolic_robot.domains.home.catalog import MESSAGE_TEXT
 
 from ..env import Finish, ToolCall, give_up_text
 from .base import ask_json

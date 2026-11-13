@@ -14,11 +14,11 @@ from pathlib import Path
 
 import pytest
 
-from homeloop_bench.gen.dedup import jaccard, shingles
-from homeloop_bench.planners import REGISTRY, list_planners, planner_class
-from homeloop_bench.planners import progprompt_examples as PE
+from bench.suites.home.gen.dedup import jaccard, shingles
+from bench.suites.home.planners import REGISTRY, list_planners, planner_class
+from bench.suites.home.planners import progprompt_examples as PE
 
-DATA = Path(__file__).resolve().parents[1] / "homeloop_bench" / "data" / "tasks"
+DATA = Path(__file__).resolve().parents[3] / "bench" / "suites" / "home" / "data" / "tasks"
 MAX_J = 0.5
 
 
@@ -28,7 +28,7 @@ def _split(name):
 
 @pytest.fixture(scope="module")
 def pool():
-    from homeloop_bench.planners.robot_agent_adapter import seed_pool_path
+    from bench.suites.home.planners.robot_agent_adapter import seed_pool_path
     p = seed_pool_path()
     assert p is not None and p.is_file()
     return [json.loads(line) for line in p.read_text(encoding="utf-8").splitlines() if line.strip()]
@@ -54,7 +54,7 @@ def test_both_variants_listed_and_differ_only_in_the_pool():
 def test_run_config_records_variant_and_sha(pool):
     import hashlib
 
-    from homeloop_bench.planners.robot_agent_adapter import seed_pool_path
+    from bench.suites.home.planners.robot_agent_adapter import seed_pool_path
     ca, cb = planner_class("robot_agent:sage").run_config(), planner_class("robot_agent:sage_norag").run_config()
     assert ca["variant"] == "rag" and ca["seed_pool_n"] == len(pool)
     assert ca["seed_pool_sha"] == hashlib.sha256(seed_pool_path().read_bytes()).hexdigest()
@@ -68,7 +68,7 @@ def test_no_family_gen_id_template_or_house_shared(pool, held):
     gid = {t["meta"]["gen_id"] for t in held} | {t["id"] for t in held}
     tid = {t["template_id"] for t in held}
     houses = {t["house"] for t in held} | {t["house"] for t in _split("train")}
-    from homeloop_robot.houses import list_houses
+    from symbolic_robot.domains.home.houses import list_houses
     for e in pool:
         o = e["origin"]
         assert o["family"] not in fam and o["gen_id"] not in gid and o["template_id"] not in tid
@@ -97,12 +97,12 @@ def test_no_near_duplicate_text(pool, held, lang):
 def _run_plan(e):
     """The example's plan through the robot package's skill functions on the mock robot in example_flat (ideal):
     MoveTo / Place take the raw key as robot_agent's AssistLoop passes it, the other steps the adapter's bind."""
-    from homeloop_robot.configs import ra_skills
-    from homeloop_robot.configs.adapter import make_adapter
-    from homeloop_robot.configs.backend import reset_backend, set_backend
-    from homeloop_robot.configs.tasks import env_for
-    from homeloop_robot.episode import make_episode
-    from homeloop_robot.goals import evaluate
+    from symbolic_robot.domains.home.configs import ra_skills
+    from symbolic_robot.domains.home.configs.adapter import make_adapter
+    from symbolic_robot.domains.home.configs.backend import reset_backend, set_backend
+    from symbolic_robot.domains.home.configs.tasks import env_for
+    from symbolic_robot.domains.home.episode import make_episode
+    from symbolic_robot.domains.home.goals import evaluate
     ep = make_episode(PE.example_house(), 0, "ideal", 0, lang=e["lang"], key="seed-pool")
     set_backend(ep.robot)
     env = env_for(ep.world)
@@ -143,7 +143,7 @@ def test_every_example_solves_its_task(pool):
 
 @needs_ra
 def test_reach_delivery_examples_end_on_a_reachable_surface(pool):
-    from homeloop_robot.reach import delivered
+    from symbolic_robot.domains.home.reach import delivered
     for e in pool:
         for a in e["goal"]["all"]:
             if a.get("pred") == "delivered":
@@ -175,7 +175,7 @@ def _norm_goal(g, w):
 
 @pytest.fixture(scope="module")
 def held_goals(held):
-    from homeloop_robot.episode import make_episode
+    from symbolic_robot.domains.home.episode import make_episode
     worlds, goals, atoms = {}, {}, {}
     for t in held:
         if t["house"] not in worlds:
@@ -189,7 +189,7 @@ def held_goals(held):
 
 
 def _example_world():
-    from homeloop_robot.episode import make_episode
+    from symbolic_robot.domains.home.episode import make_episode
     return make_episode(PE.example_house(), 0, "ideal", 0).world
 
 
@@ -213,7 +213,7 @@ def test_no_seed_goal_is_a_dev_test_goal(pool, held_goals):
 
 
 def test_no_seed_say_text_is_a_dev_test_message(pool, held):
-    from homeloop_robot.catalog import MESSAGE_TEXT, MESSAGES, message_matches
+    from symbolic_robot.domains.home.catalog import MESSAGE_TEXT, MESSAGES, message_matches
     keys = {a["args"][1] for t in held for a in t["goal"].get("all") or [] if a.get("pred") == "said_to"}
     says = [(e["lang"], s["object"]) for e in pool for s in json.loads(e["plan_text"])["steps"]
             if s["action"] == "Say" and not e["goal"].get("refuse")]

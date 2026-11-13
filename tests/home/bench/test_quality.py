@@ -1,5 +1,5 @@
-from homeloop_bench.gen.quality import sample, score
-from homeloop_bench.tasks import read_records
+from bench.suites.home.gen.quality import sample, score
+from bench.suites.home.tasks import read_records
 
 
 def test_sample_is_stratified_and_large_enough():

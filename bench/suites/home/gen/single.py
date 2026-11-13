@@ -7,7 +7,7 @@ ending) are reserved for the test split.
 
 from __future__ import annotations
 
-from homeloop_robot.catalog import CLASSES, COLORS, place_category
+from symbolic_robot.domains.home.catalog import CLASSES, COLORS, place_category
 
 from . import templates_en as EN
 from . import templates_ko as KO

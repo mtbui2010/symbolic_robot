@@ -3,8 +3,8 @@
 import collections
 import re
 
-from homeloop_bench.gen.textcheck import LETTER_NAME, check_text
-from homeloop_bench.tasks import read_records
+from bench.suites.home.gen.textcheck import LETTER_NAME, check_text
+from bench.suites.home.tasks import read_records
 
 RECS = [r for s in ("train", "dev", "test") for r in read_records(s)]
 
@@ -28,7 +28,7 @@ def test_no_article_before_possessive():
 
 
 def test_microwave_refusals_come_with_a_related_second_task():
-    from homeloop_bench.gen.compound import MEAL_WITH
+    from bench.suites.home.gen.compound import MEAL_WITH
     rel = set(MEAL_WITH) | {"snack", "bread"}
     for r in RECS:
         if r["meta"]["family"] != "compound.mix_microwave_refuse":

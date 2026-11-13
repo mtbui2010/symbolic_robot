@@ -9,11 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from homeloop_bench.env import Budgets, EpisodeEnv, Finish
-from homeloop_bench.llm import BudgetExceeded, FakeLLM
-from homeloop_bench.metrics import summarize
+from bench.suites.home.env import Budgets, EpisodeEnv, Finish
+from bench.suites.home.llm import BudgetExceeded, FakeLLM
+from bench.suites.home.metrics import summarize
 
-DATA = Path(__file__).resolve().parents[1] / "homeloop_bench" / "data" / "tasks"
+DATA = Path(__file__).resolve().parents[3] / "bench" / "suites" / "home" / "data" / "tasks"
 
 
 def _task(tid, split="dev"):
@@ -50,7 +50,7 @@ def test_no_budget_hit_without_a_refused_call():
 
 def test_robot_agent_swallowed_budget_is_recorded():
     pytest.importorskip("robot_agent")
-    from homeloop_bench.runner import run_episode
+    from bench.suites.home.runner import run_episode
     e = run_episode(_task("hl-dev-000010"), "robot_agent:sage", "ideal", 0, "en", "fake",
                     Budgets(max_llm_calls=1))
     assert e["llm_calls"] == 1 and e["llm_budget_hit"] is True, (e["status"], e["llm_calls"])
@@ -62,9 +62,9 @@ def test_read_back_names_people_not_ids():
     pytest.importorskip("robot_agent")
     from robot_agent.core.planning.assist_loop import AssistLoop
 
-    from homeloop_robot.configs.tasks import env_for
-    from homeloop_robot.episode import make_episode
-    from homeloop_robot.houses import list_houses
+    from symbolic_robot.domains.home.configs.tasks import env_for
+    from symbolic_robot.domains.home.episode import make_episode
+    from symbolic_robot.domains.home.houses import list_houses
     for h in list_houses():
         w = make_episode(h, 0, "ideal", 0).world
         for k, e in env_for(w).items():
@@ -85,7 +85,7 @@ LOST_MESSAGE = {"hl-test-002020", "hl-test-002764"}
 
 
 def test_every_message_instruction_matches_its_key():
-    from homeloop_robot.catalog import message_matches
+    from symbolic_robot.domains.home.catalog import message_matches
     bad = []
     for split in ("dev", "test"):
         for line in (DATA / f"{split}.jsonl").open(encoding="utf-8"):
@@ -101,6 +101,6 @@ def test_every_message_instruction_matches_its_key():
 
 
 def test_pilot_message_said_by_sage_counts():
-    from homeloop_robot.catalog import message_matches
+    from symbolic_robot.domains.home.catalog import message_matches
     assert message_matches("leaving_soon", "10분 있다가 나간다고 합니다.", "ko")
     assert message_matches("leaving_soon", "We're leaving in ten minutes.", "en")

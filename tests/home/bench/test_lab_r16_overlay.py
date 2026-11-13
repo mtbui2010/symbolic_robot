@@ -4,8 +4,8 @@ import pytest
 
 pytest.importorskip("robot_agent")
 
-from homeloop_bench.planners import planner_class  # noqa: E402
-from homeloop_bench.planners import robot_agent_adapter as A  # noqa: E402
+from bench.suites.home.planners import planner_class  # noqa: E402
+from bench.suites.home.planners import robot_agent_adapter as A  # noqa: E402
 
 ROLES = {"put_down": "Place", "move": "MoveTo", "open": "Open", "close": "Close"}
 

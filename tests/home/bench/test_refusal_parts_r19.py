@@ -5,13 +5,13 @@ import json
 from pathlib import Path
 
 from fixtures import feasible_tasks, special_tasks
-from homeloop_bench import refusals as R
-from homeloop_bench.env import EpisodeEnv
-from homeloop_bench.metrics import summarize
-from homeloop_bench.planners.robot_agent_adapter import declared_refusals, note_declared_refusals
-from homeloop_bench.report import render
+from bench.suites.home import refusals as R
+from bench.suites.home.env import EpisodeEnv
+from bench.suites.home.metrics import summarize
+from bench.suites.home.planners.robot_agent_adapter import declared_refusals, note_declared_refusals
+from bench.suites.home.report import render
 
-DEV = Path(__file__).resolve().parent.parent / "homeloop_bench" / "data" / "tasks" / "dev.jsonl"
+DEV = Path(__file__).resolve().parents[3] / "bench" / "suites" / "home" / "data" / "tasks" / "dev.jsonl"
 GLASSES = {"all": [{"pred": "on", "args": ["glasses_1", "bookshelf@living"]}]}
 
 
@@ -20,7 +20,7 @@ def _t118():
 
 
 def _solve(env, goal):
-    from homeloop_robot import oracle
+    from symbolic_robot.domains.home import oracle
     for c in oracle.solve(env._world, goal):
         assert env.call(c.skill, **c.args)["ok"]
 
@@ -84,7 +84,7 @@ def test_a_place_or_a_person_alone_never_names_a_part():
 
 
 def test_a_name_in_any_catalog_language_names_the_object(monkeypatch):
-    from homeloop_robot import catalog
+    from symbolic_robot.domains.home import catalog
     cls = catalog.CLASSES["bleach"]
     monkeypatch.setitem(cls.name, "vi", "thuốc tẩy")
     assert "thuốc tẩy" in R.object_names("bleach")

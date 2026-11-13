@@ -12,12 +12,12 @@ from pathlib import Path
 
 import pytest
 
-from homeloop_bench.env import EpisodeEnv, raw_ids
-from homeloop_bench.metrics import summarize
-from homeloop_bench.tasks import task_by_id
+from bench.suites.home.env import EpisodeEnv, raw_ids
+from bench.suites.home.metrics import summarize
+from bench.suites.home.tasks import task_by_id
 
 DELIVERY = "hl-dev-000010"
-DEV = Path(__file__).resolve().parents[1] / "homeloop_bench" / "data" / "tasks" / "dev.jsonl"
+DEV = Path(__file__).resolve().parents[3] / "bench" / "suites" / "home" / "data" / "tasks" / "dev.jsonl"
 
 
 def _finish(lang, status, say):
@@ -85,8 +85,8 @@ def test_robot_agent_ko_episode_ends_in_korean(monkeypatch):
     """The real AssistLoop (robot_agent:sage, --llm fake) on a KO message task: the done narration is Korean."""
     pytest.importorskip("robot_agent")
     import ko_fake_translation
-    from homeloop_bench.runner import run_episode
-    from homeloop_robot.world import from_house
+    from bench.suites.home.runner import run_episode
+    from symbolic_robot.domains.home.world import from_house
     t = next(json.loads(line) for line in DEV.open(encoding="utf-8") if '"id":"hl-dev-000040"' in line)
     ko_fake_translation.install(monkeypatch, from_house(t["house"], int(t.get("seed_state") or 0)))
     e = run_episode(t, "robot_agent:sage", "ideal", 0, "ko", "fake")

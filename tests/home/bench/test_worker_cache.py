@@ -6,8 +6,8 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from fixtures import fixture_tasks
-from homeloop_bench.llm import FakeLLM
-from homeloop_bench.runner import run_many
+from bench.suites.home.llm import FakeLLM
+from bench.suites.home.runner import run_many
 
 TASKS = fixture_tasks()
 

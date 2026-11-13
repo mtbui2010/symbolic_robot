@@ -1,4 +1,4 @@
-from homeloop_bench.gen import paraphrase as P
+from bench.suites.home.gen import paraphrase as P
 
 REC_EN = {"id": "hl-dev-000001", "split": "dev", "n_subtasks": 1, "structure": "single",
           "text": {"en": "Could you bring me the red mug from the counter?", "ko": "조리대에 있는 빨간 머그컵 좀 갖다줄래요?"},
@@ -115,7 +115,7 @@ class _Fake:
 
 
 def test_korean_rounds_accept_only_filtered_and_judged(monkeypatch):
-    from homeloop_bench.gen.dedup import NearDupIndex
+    from bench.suites.home.gen.dedup import NearDupIndex
     monkeypatch.setattr(P, "realism_ok", lambda rec, lang, text: [])   # REC_KO has no world
     seen = {"en": {"x"}, "ko": {"y"}}
     writer = _Fake({"para_ko2": "수건 좀 남편에게 가져다줄 수 있을까요?"})
@@ -131,14 +131,14 @@ def test_korean_rounds_accept_only_filtered_and_judged(monkeypatch):
 
 
 def test_realism_filter_rejects_a_broken_self_correction():
-    from homeloop_bench.tasks import read_records
+    from bench.suites.home.tasks import read_records
     rec = next(r for r in read_records("dev") if r["structure"] == "correction"
                and any("first" in (s.get("correction") or {}) for s in r["subtasks"]))
     tpl = (rec["meta"].get("template_text") or rec["text"])
     assert P.realism_ok(dict(rec, text=dict(tpl)), "en", tpl["en"]) == []
     c = next(s["correction"] for s in rec["subtasks"] if "first" in (s.get("correction") or {}))
-    from homeloop_bench.gen.realism import world
-    from homeloop_bench.gen.lexicon import Lex
+    from bench.suites.home.gen.realism import world
+    from bench.suites.home.gen.lexicon import Lex
     lex = Lex(world(rec))
     broken = tpl["en"].replace(lex.color(c["first"], "en"), "@@").replace(lex.color(c["final"], "en"),
                                                                             lex.color(c["first"], "en")).replace("@@", lex.color(c["final"], "en"))

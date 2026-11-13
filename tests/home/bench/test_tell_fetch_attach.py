@@ -8,14 +8,14 @@ import random
 
 import pytest
 
-from homeloop_robot.houses import list_houses
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home.houses import list_houses
+from symbolic_robot.domains.home.world import from_house
 
-from homeloop_bench.gen import compound as CP
-from homeloop_bench.gen import paraphrase as PP
-from homeloop_bench.gen.attach import FAMILIES, attach_problem, message_before_fetch
-from homeloop_bench.gen.lexicon import Lex
-from homeloop_bench.tasks import read_records
+from bench.suites.home.gen import compound as CP
+from bench.suites.home.gen import paraphrase as PP
+from bench.suites.home.gen.attach import FAMILIES, attach_problem, message_before_fetch
+from bench.suites.home.gen.lexicon import Lex
+from bench.suites.home.tasks import read_records
 
 
 def _fake(subs_tell_first=True, family="compound.tell_fetch"):
@@ -75,7 +75,7 @@ def test_every_tell_fetch_task_in_the_data_keeps_the_fetch_apart(split):
         for lg in ("en", "ko"):
             assert attach_problem(r, lg) is None, (r["id"], lg, r["source_by_lang"][lg], r["text"][lg])
             # the text still has a message verb, so the check judged something
-            from homeloop_bench.gen.attach import TELL
+            from bench.suites.home.gen.attach import TELL
             assert TELL[lg].search(r["text"][lg]), (r["id"], lg, r["text"][lg])
         assert r["meta"].get("tellfix")                               # re-rendered through the generator (data tellfix)
         for lg in ("en", "ko"):                                       # template_text follows paraphrases

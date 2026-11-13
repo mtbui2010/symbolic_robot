@@ -2,7 +2,7 @@
 
 import math
 
-from homeloop_bench.metrics import (binom_two_sided, failure_events, help_correct, mcnemar, percentile,
+from bench.suites.home.metrics import (binom_two_sided, failure_events, help_correct, mcnemar, percentile,
                                     summarize, wilson)
 
 REQUIRED = ("success", "success_ci95", "goal_condition_success", "false_success", "recovery_rate_by_code",

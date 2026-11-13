@@ -14,9 +14,9 @@ pytest.importorskip("robot_agent")
 from robot_agent.core.planning.assist_loop import Places  # noqa: E402
 from robot_agent.core.planning.understand import place_mentions  # noqa: E402
 
-from homeloop_bench.data import DATA_DIR  # noqa: E402
-from homeloop_robot.configs.tasks import env_for  # noqa: E402
-from homeloop_robot.world import from_house  # noqa: E402
+from bench.suites.home.data import DATA_DIR  # noqa: E402
+from symbolic_robot.domains.home.configs.tasks import env_for  # noqa: E402
+from symbolic_robot.domains.home.world import from_house  # noqa: E402
 
 
 def test_people_are_mentioned_only_by_their_names():

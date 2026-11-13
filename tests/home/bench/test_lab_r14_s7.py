@@ -6,7 +6,7 @@ import pytest
 pytest.importorskip("robot_agent")
 
 from fixtures import fixture_tasks  # noqa: E402
-from homeloop_bench.planners import REGISTRY, planner_class  # noqa: E402
+from bench.suites.home.planners import REGISTRY, planner_class  # noqa: E402
 
 
 def test_registered():
@@ -31,7 +31,7 @@ def test_s6_and_the_older_variants_record_no_round_14_flag():
 
 @pytest.mark.parametrize("lang", ["en", "ko"])
 def test_s7_episodes_under_fake_match_s6_when_nothing_is_refused_or_missed(tmp_path, lang):
-    from homeloop_bench.runner import run_many
+    from bench.suites.home.runner import run_many
     tasks = fixture_tasks()[:3]
     out = {}
     for n in ("robot_agent:sage_s6", "robot_agent:sage_s7"):

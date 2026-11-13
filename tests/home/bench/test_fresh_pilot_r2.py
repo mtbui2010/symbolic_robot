@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from homeloop_bench.env import Budgets, EpisodeEnv
-from homeloop_bench.failures import cause
-from homeloop_bench.llm import BudgetExceeded, FakeLLM
+from bench.suites.home.env import Budgets, EpisodeEnv
+from bench.suites.home.failures import cause
+from bench.suites.home.llm import BudgetExceeded, FakeLLM
 
-DATA = Path(__file__).resolve().parents[1] / "homeloop_bench" / "data" / "tasks"
+DATA = Path(__file__).resolve().parents[3] / "bench" / "suites" / "home" / "data" / "tasks"
 
 
 def _task(tid, split="dev"):
@@ -69,8 +69,8 @@ def test_give_up_after_the_llm_budget_without_a_fault_is_the_budget():
 @pytest.mark.parametrize("lang", ["en", "ko"])
 def test_naive_give_up_is_said_in_the_users_language_without_raw_ids(lang):
     # naive hl-dev-000060 (profile real, seed 0): the glasses are not where it looks ("glasses_1 not found")
-    from homeloop_bench.env import give_up_text
-    from homeloop_bench.runner import run_episode
+    from bench.suites.home.env import give_up_text
+    from bench.suites.home.runner import run_episode
     e = run_episode(_task("hl-dev-000060"), "naive", "real", 0, lang, None, Budgets())
     assert e["status"] == "give_up", e["status"]
     assert e["final_say"] == give_up_text(lang)
@@ -118,7 +118,7 @@ def test_persistent_fault_before_the_llm_budget_ran_out_is_still_the_budget():
 def test_say_text_not_in_the_users_language_is_counted(text, lang, bad):
     # sage_norag KO hl-dev-000057 k=5: Say {'lang': 'en', 'text': "It's time to sleep"} to the Korean child; only the
     # English last message was counted in dialog_not_in_lang
-    from homeloop_bench.metrics import summarize
+    from bench.suites.home.metrics import summarize
     env = EpisodeEnv(_task("hl-dev-000057"), "ideal", 0, "ko", Budgets())
     env.call("say", text=text, lang=lang)
     env.call("announce", text="이제 잘 시간이에요", lang="ko")

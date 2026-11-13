@@ -2,9 +2,11 @@
 
 from pathlib import Path
 
-from homeloop_bench.tasks import read_records
+from bench.suites.home.tasks import read_records
 
-ROOT = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[3]
+ROOT = REPO / "bench" / "suites" / "home"          # LICENSE-DATA, NOTICE
+DOCS = REPO / "docs" / "home" / "bench"           # README.md (the benchmark's own), datasheet.md
 
 
 def _exaone(split):
@@ -23,7 +25,7 @@ def test_exaone_part_and_training_warning():
     n_train = _exaone("train")
     assert f"{n_train:,}" in part3
     assert f"{n_train + _exaone('dev') + _exaone('test'):,}" in part3
-    for f in ("README.md", "NOTICE", "docs/datasheet.md"):
-        t = (ROOT / f).read_text(encoding="utf-8")
+    for f in (DOCS / "README.md", ROOT / "NOTICE", DOCS / "datasheet.md"):
+        t = f.read_text(encoding="utf-8")
         assert "fine-tun" in t and ("improve" in t or "develop" in t), f
         assert str(n_train) in t.replace(",", ""), f

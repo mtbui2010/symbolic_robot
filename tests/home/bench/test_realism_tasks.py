@@ -1,8 +1,8 @@
 import copy
 
-from homeloop_bench.gen.realism import check_record, report
-from homeloop_bench.gen.textcheck import check_text
-from homeloop_bench.tasks import read_records
+from bench.suites.home.gen.realism import check_record, report
+from bench.suites.home.gen.textcheck import check_text
+from bench.suites.home.tasks import read_records
 
 
 def test_shipped_sample_passes():

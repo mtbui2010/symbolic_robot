@@ -1,7 +1,7 @@
 """D1 bench-side retry: RobotProxy repeats only safe skills on transient failures, attempts counts the first call."""
 import types
-from homeloop_bench.planners.robot_agent_adapter import RobotProxy, SageS8nD1Planner, SageS8nPlanner
-from homeloop_robot.types import FailureCode, SkillResult
+from bench.suites.home.planners.robot_agent_adapter import RobotProxy, SageS8nD1Planner, SageS8nPlanner
+from symbolic_robot.domains.home.types import FailureCode, SkillResult
 
 
 def _proxy(codes, attempts):
@@ -48,7 +48,7 @@ def test_variant_setup_is_declared_and_base_unchanged():
 
 
 def test_d1_confirms_a_sighting_that_followed_a_miss_base_unchanged():
-    from homeloop_bench.planners.robot_agent_adapter import SageS8nFtD1Planner, SageS8nFtPlanner
+    from bench.suites.home.planners.robot_agent_adapter import SageS8nFtD1Planner, SageS8nFtPlanner
     for d1, base in ((SageS8nD1Planner, SageS8nPlanner), (SageS8nFtD1Planner, SageS8nFtPlanner)):
         assert d1.loop_options["confirm_look"] == "1" and "confirm_look" not in base.loop_options
         assert d1.run_config()["loop_options"]["confirm_look"] == "1"        # recorded in the run config

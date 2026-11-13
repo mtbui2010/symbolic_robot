@@ -1,4 +1,4 @@
-"""``python -m homeloop_bench.data {generate,paraphrase,validate,stats,realism,quality}`` (docs/generation.md).
+"""``python -m bench.suites.home.data {generate,paraphrase,validate,stats,realism,quality}`` (docs/generation.md).
 
 generate    build the template tasks and write data/tasks/{train,dev,test}.jsonl
 paraphrase  LLM paraphrases (local Ollama on GPU 0 via tools/llm_gpu0.sh; cached, resumable)
@@ -147,7 +147,7 @@ def cmd_quality(a):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(prog="python -m homeloop_bench.data")
+    ap = argparse.ArgumentParser(prog="python -m bench.suites.home.data")
     sub = ap.add_subparsers(dest="cmd", required=True)
     g = sub.add_parser("generate")
     g.add_argument("--gen-seed", type=int, default=2026)

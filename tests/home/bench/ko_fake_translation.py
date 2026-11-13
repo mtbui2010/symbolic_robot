@@ -12,13 +12,13 @@ HEAD_RX = re.compile(r"^Translate into natural[^\n]*Korean[^\n]*Output only the 
 
 
 def _place(world, key: str) -> str:
-    from homeloop_robot import dialog as D
+    from symbolic_robot.domains.home import dialog as D
     key = key.strip().replace(" in the ", "@")
     return D.place_name(world, key, "ko") if world is not None and key in world.house.places else key
 
 
 def _person(world, pid: str) -> str:
-    from homeloop_robot import dialog as D
+    from symbolic_robot.domains.home import dialog as D
     return D.person_name(world, pid, "ko") if world is not None and pid in world.people else pid
 
 
@@ -55,7 +55,7 @@ def translate(text: str, world=None) -> str:
 def install(monkeypatch, world=None):
     """Answer robot_agent's translation requests with :func:`translate` (``world``: the house, for its Korean
     place and person names)."""
-    from homeloop_bench.planners import robot_agent_fake as fk
+    from bench.suites.home.planners import robot_agent_fake as fk
     chat = fk.FakeUnderstandLLM.chat
 
     def tr_chat(self, prompt="", format=None, **kw):

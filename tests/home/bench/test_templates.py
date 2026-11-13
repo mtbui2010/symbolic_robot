@@ -1,16 +1,16 @@
 import random
 import re
 
-from homeloop_robot.houses import list_houses
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home.houses import list_houses
+from symbolic_robot.domains.home.world import from_house
 
-from homeloop_bench.gen import compound as CP
-from homeloop_bench.gen import families as F
-from homeloop_bench.gen import templates_en as EN
-from homeloop_bench.gen import templates_ko as KO
-from homeloop_bench.gen.single import render
-from homeloop_bench.gen.lexicon import Lex
-from homeloop_bench.gen.textcheck import check_text
+from bench.suites.home.gen import compound as CP
+from bench.suites.home.gen import families as F
+from bench.suites.home.gen import templates_en as EN
+from bench.suites.home.gen import templates_ko as KO
+from bench.suites.home.gen.single import render
+from bench.suites.home.gen.lexicon import Lex
+from bench.suites.home.gen.textcheck import check_text
 
 FORMS = ("q", "q2", "q3", "imp", "imp2", "and", "and2", "seq", "after")
 

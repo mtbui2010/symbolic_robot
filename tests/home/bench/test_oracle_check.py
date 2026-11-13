@@ -1,5 +1,5 @@
-from homeloop_bench.gen.oracle_check import completion_times, order_ok, run_shim
-from homeloop_bench.tasks import load_split
+from bench.suites.home.gen.oracle_check import completion_times, order_ok, run_shim
+from bench.suites.home.tasks import load_split
 
 
 def test_completion_and_order():

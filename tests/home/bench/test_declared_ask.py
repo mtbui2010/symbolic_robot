@@ -6,7 +6,7 @@ import pytest
 
 pytest.importorskip("robot_agent")
 
-from homeloop_bench.planners.robot_agent_adapter import declared_meaning, structured_asks  # noqa: E402
+from bench.suites.home.planners.robot_agent_adapter import declared_meaning, structured_asks  # noqa: E402
 from robot_agent.core.planning import speech  # noqa: E402
 
 

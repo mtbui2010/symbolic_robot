@@ -1,6 +1,6 @@
 """Lab round 3, H3: the ``tell_fetch`` family ("tell P <message> and bring me X") is rendered with the fetch clause in
 its own sentence (``compound.EN_TELLFETCH`` / ``KO_TELLFETCH``), so the robot's fetch cannot be read as part of the
-message. ``python -m homeloop_bench.data tellfix`` re-renders the template text of the train and dev tasks of the family
+message. ``python -m bench.suites.home.data tellfix`` re-renders the template text of the train and dev tasks of the family
 through the generator's own ``compound.render`` (same house, seed_state, goals, request wrapper nn), keeps the dock
 and explicit-hand sentences the later steps appended, and resets the record to template text; ``paraphrase
 --tellfix`` then redoes the LLM paraphrases of exactly those records (its EN judge asks the attachment question).
@@ -15,8 +15,8 @@ from __future__ import annotations
 import copy
 import re
 
-from homeloop_robot.rng import rng_for
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home.rng import rng_for
+from symbolic_robot.domains.home.world import from_house
 
 from . import compound as CP
 from .attach import FAMILIES, attach_problem
@@ -35,7 +35,7 @@ def _gid(r):
 
 def _tails(text: str, lang: str) -> tuple:
     """(core, [tail sentences]) of a template text: trailing sentences that are the dock sentence or ask for a hand."""
-    from homeloop_robot import reach
+    from symbolic_robot.domains.home import reach
     dock = {tidy(s) for s in (CP.DOCK_EN if lang == "en" else CP.DOCK_KO)}
     sents = sentences(text)
     tails = []

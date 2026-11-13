@@ -3,7 +3,7 @@
 
 robot_agent is imported inside functions only, so the planner listing works without it. Per episode:
 
-1. ``homeloop_robot.configs.backend.set_backend(proxy)``: the proxy's ``call`` goes through
+1. ``symbolic_robot.domains.home.configs.backend.set_backend(proxy)``: the proxy's ``call`` goes through
    ``env.call`` (budgets, the call log and interruptions apply), so the robot package's own skill
    functions (``configs/ra_skills.py``) are what robot_agent executes.
 2. The module-level hooks robot_agent's own tests replace (``state.current``, ``assist_loop.current`` /
@@ -33,11 +33,11 @@ from ..env import MOTION, STOP_TEXT
 from ..llm import BudgetExceeded, CountingLLM, FakeLLM
 
 MAX_EVENTS = 2000
-FAKE_GENERATOR = "homeloop_bench.planners.robot_agent_fake:GoalPlanner"
+FAKE_GENERATOR = "bench.suites.home.planners.robot_agent_fake:GoalPlanner"
 
 
 class RobotProxy:
-    """What ``homeloop_robot.configs.backend`` hands the skill functions: the episode's robot behind
+    """What ``symbolic_robot.domains.home.configs.backend`` hands the skill functions: the episode's robot behind
     ``env.call``."""
 
     # Bench-only retry (variants with ``skill_attempts`` > 1; default 1 = a single call, as before). ``attempts`` counts the first call.
@@ -68,7 +68,7 @@ class RobotProxy:
         return code in self.RETRY_CODES      # "absent" is an answer, not a fault: never repeated (a repeat would be a second look)
 
     def _call_once(self, skill: str, **args):
-        from homeloop_robot.types import FailureCode, SkillResult
+        from symbolic_robot.domains.home.types import FailureCode, SkillResult
         if skill == "ask" and self.meaning is not None and "meaning" not in args:
             args = {**args, "meaning": dict(self.meaning)}
         r = self.env.call(skill, **args)
@@ -123,7 +123,7 @@ class HomeloopRegistry:
     function by name."""
 
     def __init__(self):
-        self.ra = importlib.import_module("homeloop_robot.configs.ra_skills")
+        self.ra = importlib.import_module("symbolic_robot.domains.home.configs.ra_skills")
 
     def execute(self, skill, params, node=None, log_fn=None):
         fn = getattr(self.ra, skill, None)
@@ -150,7 +150,7 @@ class FakeState:
 
     def __init__(self, common_dir, node):
         from robot_agent.core.planning.base import WorldState
-        self.robot_pkg = "homeloop_robot"
+        self.robot_pkg = "symbolic_robot.domains.home"
         self.common_dir = str(common_dir)
         self.world = WorldState()
         self.dm = types.SimpleNamespace(_ros_node=node)
@@ -289,10 +289,10 @@ def declared_meaning(question) -> dict | None:
 def structured_asks(loop, proxy) -> bool:
     """Give the AssistLoop's questions their structured form (homeloop_robot docs/user_model.md): wrap
     ``_ask_io`` on this loop instance (robot_agent is not changed). It receives the English question before
-    robot_agent translates it (``_in_lang``); ``homeloop_robot.configs.ra_dialog.derive`` maps it onto SAGE's
+    robot_agent translates it (``_in_lang``); ``symbolic_robot.domains.home.configs.ra_dialog.derive`` maps it onto SAGE's
     template and its slots, which the proxy attaches to the Ask skill's ``ask`` call. False = the loop has no
     ``_ask_io`` (ClosedLoop): its questions stay free text (rules, then the classifier)."""
-    from homeloop_robot.configs.ra_dialog import derive
+    from symbolic_robot.domains.home.configs.ra_dialog import derive
     orig = getattr(loop, "_ask_io", None)
     if orig is None:
         return False
@@ -489,8 +489,8 @@ def manifest_planner() -> dict:
     """The homeloop robot package's manifest ``planner:`` section (read without robot_agent)."""
     import yaml
 
-    import homeloop_robot
-    path = Path(homeloop_robot.__file__).resolve().parent / "configs" / "manifest.yaml"
+    import symbolic_robot.domains.home
+    path = Path(symbolic_robot.domains.home.__file__).resolve().parent / "configs" / "manifest.yaml"
     return (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("planner") or {}
 
 
@@ -498,24 +498,24 @@ def seed_pool_path():
     """The homeloop robot package's seed pool (its manifest's ``planner.seed_memory``), None without one."""
     import yaml
 
-    import homeloop_robot
-    MANIFEST_PATH = Path(homeloop_robot.__file__).resolve().parent / "configs" / "manifest.yaml"   # no robot_agent
+    import symbolic_robot.domains.home
+    MANIFEST_PATH = Path(symbolic_robot.domains.home.__file__).resolve().parent / "configs" / "manifest.yaml"   # no robot_agent
     rel = ((yaml.safe_load(MANIFEST_PATH.read_text(encoding="utf-8")) or {}).get("planner") or {}).get("seed_memory")
     return (MANIFEST_PATH.parent / rel).resolve() if rel else None
 
 
 def seed_pool_info() -> dict:
-    """{seed_pool: path relative to the homeloop_robot package, seed_pool_sha: sha256 of the file, seed_pool_n}."""
+    """{seed_pool: path relative to the repository root, seed_pool_sha: sha256 of the file, seed_pool_n}."""
     import hashlib
 
-    import homeloop_robot
+    import symbolic_robot.domains.home
     p = seed_pool_path()
     if p is None or not p.is_file():
         return {"seed_pool": None, "seed_pool_sha": None, "seed_pool_n": 0}
     data = p.read_bytes()
-    root = Path(homeloop_robot.__file__).resolve().parent
+    root = Path(symbolic_robot.domains.home.__file__).resolve().parent
     try:
-        rel = str(p.relative_to(root.parent))
+        rel = str(p.relative_to(root.parents[2]))        # symbolic_robot/domains/home/planner/... (the repository root is the base)
     except ValueError:
         rel = p.name
     return {"seed_pool": rel, "seed_pool_sha": hashlib.sha256(data).hexdigest(),
@@ -538,7 +538,7 @@ def seed_memory(env, path) -> int:
     Returns the number of names written."""
     from robot_agent.core.planning.assist_loop import words
 
-    from homeloop_robot.catalog import COLORS, class_names
+    from symbolic_robot.domains.home.catalog import COLORS, class_names
     places: dict = {}
     who: dict = {}                      # name -> ids of the objects it can mean
     for o in env.object_memory():
@@ -745,8 +745,8 @@ class _RobotAgentPlanner:
         from robot_agent.core import run_control
         from robot_agent.interact.run_manager import reset_manager
 
-        from homeloop_robot.configs import backend as hb
-        from homeloop_robot.configs.tasks import env_for
+        from symbolic_robot.domains.home.configs import backend as hb
+        from symbolic_robot.domains.home.configs.tasks import env_for
 
         from . import robot_agent_fake as fk
 
@@ -1296,7 +1296,7 @@ class SageS6dPlanner(SagePlanner):
 
 class SageGoldPlanner(SagePlanner):
     """DIAGNOSTIC, PRIVILEGED: ``robot_agent:sage`` that does not understand the request. The task's gold goals, converted
-    to robot_agent goals (``homeloop_bench.gold_goals``: no source location, the robot searches), are handed to
+    to robot_agent goals (``bench.suites.home.gold_goals``: no source location, the robot searches), are handed to
     robot_agent, whose option ``accept_goals`` is on and which then skips its understand step. It measures what is left
     after understanding: plan, gate, search, recovery and the dialogue about the unknowns that remain. Never a headline
     planner; mark it privileged in every table. A task with no gold goal to give (a request to refuse) is understood as

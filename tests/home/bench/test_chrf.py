@@ -1,4 +1,4 @@
-from homeloop_bench.gen.chrf import chrf
+from bench.suites.home.gen.chrf import chrf
 
 
 def test_identical_and_disjoint():

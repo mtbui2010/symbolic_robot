@@ -9,10 +9,10 @@
 """
 import pytest
 
-from homeloop_bench.env import EpisodeEnv, raw_ids
-from homeloop_bench.metrics import summarize
-from homeloop_bench.runner import run_episode
-from homeloop_bench.tasks import task_by_id
+from bench.suites.home.env import EpisodeEnv, raw_ids
+from bench.suites.home.metrics import summarize
+from bench.suites.home.runner import run_episode
+from bench.suites.home.tasks import task_by_id
 
 READ_BACK = ('I am not sure I understood (the you you mentioned is not in my plan). I will put the green book from the '
              'kids_desk in the kids on the coffee_table in the living, then say "It\'s time for bed, kid." in the kid. '

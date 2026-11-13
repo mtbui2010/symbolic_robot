@@ -4,17 +4,17 @@ Each ``opts_<family>(lex)`` yields Option dicts for one world (house + arrangeme
   {"fam", "capability", "kind", "ambiguity", "goal", "atoms" (for the clause), "user" (clarify / interrupt info),
    "refuse_reason", "requested", "hazards", "key"}
 Only goals a person would really ask for: object classes are restricted per family, destinations must be typical
-receptacles of the class (homeloop_robot.realism.placement_ok, R-b / R-c), objects must be liftable (R-d),
+receptacles of the class (symbolic_robot.domains.home.realism.placement_ok, R-b / R-c), objects must be liftable (R-d),
 feasible / clarify goals must be hazard-free and solvable by the oracle, and refuse goals need a sourced hazard.
 """
 
 from __future__ import annotations
 
-from homeloop_robot import goals as G
-from homeloop_robot import oracle
-from homeloop_robot.catalog import CLASSES, REALISM, place_category
-from homeloop_robot.hazards import goal_hazards
-from homeloop_robot.realism import placement_ok
+from symbolic_robot.domains.home import goals as G
+from symbolic_robot.domains.home import oracle
+from symbolic_robot.domains.home.catalog import CLASSES, REALISM, place_category
+from symbolic_robot.domains.home.hazards import goal_hazards
+from symbolic_robot.domains.home.realism import placement_ok
 
 from .lexicon import PEOPLE, Lex
 

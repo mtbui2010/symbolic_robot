@@ -5,10 +5,10 @@ import pytest
 
 pytest.importorskip("robot_agent")
 
-from homeloop_bench.planners.robot_agent_adapter import HEALTH_WAIT_S, SimTime  # noqa: E402
-from homeloop_robot.episode import make_episode  # noqa: E402
-from homeloop_robot.types import FailureCode  # noqa: E402
-from homeloop_robot.types import FaultState  # noqa: E402
+from bench.suites.home.planners.robot_agent_adapter import HEALTH_WAIT_S, SimTime  # noqa: E402
+from symbolic_robot.domains.home.episode import make_episode  # noqa: E402
+from symbolic_robot.domains.home.types import FailureCode  # noqa: E402
+from symbolic_robot.domains.home.types import FaultState  # noqa: E402
 
 
 def _camera_down(ep, p_clear=1.0):

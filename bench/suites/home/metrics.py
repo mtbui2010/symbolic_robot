@@ -10,7 +10,7 @@ import math
 import re
 from typing import Optional
 
-from homeloop_robot.rng import r6
+from symbolic_robot.domains.home.rng import r6
 
 from . import refusals as refusals_mod
 

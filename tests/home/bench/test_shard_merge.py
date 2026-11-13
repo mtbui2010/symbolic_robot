@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from homeloop_bench.runner import MergeError, merge_shards, run_many
+from bench.suites.home.runner import MergeError, merge_shards, run_many
 
 
 def _run(planner, out, shard=None, lang="en"):

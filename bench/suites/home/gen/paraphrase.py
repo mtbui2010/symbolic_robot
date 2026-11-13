@@ -35,9 +35,9 @@ import urllib.request
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 
-from homeloop_robot.catalog import CLASSES, COLORS
-from homeloop_robot.houses import list_houses, load_house
-from homeloop_robot.rng import derive_seed
+from symbolic_robot.domains.home.catalog import CLASSES, COLORS
+from symbolic_robot.domains.home.houses import list_houses, load_house
+from symbolic_robot.domains.home.rng import derive_seed
 
 from ..data import CACHE_DIR, QUALITY_DIR, SPLITS, TASKS_DIR
 from .attach import FAMILIES as ATTACH_FAMILIES

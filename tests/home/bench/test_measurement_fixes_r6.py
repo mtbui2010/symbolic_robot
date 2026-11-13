@@ -10,11 +10,11 @@ from pathlib import Path
 
 import pytest
 
-from homeloop_bench import cli
-from homeloop_bench.env import Budgets, EpisodeEnv
-from homeloop_bench.runner import StaleTasksError, aa_compare, load_tasks, run_many, stale_records
+from bench.suites.home import cli
+from bench.suites.home.env import Budgets, EpisodeEnv
+from bench.suites.home.runner import StaleTasksError, aa_compare, load_tasks, run_many, stale_records
 
-DATA = Path(__file__).resolve().parents[1] / "homeloop_bench" / "data" / "tasks"
+DATA = Path(__file__).resolve().parents[3] / "bench" / "suites" / "home" / "data" / "tasks"
 
 
 def _rec(tid, split="dev"):
@@ -120,7 +120,7 @@ def test_a_persistent_fault_on_the_last_budgeted_call_stays_give_up():
 
 def test_the_object_memory_names_the_instance_so_synonyms_are_one_candidate(tmp_path):
     pytest.importorskip("robot_agent")
-    from homeloop_bench.planners.robot_agent_adapter import seed_memory
+    from bench.suites.home.planners.robot_agent_adapter import seed_memory
     from robot_agent.core.planning import goal_fix
     env = EpisodeEnv(_rec("hl-dev-000014"), "real", 0, "en", Budgets())
     f = tmp_path / "mem.json"
@@ -136,7 +136,7 @@ def test_the_object_memory_names_the_instance_so_synonyms_are_one_candidate(tmp_
 
 def test_a_record_of_a_name_shared_by_two_objects_has_no_instance(tmp_path):
     pytest.importorskip("robot_agent")
-    from homeloop_bench.planners.robot_agent_adapter import seed_memory
+    from bench.suites.home.planners.robot_agent_adapter import seed_memory
     env = EpisodeEnv(_rec("hl-dev-000003"), "real", 0, "en", Budgets())
     f = tmp_path / "mem.json"
     seed_memory(env, f)
@@ -218,8 +218,8 @@ def test_replicates_have_their_own_shared_cache_and_aa_check_passes(tmp_path, se
 
 
 def test_the_user_intent_classifier_reads_the_shared_cache(tmp_path, monkeypatch):
-    from homeloop_bench import user_intent
-    from homeloop_bench.llm import CachedLLM
+    from bench.suites.home import user_intent
+    from bench.suites.home.llm import CachedLLM
 
     class Raw:
         model = "m:1"

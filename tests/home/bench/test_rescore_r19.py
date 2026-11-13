@@ -6,9 +6,9 @@ import json
 import pytest
 
 from fixtures import feasible_tasks, write_jsonl
-from homeloop_bench import rescore as RS
-from homeloop_bench.llm import CachedLLM, CacheMiss, NoServer, cache_key, make_llm
-from homeloop_bench.runner import run_episode, run_many
+from bench.suites.home import rescore as RS
+from bench.suites.home.llm import CachedLLM, CacheMiss, NoServer, cache_key, make_llm
+from bench.suites.home.runner import run_episode, run_many
 
 
 def test_no_server_raises_cache_miss_and_the_cache_answers_a_hit(tmp_path):

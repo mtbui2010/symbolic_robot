@@ -5,7 +5,7 @@ import random
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools" / "lora"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "bench" / "suites" / "home" / "tools" / "lora"))
 
 import text_noise as TN  # noqa: E402
 import understand_labels as UL  # noqa: E402

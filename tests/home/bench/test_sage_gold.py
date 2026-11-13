@@ -7,10 +7,10 @@ import pytest
 pytest.importorskip("robot_agent")
 
 from fixtures import fixture_tasks  # noqa: E402
-from homeloop_bench.env import EpisodeEnv  # noqa: E402
-from homeloop_bench.gold_goals import understand_goals  # noqa: E402
-from homeloop_bench.planners import REGISTRY, make_planner, planner_class  # noqa: E402
-from homeloop_bench.runner import run_episode  # noqa: E402
+from bench.suites.home.env import EpisodeEnv  # noqa: E402
+from bench.suites.home.gold_goals import understand_goals  # noqa: E402
+from bench.suites.home.planners import REGISTRY, make_planner, planner_class  # noqa: E402
+from bench.suites.home.runner import run_episode  # noqa: E402
 
 TASKS = {t["id"]: t for t in fixture_tasks()}
 
@@ -53,7 +53,7 @@ def test_clarify_is_not_asked_and_a_refusal_is_understood_as_usual():
 
 
 def test_korean_and_a_room_goal_run():
-    from homeloop_bench.tasks import load_split
+    from bench.suites.home.tasks import load_split
     anyg = next(t for t in load_split("dev") if any("any" in a for a in t.goal["all"]) and t.kind == "feasible"
                 and t.n_subtasks == 1)
     for lang in ("en", "ko"):

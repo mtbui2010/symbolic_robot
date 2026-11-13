@@ -1,6 +1,6 @@
 """Oracle feasibility check of one task (validator rule 5; DESIGN 13.2).
 
-When the bench runner is importable (``homeloop_bench.runner.run_episode``) the validator uses it: the ``oracle``
+When the bench runner is importable (``bench.suites.home.runner.run_episode``) the validator uses it: the ``oracle``
 planner, profile ``ideal``, seed 0. Otherwise this local shim runs the same judge with the same mechanics:
 ``make_episode`` + ``oracle.solve`` re-solved from the true world after every call, the task's scripted
 interruption armed on the robot, ordered subtasks done in their order, and the order constraints checked on the
@@ -13,11 +13,11 @@ Order pair [a, b]: completion(a) <= completion(b).
 
 from __future__ import annotations
 
-from homeloop_robot import goals as G
-from homeloop_robot import oracle
-from homeloop_robot.episode import make_episode
-from homeloop_robot.rng import derive_seed
-from homeloop_robot.types import UserEvent
+from symbolic_robot.domains.home import goals as G
+from symbolic_robot.domains.home import oracle
+from symbolic_robot.domains.home.episode import make_episode
+from symbolic_robot.domains.home.rng import derive_seed
+from symbolic_robot.domains.home.types import UserEvent
 
 MAX_CALLS = 60
 
@@ -121,8 +121,8 @@ def run_shim(task: dict, lang: str = "en", seed: int = 0, profile: str = "ideal"
 def run(task: dict, lang: str = "en") -> dict:
     """Use the bench runner when it exists, else the shim."""
     try:
-        from homeloop_bench.runner import run_episode  # noqa: F401
-        from homeloop_bench.tasks import Task
+        from bench.suites.home.runner import run_episode  # noqa: F401
+        from bench.suites.home.tasks import Task
     except ImportError:
         return run_shim(task, lang)
     try:

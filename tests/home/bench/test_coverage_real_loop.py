@@ -9,9 +9,9 @@ pytest.importorskip("robot_agent")
 rc = pytest.importorskip("robot_agent.core.planning.request_coverage")
 
 from fixtures import fixture_tasks  # noqa: E402
-from homeloop_bench.planners import robot_agent_fake as F  # noqa: E402
-from homeloop_bench.planners.robot_agent_adapter import UNSTICK_OVERLAY, SageGround2Planner, SagePlanner  # noqa: E402
-from homeloop_bench.runner import run_episode  # noqa: E402
+from bench.suites.home.planners import robot_agent_fake as F  # noqa: E402
+from bench.suites.home.planners.robot_agent_adapter import UNSTICK_OVERLAY, SageGround2Planner, SagePlanner  # noqa: E402
+from bench.suites.home.runner import run_episode  # noqa: E402
 
 TASKS = {t["id"]: t for t in fixture_tasks()}
 

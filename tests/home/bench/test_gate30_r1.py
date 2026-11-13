@@ -8,10 +8,10 @@ import pytest
 pytest.importorskip("robot_agent")
 
 from fixtures import fixture_tasks  # noqa: E402
-from homeloop_bench.metrics import summarize  # noqa: E402
-from homeloop_bench.planners import robot_agent_adapter as ad  # noqa: E402
-from homeloop_bench.planners.robot_agent_fake import GoalPlanner  # noqa: E402
-from homeloop_bench.runner import run_episode  # noqa: E402
+from bench.suites.home.metrics import summarize  # noqa: E402
+from bench.suites.home.planners import robot_agent_adapter as ad  # noqa: E402
+from bench.suites.home.planners.robot_agent_fake import GoalPlanner  # noqa: E402
+from bench.suites.home.runner import run_episode  # noqa: E402
 
 TASKS = {t["id"]: t for t in fixture_tasks()}
 
@@ -62,11 +62,11 @@ def test_008_person_spot_refresh_reaches_robot_agents_own_copy_of_the_env(monkey
 
     from robot_agent.core.planning.assist_loop import Places
 
-    from homeloop_bench.env import EpisodeEnv
-    from homeloop_bench.runner import load_tasks
-    from homeloop_robot.configs import backend as hb
-    from homeloop_robot.configs import ra_skills
-    from homeloop_robot.configs.tasks import env_for, person_key
+    from bench.suites.home.env import EpisodeEnv
+    from bench.suites.home.runner import load_tasks
+    from symbolic_robot.domains.home.configs import backend as hb
+    from symbolic_robot.domains.home.configs import ra_skills
+    from symbolic_robot.domains.home.configs.tasks import env_for, person_key
 
     task = next(t for t in load_tasks("dev", 30, None) if (t["id"] if isinstance(t, dict) else t.id) == "hl-dev-000008")
     env = EpisodeEnv(task, "ideal", 0, "en")

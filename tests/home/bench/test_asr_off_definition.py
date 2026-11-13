@@ -7,10 +7,10 @@ import random
 import re
 from pathlib import Path
 
-from homeloop_robot.asr import ASRRates, corrupt
-from homeloop_robot.profiles import load_profile
+from symbolic_robot.domains.home.asr import ASRRates, corrupt
+from symbolic_robot.domains.home.profiles import load_profile
 
-DOC = Path(__file__).resolve().parents[1] / "docs" / "experiments.md"
+DOC = Path(__file__).resolve().parents[3] / "docs" / "home" / "bench" / "experiments.md"
 FOUR = {"asr.en.app_wer", "asr.ko.app_cer", "asr.p_partial", "asr.p_not_heard"}
 EN = "could you please bring the red mug from the kitchen counter to grandma in the living room"
 KO = "부엌 조리대에 있는 빨간 머그컵을 거실에 계신 할머니께 가져다 주세요"

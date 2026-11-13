@@ -1,7 +1,7 @@
 """Privileged planners choose a delivery mode from the words the user said, not from the ASR output."""
 from types import SimpleNamespace as NS
 
-from homeloop_bench.planners.oracle import heard_text
+from bench.suites.home.planners.oracle import heard_text
 
 
 def _env(said, heard, events=()):

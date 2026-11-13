@@ -5,13 +5,13 @@ import json
 import pytest
 
 from fixtures import fixture_tasks
-from homeloop_bench.env import EpisodeEnv
-from homeloop_bench.llm import CountingLLM, FakeLLM, parse_json
-from homeloop_bench.planners import make_planner
-from homeloop_bench.planners.knowno_like import prediction_set
-from homeloop_bench.planners.progprompt_like import parse_program
-from homeloop_bench.planners.saycan_like import AffordanceBelief, options
-from homeloop_bench.runner import run_episode
+from bench.suites.home.env import EpisodeEnv
+from bench.suites.home.llm import CountingLLM, FakeLLM, parse_json
+from bench.suites.home.planners import make_planner
+from bench.suites.home.planners.knowno_like import prediction_set
+from bench.suites.home.planners.progprompt_like import parse_program
+from bench.suites.home.planners.saycan_like import AffordanceBelief, options
+from bench.suites.home.runner import run_episode
 
 TASKS = fixture_tasks()
 LLM_PLANNERS = ("saycan_like", "inner_monologue_like", "progprompt_like", "knowno_like")
@@ -68,7 +68,7 @@ def test_unparsable_answers_give_up_after_two_repairs():
 def test_llm_budget_is_enforced():
     t = TASKS[0]
     e = run_episode(t, "inner_monologue_like", "ideal", 0, "en", "fake",
-                    budgets=__import__("homeloop_bench.env", fromlist=["Budgets"]).Budgets(max_llm_calls=2))
+                    budgets=__import__("bench.suites.home.env", fromlist=["Budgets"]).Budgets(max_llm_calls=2))
     assert e["status"] == "budget" and e["llm_calls"] == 2
 
 
@@ -116,7 +116,7 @@ def test_fake_llm_is_deterministic_and_counted():
     env = EpisodeEnv(TASKS[0], "ideal", 0, "en", llm=FakeLLM())
     c = env.llm()
     assert isinstance(c, CountingLLM)
-    from homeloop_bench.planners.prompts import step_prompt
+    from bench.suites.home.planners.prompts import step_prompt
     p = step_prompt("inner_monologue", env.observe())
     a, b = c.chat(p), c.chat(p)
     assert a == b and env.llm_calls == 2 and "action" in json.loads(a)

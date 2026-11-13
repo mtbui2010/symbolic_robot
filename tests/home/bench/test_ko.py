@@ -1,4 +1,4 @@
-from homeloop_bench.gen.ko import final, josa
+from bench.suites.home.gen.ko import final, josa
 
 
 def test_josa_final_consonant():

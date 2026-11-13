@@ -6,7 +6,7 @@ the first few hundred dev tasks hold every kind and capability (the checker runs
 
 from __future__ import annotations
 
-from homeloop_robot.rng import rng_for
+from symbolic_robot.domains.home.rng import rng_for
 
 from . import compound as CP
 from . import templates_en as EN

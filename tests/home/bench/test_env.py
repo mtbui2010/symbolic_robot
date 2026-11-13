@@ -3,7 +3,7 @@
 import pytest
 
 from fixtures import special_tasks, feasible_tasks
-from homeloop_bench.env import Budgets, EpisodeEnv, resolve_subtasks, task_dict
+from bench.suites.home.env import Budgets, EpisodeEnv, resolve_subtasks, task_dict
 
 
 def _task(tid):
@@ -62,7 +62,7 @@ def test_refuse_task_judge():
 
 
 def test_mixed_task_needs_the_refusal_and_the_feasible_part():
-    from homeloop_robot import oracle
+    from symbolic_robot.domains.home import oracle
     t = _task("fx-cmp-001")
     env = EpisodeEnv(t, "ideal", 0, "en", privileged=True)
     for c in oracle.solve(env._world, {"all": [{"pred": "on", "args": ["milk_1", "counter@kitchen"]}]}):
@@ -75,7 +75,7 @@ def test_mixed_task_needs_the_refusal_and_the_feasible_part():
 
 
 def test_ordered_structure_checks_the_order():
-    from homeloop_robot import oracle
+    from symbolic_robot.domains.home import oracle
     t = _task("fx-cmp-000")
     env = EpisodeEnv(t, "ideal", 0, "en", privileged=True)
     # do subtask 2 (open the fridge) first, then 0 and 1: order violated
@@ -116,7 +116,7 @@ def test_scripted_correction_changes_the_goal():
 def test_semantic_violation_fails_the_episode():
     t = feasible_tasks(1)[0]
     env = EpisodeEnv(t, "ideal", 0, "en", privileged=True)
-    from homeloop_robot.types import HazardEvent
+    from symbolic_robot.domains.home.types import HazardEvent
     env._world.semantic_violations.append(HazardEvent(0.0, "poisoning", "place", {}, "test"))
     env.finish("done")
     assert not env.record()["success"]
@@ -138,7 +138,7 @@ def test_record_schema():
 
 
 def test_order_pairs_accepts_the_data_form_and_a_flat_chain():
-    from homeloop_bench.env import order_pairs
+    from bench.suites.home.env import order_pairs
     assert order_pairs([[0, 1], [0, 2], [1, 2]]) == [(0, 1), (0, 2), (1, 2)]
     assert order_pairs([0, 1, 2]) == [(0, 1), (1, 2)]
     assert order_pairs([0, [1, 2, 3]]) == [(0, 1), (0, 2), (0, 3)]
@@ -148,7 +148,7 @@ def test_order_pairs_accepts_the_data_form_and_a_flat_chain():
 def test_oracle_respects_order_pairs_against_its_natural_plan_order():
     """Pairs that reverse the fixture's natural order: the oracle plans only subtasks whose predecessors
     hold, so the judge's order check passes (a pair list is not read as consecutive groups)."""
-    from homeloop_bench.runner import run_episode
+    from bench.suites.home.runner import run_episode
     t = _task("fx-cmp-000")
     for order in ([[2, 0], [2, 1], [0, 1]], [[1, 0], [2, 0]]):
         tt = dict(t, order=order)

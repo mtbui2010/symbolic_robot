@@ -8,13 +8,13 @@ import json
 import pytest
 
 from fixtures import base
-from homeloop_bench.env import EpisodeEnv
-from homeloop_bench.gen import delivery as D
-from homeloop_bench.metrics import summarize
-from homeloop_bench.runner import run_episode
-from homeloop_bench.tasks import read_records
-from homeloop_robot import reach
-from homeloop_robot.world import from_house
+from bench.suites.home.env import EpisodeEnv
+from bench.suites.home.gen import delivery as D
+from bench.suites.home.metrics import summarize
+from bench.suites.home.runner import run_episode
+from bench.suites.home.tasks import read_records
+from symbolic_robot.domains.home import reach
+from symbolic_robot.domains.home.world import from_house
 
 H, SS = "senior_flat", 0           # grandma (the user) in the armchair; the side table is within her reach
 
@@ -153,7 +153,7 @@ def dev():
 
 
 def test_data_has_no_held_by_and_valid_labels(dev):
-    from homeloop_bench.gen.validate import delivery_problems
+    from bench.suites.home.gen.validate import delivery_problems
     assert delivery_problems(dev) == []
     n = sum(1 for r in dev for _, a in D.delivery_atoms(r))
     assert n > 300
@@ -272,7 +272,7 @@ def test_hands_full_is_not_a_handover_request(every):
 
 def test_no_surface_is_geometry_only(every):
     """no_surface = no support surface within reach at all; a full reachable surface stays a reach task."""
-    from homeloop_robot.world import from_house
+    from symbolic_robot.domains.home.world import from_house
     n_reach_full = 0
     for r in every["dev"]:
         w = from_house(r["house"], r["seed_state"])
@@ -297,8 +297,8 @@ def test_explicit_and_user_needs_in_every_split(every):
 
 
 def test_named_variant_names_the_object(every):
-    from homeloop_robot.world import from_house
-    from homeloop_bench.gen.lexicon import Lex
+    from symbolic_robot.domains.home.world import from_house
+    from bench.suites.home.gen.lexicon import Lex
     n = 0
     for r in every["dev"] + every["train"]:
         if (r["meta"].get("delivery") or {}).get("variant") != "append_named":

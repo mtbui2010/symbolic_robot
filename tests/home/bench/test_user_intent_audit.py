@@ -3,7 +3,7 @@ judges, 3-way disagreements left out and counted; the committed result reproduce
 cache without a server; the audit set is fixed."""
 import json
 
-from homeloop_bench import sim_user_audit as A
+from bench.suites.home import sim_user_audit as A
 
 
 def _judges(*labels):
@@ -38,7 +38,7 @@ def test_score_excludes_disagreements_and_checks_key_slots():
 
 
 def _world():
-    from homeloop_robot.episode import make_episode
+    from symbolic_robot.domains.home.episode import make_episode
     return make_episode("korean_apt_59", 0, "ideal", 0).world
 
 

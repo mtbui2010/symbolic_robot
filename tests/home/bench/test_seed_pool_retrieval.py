@@ -11,9 +11,9 @@ import pytest
 pytest.importorskip("robot_agent")
 pytest.importorskip("embodiplan")
 
-from homeloop_bench.planners.robot_agent_adapter import built_prompt, seed_pool_path  # noqa: E402
+from bench.suites.home.planners.robot_agent_adapter import built_prompt, seed_pool_path  # noqa: E402
 
-DEV = Path(__file__).resolve().parents[1] / "homeloop_bench" / "data" / "tasks" / "dev.jsonl"
+DEV = Path(__file__).resolve().parents[3] / "bench" / "suites" / "home" / "data" / "tasks" / "dev.jsonl"
 IDS = ("hl-dev-000003", "hl-dev-000017")
 BLOCK = re.compile(r"=== RETRIEVED EXAMPLE \d+ .*?(?==== )", re.S)
 

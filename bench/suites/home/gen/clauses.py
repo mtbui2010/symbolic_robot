@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from homeloop_robot.catalog import CLASSES, place_category
+from symbolic_robot.domains.home.catalog import CLASSES, place_category
 
 from . import templates_en as EN
 from . import templates_ko as KO

@@ -1,7 +1,7 @@
 """oracle / naive: the reference planner and its open-loop ablation (docs/planners.md)."""
 
 from fixtures import fixture_tasks
-from homeloop_bench.runner import run_episode
+from bench.suites.home.runner import run_episode
 
 TASKS = fixture_tasks()
 

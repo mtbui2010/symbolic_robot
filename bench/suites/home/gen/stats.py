@@ -1,4 +1,4 @@
-"""``python -m homeloop_bench.data stats [--json]`` (DESIGN 10.7, 14)."""
+"""``python -m bench.suites.home.data stats [--json]`` (DESIGN 10.7, 14)."""
 
 from __future__ import annotations
 

@@ -4,9 +4,9 @@ through the ask API a planner's meaning counts only when the question text says 
 language than the household's does not reach the listener."""
 import pytest
 
-from homeloop_bench.env import EpisodeEnv
-from homeloop_bench.tasks import task_by_id
-from homeloop_robot.configs.ra_dialog import derive
+from bench.suites.home.env import EpisodeEnv
+from bench.suites.home.tasks import task_by_id
+from symbolic_robot.domains.home.configs.ra_dialog import derive
 
 MILK = "hl-dev-000003"
 
@@ -49,7 +49,7 @@ def test_untranslated_question_in_a_korean_episode():
     env.finish("give_up")
     rec = env.record()
     assert rec["dialog_not_in_lang"] == 1 and rec["dialog_paths"] == {"rules": 1, "structured_mismatch": 1}
-    from homeloop_bench.metrics import summarize
+    from bench.suites.home.metrics import summarize
     assert summarize([rec], {})["dialog_not_in_lang"] == 1
 
 
@@ -57,8 +57,8 @@ def test_untranslated_question_in_a_korean_episode():
                                           ("en", "Dad, lunch is ready.", True)])
 def test_message_in_the_household_language(lang, text, ok):
     """KO hl-dev-000040 ("tell dad lunch is ready"): said in English in the Korean home, it does not tell dad."""
-    from homeloop_robot import goals as G
-    from homeloop_robot.types import Utterance
+    from symbolic_robot.domains.home import goals as G
+    from symbolic_robot.domains.home.types import Utterance
     env = EpisodeEnv(task_by_id("hl-dev-000040"), "ideal", 0, lang)
     w = env.ep.world
     w.utterances.append(Utterance(t=0.0, skill="say", text=text, lang="en" if text.startswith("Dad") else "ko",

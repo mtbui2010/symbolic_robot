@@ -1,24 +1,24 @@
 """``oracle``: the privileged closed-loop reference planner (docs/planners.md).
 
 Reads the TRUE world and the hidden goal. After every call it re-solves from the true state with
-``homeloop_robot.oracle.solve``; per (skill, args) at most 3 consecutive attempts; ``wait(5)`` before
+``symbolic_robot.domains.home.oracle.solve``; per (skill, args) at most 3 consecutive attempts; ``wait(5)`` before
 retrying perception_unavailable / blocked; an ``ask`` for help with a blocked path when the user can hear
 the robot (STRANDS-style human help), else a wait. The follow-up policy is
-``homeloop_robot.oracle.recovery_call``, shared with ``homeloop_robot.oracle.rollout``; before the last attempt of a
+``symbolic_robot.domains.home.oracle.recovery_call``, shared with ``symbolic_robot.domains.home.oracle.rollout``; before the last attempt of a
 move that stays blocked it backs off to the room's floor spot (or its start place) and comes another way. Clarify tasks: it asks the gold question once (for the help metrics) and then acts on the true
 intent. Refuse tasks: ``finish("refuse")``; mixed tasks: it declines the refuse part and does the rest.
 It finishes ``done`` only when the judge would score success, so its false-success rate is 0.
 
 Deliveries (docs/runner.md, "Delivery"): the oracle never reads an atom's ``mode`` label. It chooses reach or hand
 itself, once, from what a robot observes when it gets the request (:func:`observed_modes`: the instruction as the user said it,
-the house profile and the furniture around the person at the start, ``homeloop_robot.oracle.delivery_modes``), and
+the house profile and the furniture around the person at the start, ``symbolic_robot.domains.home.oracle.delivery_modes``), and
 for a correction's new deliveries with the correction's words added. In reach mode the robot oracle puts the
 object on the nearest reachable support surface with room where the person is now, else hands it over.
 """
 
 from __future__ import annotations
 
-from homeloop_robot import oracle as _oracle
+from symbolic_robot.domains.home import oracle as _oracle
 
 from ..env import STOP_TEXT
 from .base import give_up_text, refusal_text
@@ -36,7 +36,7 @@ def solve_target(env) -> dict:
     subs = env.subtasks
     use = [i for i, s in enumerate(subs) if s["kind"] != "refuse"]
     if env.order:
-        from homeloop_robot import goals as G
+        from symbolic_robot.domains.home import goals as G
         done = {i: G.evaluate(subs[i]["goal"], env.truth).holds for i in use}
         use = [i for i in use if all(done.get(a, True) for a, b in env.order if b == i)]
     atoms = []

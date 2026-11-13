@@ -1,8 +1,8 @@
 from collections import Counter
 
-from homeloop_bench.gen.stats import stats
-from homeloop_bench.gen.validate import _compound, _schema
-from homeloop_bench.tasks import load_split, read_records, task_by_id
+from bench.suites.home.gen.stats import stats
+from bench.suites.home.gen.validate import _compound, _schema
+from bench.suites.home.tasks import load_split, read_records, task_by_id
 
 SIZES = {"train": 6000, "dev": 1000, "test": 3000}
 
@@ -13,7 +13,7 @@ def _all():
 
 def test_split_sizes_and_ids():
     recs = _all()
-    from homeloop_bench.gen.resplit import RESPLIT_SIZES
+    from bench.suites.home.gen.resplit import RESPLIT_SIZES
     assert Counter(r["split"] for r in recs) == RESPLIT_SIZES
     assert len({r["id"] for r in recs}) == len(recs) == 10000
 

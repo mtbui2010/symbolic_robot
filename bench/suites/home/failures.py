@@ -1,4 +1,4 @@
-"""Primary cause of each failed episode (docs/experiments.md).   python -m homeloop_bench.failures DIR [--json]
+"""Primary cause of each failed episode (docs/experiments.md).   python -m bench.suites.home.failures DIR [--json]
 
 A rule-based reading of the episode record: the first rule that matches names the cause. It reads only the
 record (calls, goal atoms, status, the planner's final message and the ask replies), never the planner's
@@ -98,7 +98,7 @@ def analyse(episodes: list, examples: int = 5) -> dict:
 
 def main(argv=None) -> int:
     from .runner import read_episodes
-    ap = argparse.ArgumentParser(prog="python -m homeloop_bench.failures")
+    ap = argparse.ArgumentParser(prog="python -m bench.suites.home.failures")
     ap.add_argument("dirs", nargs="+")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--examples", type=int, default=5)

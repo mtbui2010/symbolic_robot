@@ -11,9 +11,9 @@ import pytest
 pytest.importorskip("robot_agent")
 pytest.importorskip("robot_agent.core.options")
 
-from homeloop_bench.gold_goals import understand_goals  # noqa: E402
-from homeloop_bench.planners import robot_agent_fake as F  # noqa: E402
-from homeloop_bench.runner import load_tasks, run_episode  # noqa: E402
+from bench.suites.home.gold_goals import understand_goals  # noqa: E402
+from bench.suites.home.planners import robot_agent_fake as F  # noqa: E402
+from bench.suites.home.runner import load_tasks, run_episode  # noqa: E402
 
 TASKS = {t.id: t for t in load_tasks("dev") if t.id in ("hl-dev-000118", "hl-dev-000319")}
 

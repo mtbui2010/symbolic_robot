@@ -8,14 +8,14 @@ import pytest
 pytest.importorskip("robot_agent")
 
 from fixtures import fixture_tasks  # noqa: E402
-from homeloop_bench.planners import robot_agent_adapter as A  # noqa: E402
-from homeloop_bench.runner import run_episode, run_many  # noqa: E402
+from bench.suites.home.planners import robot_agent_adapter as A  # noqa: E402
+from bench.suites.home.runner import run_episode, run_many  # noqa: E402
 
 TASKS = {t["id"]: t for t in fixture_tasks()}
 
 
 def test_run_config_records_every_loop_option():
-    from homeloop_bench.planners import planner_class
+    from bench.suites.home.planners import planner_class
     cfg = planner_class("robot_agent:sage_r3").run_config()
     assert cfg["loop_options"] == {"exec_integrity": "1", "go_steps": "1", "inventory_ask": "1", "kind_anchor": "1",
                                    "name_canon": "1"}
@@ -26,7 +26,7 @@ def test_run_config_records_every_loop_option():
 
 
 def test_run_config_records_the_wait_schedule():
-    from homeloop_bench.planners import planner_class
+    from bench.suites.home.planners import planner_class
     for name in ("robot_agent:sage_exec", "robot_agent:sage_ei_wait", "robot_agent:sage_r3"):
         ov = planner_class(name).run_config()["manifest_overlay"]
         assert ov["planner"]["recovery"]["wait"] == {"action": "Wait", "schedule_s": [2, 4, 8]} and ov["assumed"] is True
@@ -34,7 +34,7 @@ def test_run_config_records_the_wait_schedule():
 
 
 def test_reset_container_variants_declare_the_blocked_putin_remedy():
-    from homeloop_bench.planners import planner_class
+    from bench.suites.home.planners import planner_class
     for name in ("robot_agent:sage_exec", "robot_agent:sage_ei_reset", "robot_agent:sage_r3", "robot_agent:sage_r3u"):
         ov = planner_class(name).run_config()["manifest_overlay"]
         assert ov["planner"]["recovery"]["blocked_putin"] == ["Close", "Open"] and ov["assumed"] is True
@@ -112,7 +112,7 @@ def test_episode_has_lab_events_only_for_variants_with_options(tmp_path):
 
 
 def test_unstick_variant_is_registered_and_recorded():
-    from homeloop_bench.planners import planner_class
+    from bench.suites.home.planners import planner_class
     cfg = planner_class("robot_agent:sage_unstick").run_config()
     assert cfg["loop_options"] == {"dialog_unstick": "1"} and cfg["dialog_unstick"] == 1
 
@@ -123,7 +123,7 @@ def test_unstick_variant_runs_and_logs_nothing_on_a_clean_task():
 
 
 def test_sage_r3u_is_registered_and_is_sage_r3_plus_dialog_unstick():
-    from homeloop_bench.planners import REGISTRY, list_planners, planner_class
+    from bench.suites.home.planners import REGISTRY, list_planners, planner_class
     assert "robot_agent:sage_r3u" in REGISTRY
     assert "robot_agent:sage_r3u" in [n for n, _d, _ok in list_planners()]
     cfg = planner_class("robot_agent:sage_r3u").run_config()
@@ -139,7 +139,7 @@ def test_sage_r3u_is_registered_and_is_sage_r3_plus_dialog_unstick():
 
 
 def test_round7_variants_are_registered_and_each_adds_one_flag_to_the_previous():
-    from homeloop_bench.planners import REGISTRY, planner_class
+    from bench.suites.home.planners import REGISTRY, planner_class
     names = ["robot_agent:sage_ground2", "robot_agent:sage_u1", "robot_agent:sage_u2", "robot_agent:sage_u3", "robot_agent:sage_u"]
     assert all(n in REGISTRY for n in names) and "robot_agent:sage_r3u" in REGISTRY
     opts = [planner_class(n).run_config()["loop_options"] for n in names]

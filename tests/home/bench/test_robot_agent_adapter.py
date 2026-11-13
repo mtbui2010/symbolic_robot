@@ -8,7 +8,7 @@ import pytest
 pytest.importorskip("robot_agent")
 
 from fixtures import fixture_tasks  # noqa: E402
-from homeloop_bench.runner import run_episode, run_many  # noqa: E402
+from bench.suites.home.runner import run_episode, run_many  # noqa: E402
 
 TASKS = {t["id"]: t for t in fixture_tasks()}
 PICK = [TASKS["fx-feas-000"], TASKS["fx-clar-000"], TASKS["fx-ref-000"]]
@@ -47,7 +47,7 @@ def test_deterministic_summary(tmp_path):
 
 
 def test_backend_restored_after_episode():
-    from homeloop_robot.configs import backend as hb
+    from symbolic_robot.domains.home.configs import backend as hb
     before = hb._backend
     run_episode(TASKS["fx-feas-000"], "robot_agent:llm_direct", "ideal", 0, "en", "fake")
     assert hb._backend is before
@@ -60,8 +60,8 @@ def test_correction_is_injected_into_the_sage_run():
 
 
 def test_sage_object_memory_is_seeded_from_the_observed_memory(tmp_path):
-    from homeloop_bench.env import EpisodeEnv
-    from homeloop_bench.planners.robot_agent_adapter import seed_memory
+    from bench.suites.home.env import EpisodeEnv
+    from bench.suites.home.planners.robot_agent_adapter import seed_memory
     env = EpisodeEnv(TASKS["fx-feas-000"], "ideal", 0, "en")
     n = seed_memory(env, tmp_path / "mem.json")
     data = json.loads((tmp_path / "mem.json").read_text())
@@ -74,7 +74,7 @@ def test_sage_object_memory_is_seeded_from_the_observed_memory(tmp_path):
     # a class whose objects usually sit at different places is not remembered by its bare name
     for cls, ps in usual.items():
         if len(ps) > 1:
-            from homeloop_robot.catalog import CLASSES
+            from symbolic_robot.domains.home.catalog import CLASSES
             assert CLASSES[cls].name["en"].lower() not in data["objects"]
 
 

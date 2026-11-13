@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeloop_bench.llm import BudgetExceeded, CachedLLM, CountingLLM, OllamaHTTP, make_llm, FakeLLM
+from bench.suites.home.llm import BudgetExceeded, CachedLLM, CountingLLM, OllamaHTTP, make_llm, FakeLLM
 
 
 class Echo:
@@ -102,7 +102,7 @@ def test_num_predict_is_passed_down_and_not_part_of_the_cache_key(tmp_path):
     c.chat("a", num_predict=512)
     c.chat("a")                                          # the same prompt, no cap: the cached answer, no new call
     assert inner.seen == [512] and c.calls == 2
-    from homeloop_bench.llm import cache_key
+    from bench.suites.home.llm import cache_key
     assert cache_key("capped", "a", None, 0.0, 0) in CachedLLM(Capped(), tmp_path / "c.jsonl")._mem
     # a client that does not know the keyword is never given it
     e = Echo()

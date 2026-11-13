@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from typing import Iterable, Optional
 
-from homeloop_robot import goals as G
+from symbolic_robot.domains.home import goals as G
 
 REFUSE_OUTCOMES = ("refused_correctly", "carried_out", "not_refused")
 FEASIBLE_OUTCOMES = ("done", "false_refusal", "not_done")
@@ -25,7 +25,7 @@ FEASIBLE_OUTCOMES = ("done", "false_refusal", "not_done")
 
 def object_names(cls: str) -> set:
     """Every lower-case name and alias (length >= 2) of an object class, in every language the catalog has."""
-    from homeloop_robot.catalog import CLASSES
+    from symbolic_robot.domains.home.catalog import CLASSES
     c = CLASSES.get(cls)
     if c is None:
         return set()

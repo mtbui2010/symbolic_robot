@@ -1,10 +1,10 @@
 """Round 2 delivery rewrite (docs/tasks.md, "Delivery"): ``held_by`` -> ``delivered`` with a mode.
 
-``python -m homeloop_bench.data delivery`` rewrites the task files in place. It is deterministic and idempotent
+``python -m bench.suites.home.data delivery`` rewrites the task files in place. It is deterministic and idempotent
 (a second run changes nothing). Ids, splits and LLM-written texts are kept. Per record:
 
 1. **Within reach at the start.** A delivery whose object already rests on a support surface the person can
-   reach at the start (homeloop_robot.reach) asks for something the person can take themselves; it does not
+   reach at the start (symbolic_robot.domains.home.reach) asks for something the person can take themselves; it does not
    happen in real homes and its ``reach`` goal would hold before the robot moves. Such a task gets another
    arrangement of the same house (``seed_state``), searched in a fixed order:
    pass 1 keeps everyone's seat and every other object the task names where it was, and moves only the
@@ -23,7 +23,7 @@
    ``meta.delivery.variant`` names the variant; ``meta.template_text`` and ``length_words`` follow the text.
 3. **Labels.** Every ``held_by(o, p)`` atom (goal, subtasks, conditions, requested atoms, a correction's new goal,
    ``meta.requested_goal``) becomes ``{"pred": "delivered", "args": [o, p], "mode", "mode_reason"}``, labelled
-   the way a robot would choose from what it observes (``homeloop_robot.reach.choose_mode``) at the start state:
+   the way a robot would choose from what it observes (``symbolic_robot.domains.home.reach.choose_mode``) at the start state:
    ``explicit`` when the text in BOTH languages asks for the hand (``reach.wording_wants_hand``), else
    ``user_needs`` when the person's house profile says ``prefers_handover``, else ``no_surface`` when no support
    surface with room is within their reach, else ``reach``. A correction's new goal is labelled with the
@@ -41,9 +41,9 @@ import hashlib
 import re
 from collections import Counter
 
-from homeloop_robot import reach
-from homeloop_robot.catalog import CLASSES
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home import reach
+from symbolic_robot.domains.home.catalog import CLASSES
+from symbolic_robot.domains.home.world import from_house
 
 from .textcheck import words
 
@@ -174,7 +174,7 @@ def _branch_taken(r: dict, path, w) -> bool:
     node = r
     for k in path[:i + 1]:
         node = node[k]
-    from homeloop_robot import goals as G
+    from symbolic_robot.domains.home import goals as G
     return G.holds(node["if"], w) == (path[i + 1] == "then")
 
 
@@ -215,7 +215,7 @@ def reseed(r: dict, w):
     keep1 = named - probs
     recips = {p for _, p in delivery_atoms_args(r)}
     conds = _conditions(r)
-    from homeloop_robot import goals as G
+    from symbolic_robot.domains.home import goals as G
     passes = (2,) if any(_place_named(r, w, o) for o in probs) else (1, 2)
     for ps in passes:
         for k in range(RESEED_TRIES):
@@ -244,8 +244,8 @@ def reseed(r: dict, w):
 def _same_task(r: dict, w, w2) -> bool:
     """The task stays the same task in arrangement ``w2``: every subtask goal holds (or not) as before, and the
     oracle still solves the goal (so a moved object does not fill a place the task needs)."""
-    from homeloop_robot import goals as G
-    from homeloop_robot import oracle
+    from symbolic_robot.domains.home import goals as G
+    from symbolic_robot.domains.home import oracle
     for s in r.get("subtasks") or []:
         g = {"all": list((s.get("goal") or {}).get("all") or [])}
         if g["all"] and G.evaluate(g, w2).holds != G.evaluate(g, w).holds:
@@ -262,8 +262,8 @@ def _same_task(r: dict, w, w2) -> bool:
 def _ordered_solvable(r: dict, seed_state: int) -> bool:
     """Ordered subtasks: the oracle reaches the goals stage by stage (subtasks 0..k in index order) in an ideal
     run, as validate's oracle check does."""
-    from homeloop_robot import goals as G
-    from homeloop_robot import make_episode, oracle
+    from symbolic_robot.domains.home import goals as G
+    from symbolic_robot.domains.home import make_episode, oracle
     sim = make_episode(r["house"], int(seed_state), "ideal", 0, lang="en", user_impl="null", safety_impl="null")
     subs = r.get("subtasks") or []
     text = r["text"].get("en", "")
@@ -293,7 +293,7 @@ def _template_lang(r: dict, lg: str) -> bool:
 
 
 def _elder(person) -> bool:
-    from homeloop_robot.user import age_lower
+    from symbolic_robot.domains.home.user import age_lower
     lo = age_lower(getattr(person, "age_group", None))
     return lo is not None and lo >= 65
 

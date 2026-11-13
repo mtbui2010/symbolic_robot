@@ -5,8 +5,8 @@ import types
 
 import pytest
 
-from homeloop_bench.llm import BudgetExceeded, CachedLLM, CountingLLM
-from homeloop_bench.planners.robot_agent_adapter import _count_embodiplan, _patched
+from bench.suites.home.llm import BudgetExceeded, CachedLLM, CountingLLM
+from bench.suites.home.planners.robot_agent_adapter import _count_embodiplan, _patched
 
 embodiplan = pytest.importorskip("embodiplan")
 

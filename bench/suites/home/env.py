@@ -24,11 +24,11 @@ import re
 from dataclasses import asdict, dataclass, field, is_dataclass
 from typing import Optional
 
-from homeloop_robot import goals as G
-from homeloop_robot import make_episode
-from homeloop_robot.intent import in_lang as _in_lang
-from homeloop_robot.rng import derive_seed, r6
-from homeloop_robot.types import FailureCode, UserEvent
+from symbolic_robot.domains.home import goals as G
+from symbolic_robot.domains.home import make_episode
+from symbolic_robot.domains.home.intent import in_lang as _in_lang
+from symbolic_robot.domains.home.rng import derive_seed, r6
+from symbolic_robot.domains.home.types import FailureCode, UserEvent
 
 from . import refusals as R
 
@@ -112,7 +112,7 @@ class Observation:
     t: float
     calls_left: int
     time_left_s: float
-    # what the robot sees of each person now (homeloop_robot.reach.person_view): posture, place, room, walking,
+    # what the robot sees of each person now (symbolic_robot.domains.home.reach.person_view): posture, place, room, walking,
     # the house profile's prefers_handover and the furniture within 2 m (type, height, distance, free slots).
     # Never a task's delivery mode or a reach verdict (docs/runner.md).
     people_now: tuple = ()
@@ -122,7 +122,7 @@ class Observation:
         return render_observation(self)
 
 
-# ── task records (dicts from JSONL or homeloop_bench.tasks.Task objects) ──────────────────────────────────
+# ── task records (dicts from JSONL or bench.suites.home.tasks.Task objects) ──────────────────────────────────
 
 TASK_FIELDS = ("id", "split", "house", "seed_state", "text", "goal", "kind", "capability", "ambiguity", "source",
                "template_id", "refuse_reason", "hazards", "user", "expected", "meta", "subtasks", "n_subtasks",
@@ -265,7 +265,7 @@ class EpisodeEnv:
         self._llm_inner = llm
         self._llm = CountingLLM(llm, budgets.max_llm_calls) if llm is not None else None
         # the simulated user's intent classifier for free-text questions the rules do not understand
-        # (homeloop_bench.user_intent; None = rules only); its calls are the simulator's, not the planner's
+        # (bench.suites.home.user_intent; None = rules only); its calls are the simulator's, not the planner's
         from .user_intent import make_classifier
         self.user_classifier = make_classifier(llm)
         if self.user_classifier is not None and hasattr(self.user, "classifier"):
@@ -326,7 +326,7 @@ class EpisodeEnv:
 
     def people_now(self) -> tuple:
         """What the robot observes of each person now (see :attr:`Observation.people_now`)."""
-        from homeloop_robot.reach import person_view
+        from symbolic_robot.domains.home.reach import person_view
         w = self._world
         return tuple(person_view(w, pid) for pid in sorted(w.people))
 
@@ -338,7 +338,7 @@ class EpisodeEnv:
     def object_memory(self) -> list:
         """The object memory every planner observes: each object of the house with its usual place (the house
         default, so an object the task's start state moved is not where memory says)."""
-        from homeloop_robot.catalog import CLASSES
+        from symbolic_robot.domains.home.catalog import CLASSES
         mem = []
         for o in sorted(self._world.house.objects, key=lambda x: x.id):
             c = CLASSES.get(o.cls)

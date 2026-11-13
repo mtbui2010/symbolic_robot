@@ -11,11 +11,11 @@ from pathlib import Path
 import pytest
 
 from fixtures import fixture_tasks
-from homeloop_bench import cli, shared_cache as sc
-from homeloop_bench.llm import CachedLLM
+from bench.suites.home import cli, shared_cache as sc
+from bench.suites.home.llm import CachedLLM
 from test_shared_llm_cache import _Handler
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]          # the repository root
 
 
 class _Slow:
@@ -108,7 +108,7 @@ def test_a_dead_runs_registration_is_ignored_and_removed(tmp_path):
 
 HOLDER = """
 import sys
-from homeloop_bench import shared_cache as sc
+from bench.suites.home import shared_cache as sc
 sc.register_run(sys.argv[1], sys.argv[2] == "1", "other process")
 print("ready", flush=True)
 sys.stdin.read()
@@ -182,7 +182,7 @@ def test_aa_check_concurrent_on_a_cold_cache_requires_identical_episodes(tmp_pat
 
 
 def test_aa_compare_strict_counts_every_episode():
-    from homeloop_bench.runner import aa_compare
+    from bench.suites.home.runner import aa_compare
     a = [{"task_id": "t", "seed": 0, "n": 1, "llm_cache": {"misses": 3}}]
     b = [{"task_id": "t", "seed": 0, "n": 2, "llm_cache": {"misses": 3}}]
     assert aa_compare(a, b)["ok"] is False                                        # (nothing untouched: nothing verified)

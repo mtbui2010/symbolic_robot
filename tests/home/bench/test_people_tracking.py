@@ -11,10 +11,10 @@ from pathlib import Path
 import pytest
 
 from fixtures import base
-from homeloop_bench.planners import planner_class
-from homeloop_bench.runner import run_episode
+from bench.suites.home.planners import planner_class
+from bench.suites.home.runner import run_episode
 
-HB = Path(__file__).resolve().parents[1]
+HB = Path(__file__).resolve().parents[3] / "bench" / "suites" / "home"
 
 
 def _task(lang_text=("Bring me the red mug.", "빨간 머그컵 좀 저한테 가져다주세요.")):
@@ -48,7 +48,7 @@ def test_ask_then_map(lang):
     if lang == "ko":
         assert asks[0]["args"]["question"] == "지금 어디에 계세요?"            # the robot pack's phrase, no LLM
     places = [c["args"].get("target") for c in e["calls"] if c["skill"] == "place"]
-    seats = {pid for pid, p in __import__("homeloop_robot.world", fromlist=["from_house"]).from_house(
+    seats = {pid for pid, p in __import__("symbolic_robot.domains.home.world", fromlist=["from_house"]).from_house(
         "senior_flat", 0).house.places.items() if p.kind in ("seat", "floor")}
     assert not (set(places) & seats)                                            # never the seat itself
     assert e["success"] or any(c["skill"] == "handover" for c in e["calls"]), (e["status"], e["finish_reason"])
@@ -56,8 +56,8 @@ def test_ask_then_map(lang):
 
 def test_untracked_env_has_no_positions():
     pytest.importorskip("robot_agent")
-    from homeloop_robot.configs.tasks import env_for
-    from homeloop_robot.world import from_house
+    from symbolic_robot.domains.home.configs.tasks import env_for
+    from symbolic_robot.domains.home.world import from_house
     env = env_for(from_house("senior_flat", 0), people_tracking=planner_class("robot_agent:sage_ask").people_tracking)
     assert all("loc" not in v for v in env.values() if v.get("person"))
 

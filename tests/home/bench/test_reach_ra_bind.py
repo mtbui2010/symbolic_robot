@@ -16,15 +16,15 @@ import pytest
 
 pytest.importorskip("robot_agent")
 
-from homeloop_robot.catalog import CLASSES  # noqa: E402
-from homeloop_robot.configs.backend import reset_backend, set_backend  # noqa: E402
-from homeloop_robot.configs.tasks import RESERVED_USER_WORDS, SPEAKER_KEY, env_for, person_key  # noqa: E402
-from homeloop_robot.episode import make_episode  # noqa: E402
+from symbolic_robot.domains.home.catalog import CLASSES  # noqa: E402
+from symbolic_robot.domains.home.configs.backend import reset_backend, set_backend  # noqa: E402
+from symbolic_robot.domains.home.configs.tasks import RESERVED_USER_WORDS, SPEAKER_KEY, env_for, person_key  # noqa: E402
+from symbolic_robot.domains.home.episode import make_episode  # noqa: E402
 
-import homeloop_robot  # noqa: E402
+import symbolic_robot.domains.home  # noqa: E402
 
 HOUSES = sorted(os.path.basename(f)[:-5] for f in glob.glob(os.path.join(
-    os.path.dirname(homeloop_robot.__file__), "houses", "*.yaml")))
+    os.path.dirname(symbolic_robot.domains.home.__file__), "houses", "*.yaml")))
 
 
 @contextlib.contextmanager
@@ -34,7 +34,7 @@ def assist_loop(world, tmp_path):
     import robot_agent.core.planning.loop as LP
     import robot_agent.skill_configs as sc
     import robot_agent.state as state_mod
-    from homeloop_bench.planners.robot_agent_adapter import (FakeNode, FakeState, HomeloopRegistry, SagePlanner,
+    from bench.suites.home.planners.robot_agent_adapter import (FakeNode, FakeState, HomeloopRegistry, SagePlanner,
                                                              _patched)
     node = FakeNode()
     state = FakeState(tmp_path, node)
@@ -184,7 +184,7 @@ def test_reserved_person_alias_maps_back(house, tmp_path):
     try:
         with assist_loop(ep.world, tmp_path) as (loop, env):
             assert "user" not in env and "person_user" not in env and SPEAKER_KEY in env
-            from homeloop_robot.configs.adapter import make_adapter
+            from symbolic_robot.domains.home.configs.adapter import make_adapter
             ad = make_adapter()
             assert ad.bind({"action": "Handover", "object": SPEAKER_KEY}) == ("handover", {"inputs": "user"})
             oid = _hold_something(ep, loop, env)

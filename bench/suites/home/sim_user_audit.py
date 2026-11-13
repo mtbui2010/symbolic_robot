@@ -10,10 +10,10 @@ For each question the simulator's interpretation chain runs as in an episode of 
 seed 0; ``user.SimUser._content``):
 
 1. **structured**: the meaning the planner attaches, rebuilt from what the run had:
-   - ``robot_agent:sage``: ``homeloop_robot.configs.ra_dialog.derive`` of SAGE's English question before
+   - ``robot_agent:sage``: ``symbolic_robot.domains.home.configs.ra_dialog.derive`` of SAGE's English question before
      translation (the question itself in EN; ``context.robot_en`` in KO);
    - ``oracle``: ``planners.oracle.gold_meaning`` for its gold clarification question, ``{"qtype": "help"}``
-     for its help request (``homeloop_robot.oracle.HELP_QUESTION``);
+     for its help request (``symbolic_robot.domains.home.oracle.HELP_QUESTION``);
    - other planners: no meaning (free text);
 2. **rules** (``dialog.compose``);
 3. **llm**: the intent classifier (``user_intent.IntentClassifier``), only when the rules do not understand.
@@ -33,7 +33,7 @@ so it is left out of the accuracy and listed in ``untranslated_ko`` with the sim
 
 CLI::
 
-    python -m homeloop_bench.sim_user_audit [--set DIR] [--llm URL] [--model M] [--cache FILE] [--out FILE]
+    python -m bench.suites.home.sim_user_audit [--set DIR] [--llm URL] [--model M] [--cache FILE] [--out FILE]
 
 ``--cache`` (default ``DIR/user_intent_cache.jsonl``) holds the classifier's answers, so a rerun without the
 server gives the same result; with no ``--llm`` and no cache the chain is rules only.
@@ -47,7 +47,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parent                # bench/suites/home (the quality reports live in data/quality here)
 SET_DIR = ROOT / "data" / "quality" / "sim_user_audit"
 OUT = ROOT / "data" / "quality" / "sim_user_audit.json"
 KEY_SLOT = {"where_is": ("obj",), "did_you_mean": ("word",), "repeat": ("about",), "what_to_say": ("person",),
@@ -95,7 +95,7 @@ def _norm(s: str) -> str:
 
 
 def _ents(world, text: str) -> dict:
-    from homeloop_robot import intent as _intent
+    from symbolic_robot.domains.home import intent as _intent
     return _intent.entities(world, text)
 
 
@@ -148,7 +148,7 @@ def slot_match(sim: str, golds: list, world=None) -> bool:
         if a and b and (a == b or a in b or b in a):
             return True
     if world is not None:
-        from homeloop_robot import dialog as D
+        from symbolic_robot.domains.home import dialog as D
         sa = set(D.mentioned_objects(world, D._q_text(sim)))
         return bool(sa) and any(sa & set(D.mentioned_objects(world, D._q_text(g))) for g in golds)
     return False
@@ -160,7 +160,7 @@ def meaning_for(r: dict, task: dict):
     lang = r.get("lang") or "en"
     q = str(r.get("question") or "")
     if planner.startswith("robot_agent:sage"):
-        from homeloop_robot.configs.ra_dialog import derive
+        from symbolic_robot.domains.home.configs.ra_dialog import derive
         en = q if lang == "en" else (r.get("context") or {}).get("robot_en")
         if not en and not _hangul(q):
             en = q
@@ -168,7 +168,7 @@ def meaning_for(r: dict, task: dict):
     if planner == "oracle":
         import types
 
-        from homeloop_robot.oracle import HELP_QUESTION
+        from symbolic_robot.domains.home.oracle import HELP_QUESTION
 
         from .planners.oracle import gold_meaning, gold_question
         env = types.SimpleNamespace(task=task, lang=lang)
@@ -182,8 +182,8 @@ def meaning_for(r: dict, task: dict):
 
 def read_all(rows: list, clf=None) -> list:
     """The simulator's reading of each question: {qid, lang, path, qtype, slots, rule, answer}."""
-    from homeloop_robot import intent as _intent
-    from homeloop_robot.dialog import GoalView
+    from symbolic_robot.domains.home import intent as _intent
+    from symbolic_robot.domains.home.dialog import GoalView
 
     from .env import EpisodeEnv, task_dict
     from .tasks import load_split
@@ -307,9 +307,9 @@ def template_cases(split: str = "dev") -> list:
     """The coverage template (request_coverage, clarify kind 'coverage') in EN and KO on the first feasible task of ``split``
     with two or more goals: the part is the task's own words. Each case: {template, lang, question, meaning, path, qtype, rule,
     kind, answer, ok}."""
-    from homeloop_robot.configs.adapter import PHRASES
-    from homeloop_robot.configs.ra_dialog import derive
-    from homeloop_robot.dialog import GoalView
+    from symbolic_robot.domains.home.configs.adapter import PHRASES
+    from symbolic_robot.domains.home.configs.ra_dialog import derive
+    from symbolic_robot.domains.home.dialog import GoalView
 
     from .env import EpisodeEnv, task_dict
     from .tasks import load_split
@@ -335,7 +335,7 @@ def template_cases(split: str = "dev") -> list:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog="python -m homeloop_bench.sim_user_audit")
+    ap = argparse.ArgumentParser(prog="python -m bench.suites.home.sim_user_audit")
     ap.add_argument("--set", default=str(SET_DIR))
     ap.add_argument("--llm", default=None, help="Ollama URL for the classifier (none: the cache, else rules only)")
     ap.add_argument("--model", default="qwen3-vl:8b-instruct")
