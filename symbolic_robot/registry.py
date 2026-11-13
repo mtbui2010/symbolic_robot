@@ -8,7 +8,7 @@ from importlib import metadata
 from .domain import BaseDomain
 
 GROUP = "symbolic_robot.domains"
-BUILTIN = {"factory": "symbolic_robot.domains.factory:Factory", "home": "symbolic_robot.domains.home:Home"}
+BUILTIN = {"factory": "symbolic_robot.domains.factory:Factory", "home": "symbolic_robot.domains.home.domain:Home"}
 _extra: dict = {}
 _cache: dict = {}
 
