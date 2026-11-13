@@ -74,10 +74,10 @@ def capture(td: dict, lang: str, text: str, cfg: dict) -> dict:
     import contextlib
     import io
 
-    from homeloop_bench.env import EpisodeEnv
-    from homeloop_bench.planners import make_planner, planner_class
-    from homeloop_bench.understand_eval import STOP_EVENTS
-    from homeloop_robot.configs.tasks import env_for
+    from bench.suites.home.env import EpisodeEnv
+    from bench.suites.home.planners import make_planner, planner_class
+    from bench.suites.home.understand_eval import STOP_EVENTS
+    from symbolic_robot.domains.home.configs.tasks import env_for
     rec = Recorder()
     env = EpisodeEnv(td, cfg["profile"], int(cfg["seed"]), lang, llm=rec, privileged=False, interrupt_via="inject")
     env.planner_name = cfg["planner"]
@@ -221,7 +221,7 @@ def main(argv=None):
     out_dir = Path(a.out or cfg["out_dir"])
     t0 = time.time()
 
-    from homeloop_bench.tasks import read_records
+    from bench.suites.home.tasks import read_records
     if cfg.get("split", "train") != "train":
         raise SystemExit("refused: the training set is built from the train split only")
     tasks = read_records("train")

@@ -1,13 +1,13 @@
 """Translation A/B: the simulated user's heard-text check (structured_mismatch) on each model's Korean. Argument: data/quality/translate_ab."""
 import json, sys, collections
 S = sys.argv[1]
-from homeloop_robot import intent as _intent
-from homeloop_robot.dialog import GoalView
-from homeloop_robot.configs.ra_dialog import derive
-from homeloop_bench.env import EpisodeEnv, task_dict
-from homeloop_bench.tasks import load_split
-from homeloop_bench.llm import CachedLLM, OllamaHTTP
-from homeloop_bench.user_intent import IntentClassifier, PROMPT_VERSION
+from symbolic_robot.domains.home import intent as _intent
+from symbolic_robot.domains.home.dialog import GoalView
+from symbolic_robot.domains.home.configs.ra_dialog import derive
+from bench.suites.home.env import EpisodeEnv, task_dict
+from bench.suites.home.tasks import load_split
+from bench.suites.home.llm import CachedLLM, OllamaHTTP
+from bench.suites.home.user_intent import IntentClassifier, PROMPT_VERSION
 tasks = {}
 for sp in ("train", "dev", "test"):
     for t in load_split(sp):

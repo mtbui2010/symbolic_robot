@@ -1,7 +1,7 @@
 [project]
 name = "symbolic_robot"
 version = "0.1.0"
-description = "One engine for symbolic simulated robots (outcomes drawn from declared probabilities over a small symbolic world), pluggable domains, and a separate benchmark package"
+description = "One engine for symbolic simulated robots (outcomes drawn from declared probabilities over a small symbolic world), pluggable domains (factory, home), and a separate benchmark package with their suites"
 requires-python = ">=3.10"
 dependencies = ["pyyaml"]
 
@@ -24,6 +24,7 @@ include = ["symbolic_robot*", "bench*"]
 "symbolic_robot.domains.factory" = ["floors/*.yaml", "profiles/*.yaml", "configs/*.yaml", "configs/safety/*.yaml"]
 "symbolic_robot.domains.home" = ["houses/*.yaml", "profiles/*/*.yaml", "configs/*.yaml", "configs/safety/*.yaml", "planner/*.jsonl"]
 bench = ["suites/*/*.md"]
+"bench.suites.home" = ["data/tasks/*.jsonl", "data/*.yaml", "data/llm_cache/*.jsonl", "planners/*.json", "planners/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

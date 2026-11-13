@@ -1,4 +1,4 @@
-"""``homeloop-bench`` command line (docs/cli.md). Also ``python -m homeloop_bench.cli``."""
+"""The household benchmark's command line (docs/home/bench/cli.md): ``python -m bench.suites.home.cli`` or ``python -m bench run --domain home --suite <sub>``."""
 
 from __future__ import annotations
 
@@ -125,7 +125,7 @@ def cmd_run(a) -> int:
     from .runner import InfraError, PlannerConfigError, run_many
     from .shared_cache import SharedCacheError
     if a.planner not in REGISTRY and not is_spec(a.planner):
-        print(f"unknown planner {a.planner!r}; see `homeloop-bench planners` (or give package.module:ClassName)",
+        print(f"unknown planner {a.planner!r}; see `python -m bench run --domain home --suite planners` (or give package.module:ClassName)",
               file=sys.stderr)
         return 2
     try:
@@ -195,7 +195,7 @@ def cmd_understand_eval(a) -> int:
     from .planners import REGISTRY
     from .runner import InfraError, PlannerConfigError, check_llm, check_planner, load_tasks
     if a.planner not in REGISTRY:
-        print(f"unknown planner {a.planner!r}; see `homeloop-bench planners`", file=sys.stderr)
+        print(f"unknown planner {a.planner!r}; see `python -m bench run --domain home --suite planners`", file=sys.stderr)
         return 2
     if a.split == "test" and not a.tasks:
         print("understand-eval does not run on the test split (tune on train, validate on dev)", file=sys.stderr)
@@ -393,7 +393,7 @@ def cmd_live_smoke(a) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(prog="homeloop-bench", description="HomeLoop-Bench runner (docs/cli.md)")
+    ap = argparse.ArgumentParser(prog="python -m bench.suites.home.cli", description="HomeLoop-Bench runner (docs/home/bench/cli.md)")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("planners", help="list planners").set_defaults(fn=cmd_planners)
 

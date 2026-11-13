@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import re
 
-from homeloop_robot.catalog import CLASSES, COLORS, MESSAGE_TEXT, class_names
+from symbolic_robot.domains.home.catalog import CLASSES, COLORS, MESSAGE_TEXT, class_names
 
 KEY_ORDER = ("status", "reason", "reason_type", "question", "goals")
 GOAL_KEY_ORDER = ("type", "object", "said", "content", "from", "to")
@@ -64,7 +64,7 @@ POLICY_DEFAULT = {"clarify": "inferable", "conditional": "drop", "partial": "kee
 MAPPING = [
     "Prompt: the deployed robot's own understand prompt for robot_agent:sage_s8n (first reading, no dialogue), captured by "
     "running the bench episode setup and robot_agent's AssistLoop with a recording LLM (no model call).",
-    "Gold: homeloop_bench.env.resolve_subtasks on the start world (the same gold as understand-eval).",
+    "Gold: bench.suites.home.env.resolve_subtasks on the start world (the same gold as understand-eval).",
     "on(obj, place) / in(obj, place) -> {type on|in, object, from, to: place key}.",
     "delivered / held_by(obj, person): the speaker -> {type on, to 'me'}; another person -> {type on, to: the person's "
     "ENV key}; the delivery mode (hand / reach) is not written (the schema has no field for it; robot_agent's "
@@ -198,7 +198,7 @@ class Ctx:
     """What the labels need of one episode's start world (the ENV the prompt lists, people, objects)."""
 
     def __init__(self, world, env: dict, lang: str, text: str):
-        from homeloop_robot.configs.tasks import person_key
+        from symbolic_robot.domains.home.configs.tasks import person_key
         self.world, self.env, self.lang, self.text = world, env, lang, text
         self.user = world.user_id()
         self.person_key = lambda pid: person_key(world, pid)
@@ -281,7 +281,7 @@ def goal(ctx: Ctx, a: dict):
 
 def _ordered(subs: list, order) -> list:
     """Subtask indices in execution order (stable topological sort of the order pairs)."""
-    from homeloop_bench.env import order_pairs
+    from bench.suites.home.env import order_pairs
     pairs = order_pairs(order) if order else []
     left, out = list(range(len(subs))), []
     while left:
@@ -314,7 +314,7 @@ def _clarify(raw: dict, ctx: Ctx, td: dict) -> tuple:
 def target(td: dict, world, env: dict, lang: str, text: str, policy: dict) -> tuple:
     """(answer dict or None, info). ``info``: {expect, clarify_kind, skipped: why None, n_goals}. ``text`` is the CLEAN
     request of ``lang`` (labels never read a noisy text)."""
-    from homeloop_bench.env import resolve_subtasks
+    from bench.suites.home.env import resolve_subtasks
     pol = {**POLICY_DEFAULT, **(policy or {})}
     ctx = Ctx(world, env, lang, text)
     raw_subs = list(td.get("subtasks") or [])

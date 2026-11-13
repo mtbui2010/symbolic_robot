@@ -10,7 +10,7 @@ import pytest
 
 from bench import campaign, orchestrate, protocol, stats
 from bench.suites import registry
-from bench.suites.home.delegate_legacy import command
+from bench.suites.home.register import command
 
 
 def test_sign_test_exact_values():
@@ -93,15 +93,32 @@ def test_campaign_resumes_limits_and_rejects_unknown_arms(tmp_path, monkeypatch)
     assert only == 1
 
 
-def test_home_suite_delegates_by_command_line_and_refuses_the_test_split():
-    cmd = command("py", "run", ["--planner", "oracle", "--split", "dev", "--limit", "3"], "results/home_run")
-    assert cmd == ["py", "-m", "homeloop_bench.cli", "run", "--planner", "oracle", "--split", "dev", "--limit", "3", "--out", "results/home_run"]
-    assert command("py", "run", ["--out", "mine"], "results/x").count("--out") == 1
-    assert command("py", "planners", [], "results/x") == ["py", "-m", "homeloop_bench.cli", "planners"]
+def test_home_suite_hands_over_to_its_own_cli_and_refuses_the_test_split():
+    cmd = command("run", ["--planner", "oracle", "--split", "dev", "--limit", "3"], "results/home_run")
+    assert cmd == ["run", "--planner", "oracle", "--split", "dev", "--limit", "3", "--out", "results/home_run"]
+    assert command("run", ["--out", "mine"], "results/x").count("--out") == 1
+    assert command("planners", [], "results/x") == ["planners"]
     with pytest.raises(SystemExit):
-        command("py", "run", ["--split", "test"], None)
+        command("run", ["--split", "test"], None)
     with pytest.raises(SystemExit):
-        command("py", "run", ["--split=test"], None)
+        command("run", ["--split=test"], None)
+
+
+def test_home_suites_run_in_process_without_a_subprocess(capsys, tmp_path, monkeypatch):
+    """`python -m bench run --domain home ...` calls the household CLI in this process; --python is not used for it."""
+    import subprocess
+
+    from bench.cli import main
+    monkeypatch.setattr(subprocess, "call", lambda *a, **k: pytest.fail("a subprocess was started"))
+    assert main(["run", "--domain", "home", "--suite", "planners", "--out", "x"]) == 0
+    out = capsys.readouterr().out
+    assert "\noracle\t" in "\n" + out and "robot_agent:sage_s8n_d1" in out
+    d = tmp_path / "o"
+    assert main(["run", "--domain", "home", "--suite", "run", "--out", str(d), "--planner", "oracle", "--split", "dev", "--limit", "2",
+                 "--profile", "ideal", "--llm", "fake"]) == 0 and (d / "summary.json").is_file()
+    assert json.loads((d / "summary.json").read_text())["n_episodes"] == 2             # --limit reached the household CLI (the generic parser has one too)
+    with pytest.raises(SystemExit):
+        main(["run", "--domain", "home", "--suite", "run", "--out", str(d), "--split", "test", "--planner", "oracle"])
 
 
 def test_port_helpers_and_stop_only_the_started_process():
@@ -124,5 +141,5 @@ def test_dry_run_prints_the_plan_and_starts_nothing(capsys):
     assert main(["run", "--domain", "factory", "--suite", "messy_fix", "--out", "x", "--dry-run"]) == 0
     out = capsys.readouterr().out
     assert "tasks 6" in out and "arms A,E,D" in out and "only t02" in out
-    assert main(["run", "--domain", "home", "--suite", "planners", "--out", "x", "--dry-run", "--python", "py"]) == 0
-    assert "homeloop_bench.cli planners" in capsys.readouterr().out
+    assert main(["run", "--domain", "home", "--suite", "planners", "--out", "x", "--dry-run"]) == 0
+    assert "bench.suites.home.cli planners" in capsys.readouterr().out

@@ -1,1 +1,133 @@
-{"limits": {"function": 80, "file": 600}, "allowed": {}}
+{
+ "limits": {
+  "function": 80,
+  "file": 600
+ },
+ "note": "Each entry is an exception with its source; the numbers may only go down (tests/test_layering.py).",
+ "allowed": {
+  "bench/suites/home/cli.py::build_parser": {
+   "max": 153,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/env.py": {
+   "max": 738,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/env.py::record": {
+   "max": 110,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/gen/compound.py": {
+   "max": 1217,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/gen/paraphrase.py": {
+   "max": 708,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/gen/paraphrase.py::run": {
+   "max": 100,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/gen/quality.py::write_datasheet": {
+   "max": 185,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/gen/single.py::_clarify_object": {
+   "max": 93,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/gen/validate.py::validate": {
+   "max": 157,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/metrics.py::summarize": {
+   "max": 116,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/planners/keyword.py": {
+   "max": 760,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/planners/keyword.py::parse_prompt": {
+   "max": 102,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/planners/robot_agent_adapter.py": {
+   "max": 1403,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/planners/robot_agent_adapter.py::run": {
+   "max": 138,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/runner.py::run_many": {
+   "max": 83,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "bench/suites/home/tools/lora/build_understand_gold.py::main": {
+   "max": 128,
+   "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/consistency.py": {
+   "max": 616,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/consistency.py::rate_checks": {
+   "max": 295,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/dialog.py": {
+   "max": 1696,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/dialog.py::compose": {
+   "max": 105,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/dialog.py::compose_from_goal": {
+   "max": 170,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/houses/__init__.py::validate_house": {
+   "max": 142,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/intent.py": {
+   "max": 890,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/intent.py::answer_structured": {
+   "max": 90,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/intent.py::read_free": {
+   "max": 105,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/oracle.py::_apply": {
+   "max": 114,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/profiles/validate.py::run": {
+   "max": 196,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/safety.py::traverse": {
+   "max": 157,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/skills.py": {
+   "max": 1221,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/skills.py::_sk_move": {
+   "max": 103,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  },
+  "symbolic_robot/domains/home/user.py": {
+   "max": 647,
+   "source": "moved with the household simulator (tag home-sim-freeze-r19, frozen): size not reduced by the move"
+  }
+ }
+}

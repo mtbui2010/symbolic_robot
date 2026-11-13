@@ -23,7 +23,7 @@ class Suite:
     defaults: dict = field(default_factory=lambda: {"tasks": 36, "seeds": 2, "task_seed": 7, "profile": "real", "world": ""})
     server_args: tuple = ()                             # extra arguments of `python -m symbolic_robot run`
     server_env: dict = field(default_factory=dict)      # environment of the server (the baseline arm's options)
-    # ---- a suite that hands over to another program
+    # ---- a suite whose commands are its own program (the home suites: run in this process through its own CLI)
     delegate: Optional[Callable] = None                 # (args namespace, extra args list) -> exit status
 
     @property

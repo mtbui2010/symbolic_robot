@@ -85,14 +85,35 @@ def cmd_verify(a, _extra) -> int:
     return 0 if ok else 1
 
 
+def _own_cli(argv):
+    """(namespace, rest) when `run` names a suite that has its own command line (the home suites), else None. Such a suite gets EVERY other
+    argument unchanged: the generic `run` options (--limit, --profile, --seeds, --tasks, ...) mean the suite's own, not ours."""
+    if not argv or argv[0] != "run":
+        return None
+    pre = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
+    for name in ("--domain", "--suite", "--out", "--python", "--ports"):
+        pre.add_argument(name, default=None)
+    pre.add_argument("--dry-run", action="store_true")
+    a, rest = pre.parse_known_args(argv[1:])
+    try:
+        suite = registry.get(a.domain, a.suite)
+    except KeyError:
+        return None
+    return (a, rest) if suite.delegate is not None else None
+
+
 def main(argv=None) -> int:
+    argv = sys.argv[1:] if argv is None else list(argv)
+    own = _own_cli(argv)
+    if own is not None:
+        return registry.get(own[0].domain, own[0].suite).delegate(*own)
     ap = argparse.ArgumentParser(prog="python -m bench")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("list").set_defaults(fn=cmd_list)
-    r = sub.add_parser("run", help="run a suite (starts and stops its own server on a free test port); unknown arguments go to a delegating suite")
+    r = sub.add_parser("run", help="run a suite (starts and stops its own server on a free test port); a suite with its own command line (home) gets all other arguments")
     r.add_argument("--domain", required=True)
     r.add_argument("--suite", required=True)
-    r.add_argument("--python", default=sys.executable, help="interpreter that has symbolic_robot's requirements (and the household benchmark for home)")
+    r.add_argument("--python", default=sys.executable, help="interpreter that has symbolic_robot's requirements ")
     r.add_argument("--ports", default="8120-8129", help="test ports to choose a free one from")
     r.add_argument("--out", required=True)
     r.add_argument("--world", default="")

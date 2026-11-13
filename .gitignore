@@ -6,3 +6,5 @@ run/
 *.egg-info/
 results/*
 !results/.gitkeep
+!results/live_smoke/
+!results/r4a/
