@@ -4,12 +4,13 @@
 never import it (`tests/test_layering.py`). It holds everything that judges or scores: success from the simulator's truth, distance, paired
 sign tests, bootstrap intervals, per-policy tables, the pre-registered protocol hash. It drives a running server over HTTP and WebSocket
 exactly as any robot_agent client does, so what it measures is the planner on the symbolic robot, never the robot's own claim.
+The home suite is the one exception: it was merged in with its own in-process runner (it builds the episode itself, so it can judge from the simulator's truth without a server).
 
 ```
 python -m bench list
 make bench ROBOT=factory SUITE=protocol                                  # full: 288 episodes
 make bench ROBOT=factory SUITE=protocol ARGS="--tasks 3 --seeds 1 --arms A,B"   # a few tasks, end to end
-make bench ROBOT=home SUITE=planners                                     # delegation, see below
+make bench ROBOT=home SUITE=planners                                     # the household benchmark, see "Home" below
 python -m bench analyze --domain factory --suite protocol results/factory_protocol
 python -m bench report  --domain factory --suite messy results/factory_messy
 python -m bench verify  --domain factory --suite protocol results/factory_protocol   # protocol hash still matches
@@ -38,17 +39,23 @@ Needs a local LLM server (the domain's `default_model` on Ollama) and the planne
 **Recorded results of the earlier repository** are not copied. The analysis code reproduces its `summary.json` exactly from its `episodes.jsonl`
 (`tests/test_parity_factory.py`, needs `SHOPFLOOR_RESULTS`), and the factory replay reproduces its call logs (`docs/architecture.md`).
 
-## Home: delegation
+## Home: the household benchmark
 
-The household simulator has its own benchmark in its own repository (`homeloop_bench`), which is not moved or imported. `home/<subcommand>` runs
-`<python> -m homeloop_bench.cli <subcommand> ARGS` as a subprocess, with `--python` / `PY` an interpreter that has it installed:
+The household simulator and its benchmark (HomeLoop-Bench: 10k tasks in English and Korean, a seeded Monte Carlo runner, planners, metrics) were merged into this repository
+([migration_home.md](migration_home.md)). The package is `bench.suites.home`; there is no subprocess and no second repository. `python -m bench run --domain home --suite <sub>`
+calls its command line in this process and passes every argument other than `--domain --suite --out --python --ports --dry-run` to it unchanged:
 
 ```
 make bench ROBOT=home SUITE=planners                       # lists the planners: needs no data and no LLM (a safe smoke test)
-make bench ROBOT=home SUITE=run ARGS="--planner oracle --split dev --limit 20 --profile ideal --seeds 1"   # --out results/home_run is added
+make bench ROBOT=home SUITE=run ARGS="--planner oracle --split dev --limit 20 --profile ideal --seeds 1 --llm fake"   # --out results/home_run is added
+python -m bench run --domain home --suite compare results/home_a results/home_b      # paired McNemar test
+python -m bench.suites.home.cli run --planner robot_agent:sage_s8n_d1 --split dev ...   # the same without the front end (all subcommands: docs/home/bench/cli.md)
 ```
 
-The wrapper refuses `--split test` and reads no split itself. Subcommands: `planners`, `run`, `compare`, `report`. `--dry-run` prints the command.
+Suites `home/planners`, `home/run`, `home/compare`, `home/report`. The front end refuses `--split test` and reads no split itself; the benchmark's own CLI refuses it too.
+Planner names (`oracle`, `robot_agent:sage_s8n_d1`, ...) and the run-config format are as they were, so old results stay comparable. Everything else about it
+(runner, metrics, planners, datasheet, experiments log) is in [docs/home/bench/](home/bench/CLAUDE.md); the simulator is in [docs/home/sim/](home/sim/CLAUDE.md).
+Not every subcommand has a `home/<name>` suite: `merge`, `rescore`, `understand-eval`, `live-smoke`, `prompt`, `aa-check` and the data commands are used through `python -m bench.suites.home.cli`.
 
 ## Adding a suite
 

@@ -4,11 +4,11 @@
 
 ```
 bench/                          benchmark suites: runner, campaign, paired statistics, protocol hash, suites registry
-  |  imports (one way)           talks to servers over HTTP / WebSocket; to an external benchmark by subprocess only
+  |  imports (one way)           factory suites talk to servers over HTTP / WebSocket; the home suite also drives the simulator and robot_agent in process
   v
 symbolic_robot/
   cli.py  server.py  server_skills.py        glue: the only core modules that import robot_agent
-  domains/<name>/                            a domain: world, skills, profiles, data, and its robot_agent pack (configs/)
+  domains/<name>/                            a domain: world, skills, profiles, data, and its robot_agent pack (configs/); `home` is the merged household simulator
   result rng profile clock domain registry   the core: no robot, domain or language fact
   backend simcommand
 ```
@@ -16,12 +16,13 @@ symbolic_robot/
 | rule | enforced by |
 |---|---|
 | core and domains never import `bench` | `tests/test_layering.py::test_core_and_domains_never_import_bench` |
-| `bench` never imports the household benchmark or robot_agent | `test_bench_does_not_import_the_frozen_household_benchmark`, `test_robot_agent_only_in_server_glue_and_domain_packs` |
+| nothing imports the retired standalone packages (`homeloop_robot`, `homeloop_bench`) | `test_nothing_imports_the_retired_standalone_packages` |
+| `bench` does not import robot_agent, except inside functions of the home planners' two adapter files | `test_robot_agent_only_in_server_glue_and_domain_packs` |
 | robot_agent only in `server.py`, `server_skills.py` and `domains/*/configs/` (a pack is robot_agent's own plug-in format, it must import its contract) | `test_robot_agent_only_in_server_glue_and_domain_packs` |
 | domains do not import each other or the server | `test_domains_do_not_import_each_other_or_the_server` |
-| no private names; the frozen household package is named only where it is wrapped | `test_no_private_names_anywhere`, `test_frozen_household_package_is_named_only_where_it_is_wrapped` |
-| function <= 80 lines, file <= 600 lines, baseline does not grow | `test_size_limits_do_not_grow`, `tests/size_baseline.json` |
-| frozen packages untouched | the `home` domain only imports; nothing is copied (see `domains/home/__init__.py`) |
+| no private names; household names only in the home parts and the docs about them | `test_no_private_names_anywhere`, `test_household_names_appear_only_in_the_home_parts_and_the_docs_about_them` |
+| function <= 80 lines, file <= 600 lines, baseline does not grow (the moved household code is listed there, each entry with its source) | `test_size_limits_do_not_grow`, `tests/size_baseline.json` |
+| the household simulator behaves as before the merge | `tests/test_home_baseline.py` (scripted calls, oracle / naive episodes), `tests/home/sim/test_freeze_r19.py` (selftest traces pinned to the r13 bytes) |
 
 ## The core
 
@@ -46,4 +47,5 @@ symbolic_robot/
 
 * Factory replay: `tests/parity/factory_replay.py` replays the call sequences recorded in an earlier campaign (read only) and compares ok, code, msg, duration, simulated time and the whole truth of every call. Result at the time of writing: 774 episodes, 15,690 calls, 0 mismatches (`factory_v2`, `messy_factory`, `messy_fix_factory`; the older `factory_v1_plural_bug` differs on purpose: a bug fixed before v2).
 * Analysis replay: `bench` analysis of the recorded `episodes.jsonl` gives exactly the recorded `summary.json` (protocol and messy suites); task generators give exactly the recorded `tasks.json`.
-* Home wrapper: `tests/test_home_parity.py` compares 510 scripted calls over 5 houses and 3 profiles with direct calls of the household package (identical `to_json()` of every result, same clock and object places).
+* Home domain: `tests/test_home_parity.py` compares 510 scripted calls over 5 houses and 3 profiles through the domain protocol with direct calls of `make_episode` (identical `to_json()` of every result, same clock and object places).
+* Home merge: `tests/test_home_baseline.py` compares the same kind of scripted calls (62 episodes: 5 houses x 3 profiles x 2 seeds x 2 languages) and three benchmark runs (oracle, naive; dev split, fake LLM) with baselines recorded from the standalone packages before they were merged: all byte-identical ([migration_home.md](migration_home.md)).

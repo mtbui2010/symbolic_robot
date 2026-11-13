@@ -1,5 +1,7 @@
 # homeloop_bench: rules for agents
 
+> Moved into symbolic_robot (docs/migration_home.md). Paths and commands in this file are those of the standalone `homeloop_bench` repository: read `homeloop_bench/...` as `bench/suites/home/...`, `python -m homeloop_bench.X` / `homeloop-bench X` as `python -m bench.suites.home.X` / `python -m bench.suites.home.cli X`, `tests/` as `tests/home/bench/`, `docs/` as `docs/home/bench/`, `data/quality/` as `bench/suites/home/data/quality/`, `tools/` as `bench/suites/home/tools/`; `results/` is unchanged. The simulator it runs on is `symbolic_robot.domains.home`.
+
 HomeLoop-Bench: tasks, a seeded Monte Carlo runner, planners and metrics on the homeloop_robot mock robot.
 
 ## Rules

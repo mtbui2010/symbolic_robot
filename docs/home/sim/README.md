@@ -1,5 +1,7 @@
 # homeloop_robot
 
+> Moved into symbolic_robot (docs/migration_home.md). Paths and commands in this file are those of the standalone `homeloop_robot` repository: read `homeloop_robot/...` as `symbolic_robot/domains/home/...`, `python -m homeloop_robot.X` as `python -m symbolic_robot.domains.home.X`, `tests/` as `tests/home/sim/`, `docs/` as `docs/home/sim/`. The package is frozen at tag `home-sim-freeze-r19`.
+
 A stochastic mock household robot for benchmarking task planners. It has a full household skill set
 (move, find, pick, place, put in, open, close, hand over, say, announce, ask, look, VLM check, wait, dock,
 grasp check, pose) but does no motion: each skill checks the TRUE symbolic world state and returns

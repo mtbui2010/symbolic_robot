@@ -1,5 +1,7 @@
 # homeloop_robot: rules for agents
 
+> Moved into symbolic_robot (docs/migration_home.md). Paths and commands in this file are those of the standalone `homeloop_robot` repository: read `homeloop_robot/...` as `symbolic_robot/domains/home/...`, `python -m homeloop_robot.X` as `python -m symbolic_robot.domains.home.X`, `tests/` as `tests/home/sim/`, `docs/` as `docs/home/sim/`. The package is frozen at tag `home-sim-freeze-r19`.
+
 A stochastic mock household robot: full skill set, no motion; skills check the TRUE symbolic world
 and return success or a typed failure drawn from failure rates calibrated from published papers.
 

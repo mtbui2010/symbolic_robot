@@ -47,7 +47,7 @@ or `registry.register("toy", Toy)` in a test. `python -m symbolic_robot list` sh
 
 ## The robot_agent pack
 
-`pack` is the importable name of a robot_agent pack (`<pack>.configs.adapter`, `.skills_config`, `.tasks`, `manifest.yaml`). It may be dotted (the factory's is `symbolic_robot.domains.factory`) or an external package (the home domain's). `install_pack(live)` hands the live backend to the pack's skill functions (the pack's own `set_backend`). robot_agent's `check_manifest --strict` assumes a top-level pack name and so reports "module is outside <pkg>, not inspected" warnings for a dotted one; without `--strict` it reports 0 errors (`tests/test_server.py`).
+`pack` is the importable name of a robot_agent pack (`<pack>.configs.adapter`, `.skills_config`, `.tasks`, `manifest.yaml`). It may be dotted (the factory's is `symbolic_robot.domains.factory`, the home domain's `symbolic_robot.domains.home`) or an external package. `install_pack(live)` hands the live backend to the pack's skill functions (the pack's own `set_backend`). robot_agent's `check_manifest --strict` assumes a top-level pack name and so reports "module is outside <pkg>, not inspected" warnings for a dotted one; without `--strict` it reports 0 errors (`tests/test_server.py`).
 
 ## Do not
 

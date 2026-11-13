@@ -6,6 +6,8 @@
 #   make status | logs | test [ROBOT=..] | help
 #   make bench ROBOT=<domain> SUITE=<name> [ARGS=...]   run a benchmark suite (bench/); starts and stops its own server on a free
 #                                               test port (BENCH_PORTS, default 8120-8129); results in results/<domain>_<suite>/
+#   make bench ROBOT=home SUITE=<planners|run|compare|report> [ARGS=...]   the household benchmark, in process (no server): ARGS go to its CLI
+#   make test [ROBOT=home]                      all tests; ROBOT=home only the household ones
 #
 # Variables: ROBOT=factory  PORT=8091  HOST=0.0.0.0  PROFILE=real|ideal|stress  SEED=0
 #   ASK_MODE=headless  DIALOGUE=human|sim  OPTS="--floor assembly_hall"  PY=python3  RUN_ROOT=run
@@ -43,7 +45,7 @@ SHELL := /bin/bash
 .SILENT:
 
 help:
-	sed -n '1,13p' Makefile | sed 's/^# \{0,1\}//'
+	sed -n '1,15p' Makefile | sed 's/^# \{0,1\}//'
 
 list:
 	"$(PY)" -m symbolic_robot list
