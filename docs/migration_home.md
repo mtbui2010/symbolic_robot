@@ -67,13 +67,14 @@ Tags: `sim-freeze-r13` -> `home-sim-freeze-r13`, `sim-freeze-r19` -> `home-sim-f
 * `bench/suites/home/register.py` replaces the delegation; `bench/cli.py` hands every argument of a home run to the household CLI (see CHANGELOG: the old front end dropped `--limit`, `--profile`, `--seeds`, `--tasks`).
 * Tests: only paths changed, plus `tests/home/sim/test_configs_adapter.py::test_check_manifest_strict` runs `strict=False` (robot_agent's checker warns "module is outside <pkg>, not inspected" for a dotted pack name; the same known limitation as the factory pack; its errors are still asserted to be none).
   `tests/test_layering.py` rules were reworded for the merge (CHANGELOG). Nothing was removed.
+* Part 2 of the same series changes the D1 retry (inside the skill, not counted in the call budget): see the CHANGELOG entry "D1 retry moves inside the skill"; it is the only behaviour change, and it touches only planners with `skill_attempts` > 1.
 * Rules in `CLAUDE.md` (3 and 4) and the size baseline (31 moved files and functions over the limits, with their source).
 
 ## Checks
 
 * Scripted calls: 62 episodes (5 houses x 3 profiles x 2 seeds x 2 languages), `to_json()` of every result, clock and object places: byte-identical to the standalone package (`tests/test_home_baseline.py`, baseline in `tests/home/parity/`).
 * `--planner oracle --split dev --limit 20 --llm fake`: `episodes.jsonl` byte-identical and `summary.json` equal except the two `_git` version strings; the same for oracle (real, 2 seeds) and naive (stress).
-* Tests (venv-bench Python, robot_agent and embodiplan importable): before, standalone `homeloop_robot` 979 + `homeloop_bench` 546 + `symbolic_robot` 78 = 1603; after the move 1604 + the 4 new baseline tests (the extra one: the in-process home front end). Final count of this series: see the CHANGELOG.
+* Tests (venv-bench Python, robot_agent and embodiplan importable): before, standalone `homeloop_robot` 979 + `homeloop_bench` 546 + `symbolic_robot` 78 = 1603; after the move 1608 (1603 + the in-process home front end test + the 4 baseline tests, minus the one layering test that was reworded into two); after the D1 retry change 1721 (the old retry test file had 5 tests, the new one has 118). No test was removed or skipped; the only test whose strictness changed is `test_check_manifest_strict`.
 
 ## Places outside this repository that still name the old packages (not changed here)
 

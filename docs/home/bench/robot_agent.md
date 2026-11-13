@@ -36,6 +36,14 @@ removed after the episode (`HOMELOOP_KEEP_RA_LOGS=1` keeps them).
    (`robot_pkg="homeloop_robot"`, a temporary common dir); `host_id` -> "homeloop";
    `robot_agent.skill_configs.ENV` -> `homeloop_robot.configs.tasks.env_for(world)`;
    `robot_agent.connect.llm.init_llm_client` -> our client. A fresh run manager and run-control state.
+   **Retry inside the skill (D1 variants, `skill_attempts` = 2; `bench/suites/home/retry.py`, 2026-11-13).** The variants `robot_agent:sage_s8n_d1` and
+   `robot_agent:sage_s8n_ft_d1` wrap the episode's robot (`RobotProxy(env, attempts=2)`): a skill that only reads, looks or moves (move, find, look, open, close,
+   vlm_check, dock, grasp_check, pose) and fails with any code except estop / cancelled (`absent` included) is called again, `attempts` times in total, and the planner
+   sees ONE call with the last attempt's result. A repeat is not a call of the budget (`max_calls`, `len(env.calls)`, `n_calls`, `calls_left` count planner calls), but its
+   simulated time counts (the call's `duration_s` and `dur` are the sums, the clock moved, and no repeat starts after `max_sim_time_s`). pick, place, put_in (own
+   `num_trials`), handover, say, announce, ask and wait are never repeated. The call log carries `attempts` (and `attempt_codes` after a repeat), the same keys are in the
+   result's `truth`, and the run config has `skill_retry`. This is not the planner's second look (going back to a place after a detour), which stays the planner's.
+   Earlier D1 results (before this change) repeated through `env.call`: each repeat used a call of the budget, `absent` was never repeated; they are not comparable.
 3. robot_agent's object memory (`mem.json`, which a deployed robot_agent keeps across runs) is seeded with the
    object memory every planner observes (`EpisodeEnv.object_memory`: each object's usual place, the house
    default), by class name and colour + class name in English and Korean; a name shared by objects with different

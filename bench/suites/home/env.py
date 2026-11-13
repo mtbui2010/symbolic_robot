@@ -369,7 +369,7 @@ class EpisodeEnv:
         rec = self.robot.trace[-1]
         self.calls.append({"k": k, "skill": skill, "args": rec["args"], "ok": res.ok, "code": rec["code"],
                            "injected": bool(res.injected), "t": rec["t"], "dur": rec["dur"],
-                           "event": (res.truth or {}).get("event")})
+                           "event": (res.truth or {}).get("event"), **{k: v for k, v in (res.truth or {}).items() if k in ("attempts", "attempt_codes")}})
         self._refused_at_call.append(int(getattr(self._llm, "refused", 0) or 0))
         if skill == "ask":          # for the failure analysis only (docs/experiments.md); never shown to planners
             self.calls[-1]["answer"] = (res.data or {}).get("answer")

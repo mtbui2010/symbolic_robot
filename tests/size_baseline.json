@@ -54,7 +54,7 @@
    "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
   },
   "bench/suites/home/planners/robot_agent_adapter.py": {
-   "max": 1403,
+   "max": 1385,
    "source": "moved with the household benchmark (branch r21-p4b): size not reduced by the move"
   },
   "bench/suites/home/planners/robot_agent_adapter.py::run": {

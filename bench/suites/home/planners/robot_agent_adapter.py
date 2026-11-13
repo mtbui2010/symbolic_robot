@@ -29,6 +29,7 @@ import tempfile
 import types
 from pathlib import Path
 
+from .. import retry as skill_retry
 from ..env import MOTION, STOP_TEXT
 from ..llm import BudgetExceeded, CountingLLM, FakeLLM
 
@@ -40,34 +41,14 @@ class RobotProxy:
     """What ``symbolic_robot.domains.home.configs.backend`` hands the skill functions: the episode's robot behind
     ``env.call``."""
 
-    # Bench-only retry (variants with ``skill_attempts`` > 1; default 1 = a single call, as before). ``attempts`` counts the first call.
-    # Only skills that are safe to repeat, and only failures that can be transient; each repeat is a real call and uses the episode budget.
-    RETRY_SKILLS = ("move", "find", "look", "open", "close", "vlm_check", "dock")
-    RETRY_CODES = ("hw_fault", "timeout", "perception_unavailable", "unreachable", "blocked")
-
     def __init__(self, env, attempts: int = 1):
-        self.attempts = max(1, int(attempts))
-        self.retries = 0
+        skill_retry.install(env, attempts)      # attempts > 1: the episode's robot repeats safe skills itself (retry.py); 1: nothing
         self.env = env
-        self.world = env._world          # the robot side of the bridge (homeloop_robot backend), not the planner
+        self.world = env._world          # the robot side of the bridge (the home domain's backend), not the planner
         self.meaning = None              # the structured form of the question being asked (structured_asks)
 
     def call(self, skill: str, **args):
-        r = self._call_once(skill, **args)
-        for _ in range(self.attempts - 1):
-            if not self._retryable(skill, r):
-                break
-            self.retries += 1
-            r = self._call_once(skill, **args)
-        return r
-
-    def _retryable(self, skill: str, r) -> bool:
-        if getattr(r, "ok", True) or skill not in self.RETRY_SKILLS or getattr(r, "msg", "") == "episode budget exhausted":
-            return False
-        code = str(getattr(getattr(r, "code", None), "value", getattr(r, "code", None)))
-        return code in self.RETRY_CODES      # "absent" is an answer, not a fault: never repeated (a repeat would be a second look)
-
-    def _call_once(self, skill: str, **args):
+        """One call, one result. A variant that repeats safe skills does it inside the robot (retry.py), invisible here."""
         from symbolic_robot.domains.home.types import FailureCode, SkillResult
         if skill == "ask" and self.meaning is not None and "meaning" not in args:
             args = {**args, "meaning": dict(self.meaning)}
@@ -697,7 +678,8 @@ class _RobotAgentPlanner:
                 "gate_complete": int(cls.loop_options.get("gate_complete", 0)) if cls.loop_kind == "assist" else None,
                 # recorded only where the flag is set, so the other variants' summary.json stay as they were
                 **({"person_goals": 1} if cls.loop_kind == "assist" and cls.loop_options.get("person_goals") else {}),
-                **({"skill_attempts": int(cls.skill_attempts)} if getattr(cls, "skill_attempts", 1) > 1 else {}),
+                **({"skill_attempts": int(cls.skill_attempts), "skill_retry": skill_retry.describe(cls.skill_attempts)}
+                   if getattr(cls, "skill_attempts", 1) > 1 else {}),
                 # lab-round options, likewise only where set
                 **({k: 1 for k in cls._LAB_FLAGS if cls.loop_options.get(k)} if cls.loop_kind == "assist" else {}),
                 **({"options_off": list(cls.options_off)} if cls.options_off else {}),
@@ -1263,7 +1245,7 @@ _D1_CONFIRM = {"confirm_look": "1"}
 class SageS8nD1Planner(SageS8nPlanner):
     """D (pre-registered): ``sage_s8n`` with the new search setup: continue over the likely places (``search_legs``), at most 6 places
     per search (``search_total``), no search second look (``detector_miss_rate`` 0), and each safe-to-repeat skill tried up to 2 times
-    in total (bench-side wrapper in ``RobotProxy``), and ``confirm_look`` (a sighting after a miss at the goal check needs a third look).
+    in total (inside the skill, ``retry.py``: one call for the planner, not counted in its budget), and ``confirm_look`` (a sighting after a miss at the goal check needs a third look).
     Every other option stays as in ``sage_s8n``."""
     name = "robot_agent:sage_s8n_d1"
     loop_options = {**SageS8nPlanner.loop_options, **_D1_SEARCH, **_D1_CONFIRM}
