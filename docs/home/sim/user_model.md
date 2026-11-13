@@ -1,0 +1,524 @@
+# Simulated user
+
+`homeloop_robot/user.py` (`SimUser`), `dialog.py` (what the user means to say) and `asr.py` (what the robot hears)
+simulate the people of a house: they answer the robot's questions in English or Korean, sometimes wrongly,
+vaguely or not at all; the robot mishears them; they walk between seats; they take handed-over objects or do not;
+and they can interrupt a task. Parameters: `homeloop_robot/profiles/real/user.yaml`. Sources and assumptions:
+[calibration.md](calibration.md) (user-safety block). The people's positions feed the safety monitor
+([safety.md](safety.md)).
+
+All randomness comes from the episode's seeded streams (`streams.rng_for("user", ...)`), keyed by what happens
+(the n-th question, the n-th handover, the person's motion), never by wall-clock time. The same episode key and
+seed give the same answers, walks and ASR errors.
+
+## Interface (`UserModel`)
+
+| method | what it does |
+|---|---|
+| `SimUser(world, profile, streams, lang, spec)` | `lang` = episode language (`en`/`ko`); `spec` = the task's `user` block (persona, candidates, answer, interrupt, optional `wrong_answer`, `asleep`); `None` = a generic user |
+| `answer(question, lang, robot_xy, t, meaning=None) -> (UserReply, Heard)` | `UserReply` = what the person says (`kind`: correct, wrong, not_sure, no_answer, yes, no; `latency_s`); `Heard` = what the robot's ASR returns |
+| `help_request(question, t)` | the robot asked for help while a help-clearable fault is active; call it before `answer`; the reply is "OK, I moved it." / "네, 치웠어요." (the robot core clears the fault with its own probability) |
+| `hear_instruction(text, lang) -> Heard` | ASR on the spoken task instruction (`app`: near-field; `voice`: near) |
+| `hears(person, robot_xy, t, broadcast)` | same room, or within `user.hearing_range_m`; `broadcast` (announce) also reaches adjacent rooms |
+| `take_handover(person, obj, t) -> (taken, latency_s)` | the person takes the object after a latency, or does not (unresponsive, asleep, timeout) |
+| `people_at(t) -> {id: PersonState}` | positions, velocities, rooms, awake flags |
+| `interrupt_plan()` | the scripted `spec.interrupt` or a random stop, as `{after_calls, kind, text, new_goal}`; the runner triggers it at the start of motion call `after_calls + 1` |
+| `events_between(t0, t1)` | time-scheduled events; interruptions are call-indexed, so it returns `[]` |
+
+## Dialog channel
+
+`user.dialog_channel` (profile, default `app`) says how the task and the robot's questions travel between the user
+and the robot:
+
+- `app` (default): the user gives the task on their phone / tablet app, speaking near its microphone (the
+  instruction's ASR is the near-field `app` condition, see ASR below), and the robot's `ask` reaches them there,
+  wherever the robot is (`SimUser.reachable`: the user is awake). They answer into the same device (`app` ASR). The
+  robot's speaker is not used for the question. This is how the deployed robot_agent runs a task started from its
+  dashboard: the question is spoken and listened to in the browser that started the run, and a typed answer from
+  any client also answers it (robot_agent `interact/dialog.py`). The user starts each episode at their own seat,
+  not next to the robot, so this is the channel that matches the start state.
+- `voice`: the robot's own speaker and microphone: a question reaches the user only within hearing range (below),
+  and the answer's ASR condition follows the robot-user distance.
+
+`say` and `announce` (messages for other people) always use the robot's speaker and hearing range.
+`SimUser.ask_audience(robot_xy, t)` tells the robot who a question reaches; the oracle asks for help with a blocked
+path only when the user is reachable.
+
+## Dialog policy
+
+1. **Who answers**: the person with `role: user`. Not reachable (see the channel), asleep, or past the patience
+   limit -> no answer (the robot's `ask` times out).
+2. **Question type** (`dialog.classify`): a wh-word anywhere (EN which, what, where, who, how, when; KO 어느,
+   어떤, 어디, 누구, 뭐, 무엇, 무슨, 어떻게, 몇, 언제) -> `wh`; an EN question starting with an auxiliary or holding a
+   "?", a KO sentence ending in 까요?, 나요?, 가요?, 죠?, 니?, 맞아요?, ...요? (also when a remark follows it) ->
+   `yes_no`; otherwise `other`.
+3. **Mentions**: candidate mentions of the task (`spec.candidates[*].mentions`) and object names (catalog class
+   name, colour + name) are matched in both languages after normalization (case, punctuation; Korean spaces
+   ignored). Longest match first (R2-6 H2): an occurrence inside a longer name of a different thing of the house,
+   one that is not itself also called by the shorter name, does not count, so 냉장고 inside 김치냉장고 and "fridge"
+   inside "kimchi fridge" name the kimchi fridge only; "cup" inside "red cup" still names the red cup. A quoted
+   either / or ("'A' or 'B'?") naming one candidate is a choice and gets the clarify answer
+   (tests/test_dialog_longest_match.py). A Korean name of several words is also named with the plural marker 들 on
+   a word before its head ('아이들 책상' names '아이 책상', the kid's desk, not the study desk 책상;
+   `dialog.ko_plural_forms`; fresh pilot round 2, hl-dev-000057, tests/test_dialog_fresh_pilot_r2.py).
+4. **Content**, first rule that applies:
+   - ASR repair, "could you repeat?" (EN repeat, say that / it again, pardon, come again, didn't catch that; KO 다시
+     (한 번) 말씀해, 뭐라고 하셨어요, 한 번 더 말씀해, 잘 못 들었어요) -> the user says it again: right after the request,
+     or when the question names the request ("what you'd like me to do", 부탁하신 거), the original request text;
+     after an answer of theirs, that answer. ASR noise applies again to what is repeated; people do not get their
+     own words wrong, so the correctness mix does not apply (silence and patience still do);
+   - "where are you?" (EN where are you / where you are; KO 어디(에) 계세요, 어디세요, and a plain 어디(에) 있어요? that
+     names no object, place or person and has no subject before 어디: only an opener such as 지금, 혹시, 그럼,
+     죄송한데, 저기요; "그거 어디 있어요?", "말씀하신 물건은 어디 있어요?" ask about a thing, not the listener), naming
+     no candidate -> the
+     user's own place: "I'm at the sofa." / "소파에 있어요.", or while walking "I'm going to the bed." /
+     "침대로 가고 있어요." (`SimUser.place_of`). People do not misstate where they are, so the correctness mix of
+     rule 5 does not apply; ASR does;
+   - clarification with candidates: a yes/no question naming one candidate -> "Yes, that one." / "네, 맞아요."
+     if it is the intended one, else "No, " + the intended answer; a wh question or one naming two or more
+     candidates -> the intended answer (`spec.answer`);
+   - a scripted resolution (safety clarification, confirming a refused request): any wh or yes/no question ->
+     `spec.answer`;
+   - ASR repair, "Did you mean X?" (EN did / do you mean / say X, "was it X", "... a typo?"; KO X(이)라고 하셨어요?,
+     X 말씀이세요?, X 맞나요?, 오타) where X (a quoted phrase, else the words after "mean" / before 말씀) is a word of
+     the user's own request or names an object, place or person of the request -> "Yes. " / "네. " + the request
+     restated. This is informative: the wrong / not-sure mix applies (a wrong draw is "not sure", since a "no" would
+     deny the user's own words). X that is neither (the misheard word itself) gets no repair answer and falls
+     through to the rules below. Never a repair "yes": a choice between quoted phrases in one sentence ("Did you
+     mean 'sink' or 'kimchi fridge'?"), and a question that names an object, place, person or task candidate the
+     request is not about, by a name that is not a word of the request ("Did you mean 'mug', the red coffee mug?"
+     when the blue one is wanted). Those get the clarification / goal answers above and below. Quote marks are
+     punctuation when names are matched, so a quoted and an unquoted question get the same answer;
+   - a question about the user's own request (when the runner has told the user model what was asked for,
+     `SimUser.set_wants(goal)`; `dialog.compose_from_goal`): the user restates what they asked for, never more:
+     - "where should I put / bring X?" (EN put, place, bring, take, leave, move, go ...; KO 어디에 두/놓/넣/가져/갖다 ...)
+       about an object of the request -> where it goes: "On the sink, please." / "싱크대 위에 놔 주세요.",
+       "Bring it to me, please." / "저한테 갖다 주세요.", "Give it to the husband, please."; with "where is it" in the
+       same question, its place first;
+     - a choice between objects that names the requested one -> "The blue mug."; a choice between places that names
+       a place of the request (a destination, the container to open, a place to go, where the person to tell is)
+       -> "The sink."; "should I put X on A or B?" / "bring it to you or put it somewhere?" -> where X goes;
+     - "where is <a household member>?" -> where they are now ("Grandpa is at the bed."), unless the user does not
+       know (`user.p_location_unknown`);
+     - a yes / no read-back of the plan ("I will ... Is that right?", "...겠습니다. 맞죠?") -> "Yes, that's right."
+       when it states every part of the request (each object with its destination, the containers, the places, the
+       person to tell; for "bring it to me" the user's own seat or "you" counts), else "No, " + the first part it
+       gets wrong or leaves out ("No, put the blue mug on the sink."); a yes / no question about one part of the
+       request is judged on that part only;
+     - "what should I do with X?" (X requested) is a destination question; "which place do you mean for X?" too,
+       but "which place should I look for X?" asks where X is;
+     - a list of places none of which is where the request goes, when the request is for a person -> who it is
+       for: "Bring it to me, please." or where that person is ("Grandpa is at the bed.");
+     - "어디에 가져다줘야 할까요?" (Korean drops the object) / "Where should I put it?" with one thing asked for
+       (or all going to the same place) -> where it goes; an empty slot ("Where should I put the ?") is not
+       answered;
+     - open questions ("What should I do?", "What else?") are not answered from the request;
+   - knowledge state (consistency fix, not a change of rates): what the user has said about where an object is
+     holds for the rest of the episode. After "I don't know" it does not name the place later, and after naming
+     it, it does not say it does not know. The `user.p_location_unknown` draw is still taken on every ask (the
+     random streams do not shift) but only the first one per object counts;
+   - "where is X?" about one object -> its true place ("It's on the counter." / "조리대 위에 있어요."), unless the
+     user does not know (`user.p_location_unknown`); "where should I put X?" is not read as "where is X?";
+   - otherwise "I'm not sure what you mean." / "무슨 말씀인지 잘 모르겠어요." (the generic user: "I don't know.");
+   - a "to me" word ("to you", "hand it", '드릴게요', '당신', '손에') confirms a delivery to the speaker only in that
+     object's own part of the read-back (its clause and the following ones up to the next object of the request),
+     with no other person named there and no place or room of another room said as where it goes there
+     ('안경을 거실 탁자에 두고, 리모컨은 할아버지께 드릴게요' is a "no" for a speaker in the small room: the giving
+     verb is for grandpa; fresh pilot round 3, hl-dev-000060 KO).
+   - 30-task gate, round 1 (homeloop_bench results/gate30_r27/round1):
+     - a delivery read back as a put-down ON the person's own seat, bed or the floor ("put the red mug on the
+       armchair", '침대 위에 둘게요') is a "no" ("No, bring the red mug to me."): no support surface, and the judge
+       fails it; "bring it to the armchair" still counts as "to me". A support surface the person can reach from
+       where they are now (`reach.place_reachable`) is a "yes" when they asked for the thing to be brought (mode
+       reach: "on the side table" beside grandma); a person who asked for it in the hand says "no";
+     - for a delivery, the person's place said only as a waypoint ("go to the desk_chair, then ...") does not
+       count, and the object's own part naming another person ("put the book on the grandpa") is a "no";
+     - a message is judged on the places said in its own part (its clause and a go-to or 'X에서' clause right
+       before it), not on the other parts of a compound read-back (", then go to the dock");
+     - "on the fridge" / '냉장고 위에' for a request to put it IN the fridge is a "no" ("No, put the apple in the
+       fridge.");
+     - a request that only opens (closes) a container needs the verb in the read-back ("put the microwave in the
+       kitchen" is a "no": "No, open the microwave."); with something to put in it, naming the container is enough
+       as before; "where should I put the microwave?" gets "Please don't move it, just open the microwave.";
+     - "Should I wake the kid first, or should I go to the fridge ...?" (each side another part of the request) is
+       answered with the request itself (the order asked for), not "yes";
+     - "Which place do you mean: <places in the kitchen>?" when the kitchen is only in the message to be said
+       ("tell Grandpa to head to the kitchen") -> "None of those. Please just tell grandpa: Please come to the
+       kitchen.";
+     - a turn with a second, explicit "Where are you?" sentence gets both answers ("... I'm at the sofa.");
+     - a translated read-back whose English meaning and heard text both get a "no", where the part the meaning
+       corrects is right in the heard text, is corrected for what was heard.
+5. **Correctness mix** on informative answers: wrong with `user.answer.p_wrong` = 0.173 (another candidate,
+   a flipped yes/no, another place, or `spec.wrong_answer`; when no alternative exists the user is unsure
+   instead; "another place" is a surface or container where an object of the task is usually kept, a catalog
+   typical receptacle that fits it (realism R-b), as people confuse one usual place for another, never the
+   wardrobe for a mug: `SimUser.wrong_places`), not sure with `user.answer.p_not_sure` = 0.096 (said "I don't know." / "잘 모르겠어요.": the user understood the question and is unsure of the answer; "I'm not sure what you mean." is kept for a question it did not follow), else correct (73.1 %). ZOU Table 1: crowd workers
+   answering a product-search system's clarifying questions, the closest measured answer mix we found (it is not
+   a robot study).
+6. **Silence**: `user.p_no_answer` = 0.05 (assumed; no measured rate).
+7. **Patience**: after `user.patience_questions` = 7 questions (ZOU Fig. 2 median) the user stops answering.
+8. **Latency**: lognormal, median 4.98 s, sigma 0.842 (from mean 7.1 s), floor 1.75 s (ZOU Sec. 3.3).
+9. **Language**: the user answers in the episode language.
+
+## Structured questions
+
+A planner may attach a **meaning** to a question: `ask(question, lang, meaning={"qtype": ..., <slots>})`. The
+user then picks the answer from the task script by qtype and slots (`homeloop_robot/intent.py`,
+`answer_structured`) instead of reading the text. The question text is still what the user hears: it is logged as
+the robot's utterance, and the answer goes through the same correctness mix (rule 5), silence, patience, latency
+and ASR noise as any answer. The meaning never changes the outcome draws of the call (it is not part of the
+outcome key). The qtype list is frozen:
+
+| qtype | slots | what the question asks | the answer from the script |
+|---|---|---|---|
+| `which_object` | `options` (the things offered), `obj` | which object the user means or wants ("Which one, the white mug or the green mug?", "What should I bring?") | the intended candidate (`spec.answer`) of an object clarification; else the requested object ("The red book.") |
+| `which_place` | `options` (places offered), `obj` (the thing to be placed), `verb` (`open` / `close`: which container or door) | which place, or where something should go or where the robot should go ("Where should I put the mug?", "Which shelf do you mean: A or B?", "What should I open?") | the intended candidate of a destination clarification; with `verb`, the container the request opens / closes ("The fridge."); else where the object goes, the place the request names, or "anywhere in the bedroom" for a room |
+| `confirm` | `goal` (a read-back sentence) or `obj` | a yes / no check of the robot's reading: its plan ("I will ... Is that right?") or one thing ("Is it the red mug?") | rule 4's yes / no on a candidate, or the read-back check ("Yes, that's right." / "No, put the blue mug on the sink.") |
+| `where_are_you` | - | where the user is now | the user's place, or where they are walking to (not informative) |
+| `where_is` | `obj` (required: an object or a person) | where an object or another person is now | its true place, unless the user does not know |
+| `repeat` | `about`: `request` or `answer` | say the request or the last answer again, or restate the task ("Could you repeat that?", "What should I do exactly?") | the request text, or the user's last answer (ASR again; not informative) |
+| `did_you_mean` | `word` (required) | a check of a word the robot may have misheard in the user's own words | "Yes. " + the request restated when the word is the user's own; else a `confirm` of that thing |
+| `what_to_say` | `person` | what message to give someone | the message of the request's `said_to` (catalog `MESSAGE_TEXT`) |
+| `help` | - | a request to clear the way / help with an obstacle | with a help-clearable fault, "OK, I moved it." (as for HELP_RX questions); else "not sure" |
+| `free` | - | none of these | the text is read by the rules (below) |
+
+Unknown qtypes, wrong slot types or a missing required slot make the meaning void (`intent.clean`): the text is
+read as free text. A qtype whose script has nothing to say gets "not sure" like an unanswerable question.
+
+**Free text** (no meaning, or `free`), in this order:
+
+1. **Rules**, first the reading conventions of spoken dialog (`intent.read_free`), then `dialog.compose` (dialog
+   policy above) on the part of the question that is answered (`intent.text_for_rules`). The conventions:
+   1. the robot's own re-ask preamble ("Sorry, I didn't hear you.", "Sorry, I may have misheard you.",
+      "죄송해요, 잘 안 들렸어요.") is not a request to repeat, and a context sentence ("You mentioned the X.",
+      "X 얘기하셨죠?") is not the question: the question after it is read; neither is the robot's remark on what is
+      not in its plan when a translation turns it into a question with another question after it ("김치냉장고 얘기가
+      제 계획에 없나요? 제가 우유를 주방 냉장고에 두겠습니다. 맞죠?" -> the read-back is answered; pilot round 3,
+      `tests/test_dialog_pilot_r3.py`);
+   2. a compound question is answered from its **first** question ("Where is the red book, and where should I
+      bring it to?" -> where it is); sentences before the first "?" are context (a read-back); a Korean list of
+      steps ("A하고, B하고, ... 맞나요?") is one question;
+   3. an open "what should I do (there)?", "which things ... and where?" with nothing specific named, or "what
+      should I do with X?" where X names nothing in the house -> `repeat` (the user says the task again); "what
+      does 'X' mean?" about a short quoted word -> `did_you_mean`;
+   4. "Where is X?" naming a thing or person of the house (also after "I couldn't find X." / "X, 못 찾았어요.") -> `where_is`;
+      "which drawer / 어떤 서랍", a choice between two places, "어디에 둘까요?" -> `which_place`; a choice between
+      two things -> `which_object`; one proposal ("Should I ...?", "...드릴까요?") or a read-back with a tag
+      ("맞죠?", "Is that right?") -> `confirm`; "What should I tell X?" -> `what_to_say`; a remark with no
+      question, or a request for the user to do the task ("Can you bring me the mug?") -> `free` (not sure).
+   When a rule answers, that is the answer (path `rules`).
+2. **LLM classifier**, only when the rules do not understand the question (rule `not_understood` /
+   `generic_user`) and the run has an LLM: `homeloop_bench/user_intent.py` maps the question (preamble removed)
+   onto the qtype list plus slots with a fixed prompt (version `ui2`: the qtype list with examples and the same
+   reading conventions), temperature 0, seed 0, JSON output. It only classifies; the answer comes from
+   `answer_structured` (path `llm`). A `free` or unusable classification keeps "not sure".
+3. Classifications are cached per run in `<out>/llm_cache/user_intent.jsonl`, so a rerun gives the same
+   episodes. With no LLM (or `--llm fake`, or `HOMELOOP_USER_CLASSIFIER=rules`) only the rules apply
+   (`summary.json` config `user_classifier: rules`).
+
+**A meaning about nothing.** A `which_object` / `which_place` meaning whose `obj` names nothing in the house
+(SAGE's "What should I do with the chicken bring?" about an ASR fragment) cannot be answered about that thing: a
+"where ...?" question keeps `which_place` without the object, otherwise the user says the task again (`repeat`)
+(`intent.ungrounded`). The same holds for a `did_you_mean` whose word is not the user's and names nothing in the
+house: SAGE's "'언경'과 '리컨 갖단 드'는 무슨 뜻이에요?" quotes words it misheard, and a user who said 안경 / 리모컨 hears
+that and says the request again (`repeat`; fresh pilot round 1, hl-dev-000060 KO).
+
+**Answers to two parts and to several things** (fresh pilot round 1, `tests/test_dialog_fresh_pilot_r1.py`):
+- "Where are the reading glasses and the remote now?" names two things of the request: the answer says where each
+  one is ("The black glasses are on the desk in the study. The black remote control is on the sofa."); an object
+  is left out only where its name is inside a longer name of another object that is named ("book" in "red book";
+  `dialog.mentioned_objects`). Before, only the objects with the longest name were kept, so the remote's place was
+  never said (hl-dev-000016).
+- A place is named with its room when its name alone ends another place's name ("desk" and "kid's desk": "the desk
+  in the study"; `dialog.clear_place_name`), and "Which desk do you mean?" gets the desk an object of the request
+  is on when no offered place is where the request goes (hl-dev-000016).
+- "Which things, and where?" ('어떤 물건을 가져다드릴지, 그리고 어디에 놓아드릴지 알려주실 수 있나요?') gets the things
+  and where they go (`SimUser._with_destination`; hl-dev-000060 KO).
+- In a read-back, a quoted message names no place ("say 'It's time for bed.'" is not the bed), the sources of all
+  objects of the request are not "another place" for a person, and a read-back with the right person but the
+  wrong message is corrected by the message ("No, tell the kid: It is time for bed.", template `fix_say_msg`);
+  the speaker's spot read back as "the spot within your reach" / "손이 닿는 곳" is the speaker (hl-dev-000057 /
+  000060).
+- A place said as where an object comes from or where the robot goes on the way ("the remote from the coffee
+  table", "go to the desk chair, then ...", '커피 테이블에 있는 리모컨', '의자에 가서') is not a place the object is
+  brought to, even when that source is wrong; a place named as where it goes still is, and a place said in the
+  object's own part of the read-back counts even when it is the destination of another part ('... 물병을 거실 TV
+  스탠드에 두는 거죠?' for a water bottle brought to the speaker). For a message the place stays where it is said
+  ('침대에서 ... 말할 거예요'), and 'X에서' is never taken as a source (`dialog.strip_route_places`,
+  `dialog.read_back_clauses`;
+  fresh pilot round 2, hl-dev-000060: a wrong source made the right delivery to grandpa "not covered", and the
+  correction repeated what the robot had said instead of naming the glasses that went to the living room;
+  tests/test_dialog_fresh_pilot_r2.py).
+
+**Heard-text check: the meaning must match what the user hears** (both languages; R2-7 note, review round 1).
+No real user hears a planner's meaning, only its text. A meaning counts only when the text the user hears says it
+(`SimUser._content`):
+
+1. the text is in the user's language (`intent.in_lang`): a Korean household member does not follow a question
+   that is mostly English (more words in Latin letters than words with Hangul: robot_agent's `_in_lang` returns the
+   English when its translation call fails, also under its LLM budget), an English one not a question that is
+   mostly Korean. Such a question is answered "I'm not sure what you mean." (rule `not_in_lang`), with or without a
+   meaning. This is a documented assumption: some Korean users follow simple English, but the robot cannot count
+   on it;
+2. the text, read by the free-text chain above (rules, then the classifier), gives the same qtype;
+3. the slots name the same things, places and people as the text (`intent.slots_agree`): they disagree when, for
+   one kind, the slots name something the text does not and the text names something the slots do not ("빨간 사과
+   어디 있어요?" with `obj: remote`; a read-back naming the sofa with a `goal` naming the TV stand; options naming
+   other places), or when a thing / person slot names nothing of the house while the text names a thing or a
+   person ("plates" for "접시 어디 있어요?"). A text that names nothing of that kind ("Where should I put it?") or
+   fewer of them agrees (context).
+
+Otherwise the user answers what it heard (that reading, or "not sure") and the answer is recorded with path
+`structured_mismatch` ("Where are you?" translated as "여기 있어요?" is not a question about the user's position;
+`{"qtype": "what_to_say"}` sent with the text "Okay." gets no message). The adapter derives SAGE's meanings from
+its English templates, so in English episodes the user hears the template itself; the rules read every SAGE
+template as the qtype the adapter gives it (test `test_sage_english_templates_read_as_their_meaning`), so a
+faithful question is never rejected. To read those templates, the rules also read a request for help with an
+obstacle ("Please clear the way and say yes.", "가장자리 쪽으로 옮겨 주세요") as `help`, "Please answer yes or no." as
+`repeat` (`about: answer`), "Could you say the task in other words?" as `repeat`, and a where-should-it-go
+question they cannot answer ("Where should I put the ?", "Where should I go?") as `which_place`
+(`intent.read_surface`). The share of `structured_mismatch` answers is in each run's `summary.json` `dialog_paths`
+(one language per run); questions not in the user's language are the answers with rule `not_in_lang`.
+
+A read-back (`confirm` with a `goal`) is also answered for the sentence heard: when the heard read-back states something (it names a thing, place or person
+of the house, quotes a message, or, in Korean, holds a word in Latin letters such as a raw id) and the user's yes /
+no to it differs from the yes / no to the meaning's English read-back, the answer is the one to the heard sentence
+(path `structured_mismatch`). A Korean translation that names fewer things than the English ("…주방에 놓겠습니다"
+for "…on you", "파트너B에게" for "to husband") passes the slot check above, but the user agrees or disagrees with
+what they heard (pilot round 1, hl-dev-000010 / 000013). A read-back that states nothing ("그렇게 할게요. 맞죠?")
+is taken from context (`intent.vague_read_back`).
+
+The same assumption holds for messages: a `said_to` goal counts only for an utterance in the household's language
+(the episode's, `World.lang`): "Dad, lunch is ready." said in English in a Korean home does not tell dad
+(docs/world.md).
+
+Every answered question records how it was read: `SimUser.log[*]` and the episode's `calls[*].intent` hold
+`{path: structured | structured_mismatch | rules | llm, qtype, rule}`, `episodes.jsonl` has `dialog_paths` (counts) and `summary.json`
+has `dialog_paths` (shares). For a rules answer the qtype is the one its rule implies (`intent.rule_qtype`).
+
+**Who declares a meaning.** `oracle`: its gold clarification question (`which_object` / `which_place`, the
+candidates as options) and its help request (`help`). `knowno_like`: its choice question (`which_object`, or
+`which_place` when the options differ only in a place). `naive` never asks. robot_agent's SAGE-v2 (AssistLoop)
+writes every question in English from fixed templates and translates it just before its Ask skill; the bench
+adapter wraps `AssistLoop._ask_io` on the loop instance (robot_agent is not edited), sees the English question,
+and `homeloop_robot/configs/ra_dialog.py` (`derive`) maps it onto its template id, qtype and slots (read-back ->
+`confirm` with the read-back sentence; "Which place do you mean: A or B?" -> `which_place`; "Where are you?
+Which place should I bring it to?" -> `where_are_you`; "I couldn't find the X. Where is it?" -> `where_is`;
+"What should I open / close?" (understand.issue_question's verb issue, only robot_agent's verbs open / close /
+shut) -> `which_place` with `verb`; ...;
+the list and the robot_agent function each comes from are in that file). Questions the understanding LLM writes
+itself, and robot_agent's ClosedLoop planners (grace, llm_direct), have no template: free text.
+`HOMELOOP_RA_STRUCTURED=0` turns the adapter's meanings off (ablation).
+
+**Accuracy audit** (`python -m homeloop_bench.sim_user_audit`; result `homeloop_bench/data/quality/sim_user_audit.json`).
+
+- *Set* (fixed, `homeloop_bench/data/quality/sim_user_audit/questions.jsonl`): 533 real robot questions (266 EN, 267
+  KO) taken from the runs: live_smoke sage EN/KO (282), the R2-6 sage traces (183), with 313 questions of
+  tasks in the sage failure analysis tagged by their `causes.tsv` cause (`context.hard_case`), exp_r2 oracle (61) and progprompt_like (5), and the early R2-5 probe (2). Each row has
+  the task id and, for a Korean sage question, the English question SAGE wrote before translation (`robot_en`,
+  from the translation prompt in the trace or the run's LLM cache; one untranslated English question is its own
+  English).
+- *Gold*: three independent agent judges labelled every question with a qtype and slots from what the person
+  hears (`labels_{1,2,3}.json`). Gold is the qtype of at least two judges; the 4 questions where all three differ
+  are listed in `disagreements` and left out (`n_disagree_excluded`).
+- *Simulator reading*: each question goes through the chain of an episode of its task (profile ideal, seed 0):
+  structured (the meaning the run's planner attached, rebuilt the way the run built it: SAGE's template via
+  `configs/ra_dialog.derive`, the oracle's gold question or help request, none for the others), the heard-text
+  check (both languages), rules, then the classifier (qwen3-vl:8b-instruct on GPU 0, cached in
+  `sim_user_audit/user_intent_cache.jsonl`, so the audit reruns without a server).
+- *Score*: a reading is correct when its qtype is gold and, for each key slot both sides give (where_is `obj`,
+  did_you_mean `word`, repeat `about`, what_to_say `person`, which_place `obj` and `options`, confirm `goal` and
+  `obj`), the simulator's value matches a gold judge's value: same words, or naming the same object of the house;
+  for `options` and a read-back `goal`, naming the same objects, places and people of the house (one in common, no
+  kind where each names one the other does not). A gold value that names nothing of the house (a word the
+  translation made up, "부두" for the dock) cannot be compared and is not checked. The slots scored are those of
+  the reading the answer came from (the meaning, or the heard text's reading for `structured_mismatch`); a
+  reading by a rule of `dialog.compose` has no slots: only its qtype counts. `key_slots.by_slot` has the counts.
+- *Untranslated Korean questions*: a question of a Korean episode that is not in Korean (3 in the set: "I
+  couldn't find the cooking pot. Where is it?", ...) is not followed by the Korean user by design (above); the
+  judges' label is its English meaning, which the user never gets, so these are left out of the accuracy and
+  listed in `untranslated_ko` with the simulator's answer.
+
+| | n | accuracy | EN | KO | structured | rules | llm | structured_mismatch |
+|---|---|---|---|---|---|---|---|---|
+| before the fixes (robot a3e97d7, bench 5215e4c; prompt ui1) | 529 | 0.758 | 0.788 | 0.728 | 0.913 (61 %) | 0.503 (27 %) | 0.540 (12 %) | - |
+| after (prompt ui2) | 529 | 0.953 | 0.966 | 0.940 | 0.985 (63 %) | 0.917 (27 %) | 0.829 (7 %) | 0.867 (3 %) |
+| review round 1: heard-text check in both languages, slot agreement, more key slots, untranslated KO left out | 526 | **0.954** | **0.962** | **0.947** | 0.991 (60 %) | 0.917 (27 %) | 0.788 (6 %) | 0.938 (6 %) |
+| pilot round 1: a read-back is confirmed or corrected for the sentence heard | 526 | **0.954** | **0.962** | **0.947** | 0.990 (59 %) | 0.917 (27 %) | 0.788 (6 %) | 0.951 (8 %) |
+
+(accuracy of each path, with its share of the scored questions). Review round 1 also scores which_place `obj` /
+`options` and confirm `goal` / `obj` (340 key slots checked, 338 matched); the structured_mismatch answers are now
+all Korean questions (32), none English. Pilot round 1 moved 9 Korean read-backs from structured to
+structured_mismatch (now 41; 339 key slots checked, 337 matched): their Korean translation drops or changes the
+destination ("욕실 주니어 캐비닛", "kimchi_fridge에"), and the answer is now the one to that sentence; the qtype
+accuracy is unchanged. The rules added in that round to read SAGE's own templates (help, yes /
+no again, where-should-it-go, a leading "Where are you?") were written while reading this set's English
+structured questions, so they too are in-sample. The fixes were made from this set's confusions:
+the conventions above, SAGE's "You mentioned the X. What should I do there?" read as `repeat` (it was `free`),
+the Korean heard-text check (R2-7 note) and prompt ui2. The set was not changed (no question was dropped or
+relabelled), but the result is an in-sample number: the conventions were written while reading these errors, so
+accuracy on new robot questions may be lower. The before row is the same set and scorer run on the code before
+the fixes (`sim_user_audit/baseline.json`). Remaining confusions after the fixes (25 of 529): mostly an English or
+Korean question that offers an action and a place in one sentence ("Should I bring the blue book to the bed, or
+do you want me to hold them there?": gold which_place, read as a proposal), robot remarks the judges call `free`
+but the rules read as a proposal, and English slots that name an object by another word ("plates" for 접시). The
+oracle's episodes (50 dev tasks, real, seed 0, EN and KO) are unchanged by the fixes.
+
+## ASR
+
+Per utterance: not heard with `asr.p_not_heard` = 0.027 and partly heard with `asr.p_partial` = 0.0114 (the first
+half or more of the words survive) (OLDERVA Table 2: 69 and 29 of 2,552 in-home turns of older adults);
+otherwise each English word / Korean syllable is corrupted with the WER / CER of the condition: a substitution,
+a deletion, or an inserted short function word (EN the, a, and, to, it; KO 이, 요, 그), in shares 0.6 / 0.3 / 0.1
+(assumed). Substitutions are always plausible recogniser output, never non-words: an English word becomes a
+hand-listed near-homophone (cup -> cop, kitchen -> chicken) or the nearest real word of a ~330-word vocabulary by
+edit distance; a Korean syllable becomes a neighbouring-vowel or changed-final-consonant syllable (컵 -> 캅)
+restricted to the 2,350 common syllables of KS X 1001.
+
+| condition | English WER | Korean CER |
+|---|---|---|
+| near (<= 1.2 m) | 0.044, Whisper large-v2 FLEURS en (WHISPER Table 2) | 0.1048, Whisper large-v2 fine-tuned on KsponSpeech (KMETEO Table 3) |
+| far | 0.255, Whisper large-v2 CHiME-6 homes (WHISPER Table 2) | 0.2257 = 0.1048 x 2.154 (AMI SDM1/IHM ratio, assumed transfer) |
+| app (near-field: the user's phone / tablet) | 0.044, Whisper large-v2 FLEURS en (WHISPER Table 2) | 0.0521 = Speech-MASSIVE ko-KR CER 8.04 % (SMASSIVE Table 1) x KsponSpeech sWER/WER 0.648 (KSPON Table 3), meaning-changing errors only, assumed |
+
+With `user.dialog_channel = app` (the default) the instruction and the answers use `app`. With `voice` the
+answer condition depends on the distance between the robot and the speaker, and the instruction is spoken from
+`user.approach_distance_m` = 0.57 m (OSKOEI10 Table 1), so it is near.
+
+Share of instructions that reach the planner changed (`python -m homeloop_robot.report asr-share --tasks
+<bench dev.jsonl>`, real, seed 0, 1,000 dev tasks; details and the old value in
+[calibration.md](calibration.md#near-field-asr-app-channel-round-2)):
+
+| lang | any change | an entity changed |
+|---|---|---|
+| EN (18.1 words) | 58.1 % | 18.8 % |
+| KO (30.1 syllables) | 76.5 % (was 91.9 % with the near rate; 88.5 % corrupted) | 35.1 % (was 56.9 %) |
+ `stress` uses zero-shot Korean (0.1466,
+KMETEO Table 3 group 1) and the AMI single-distant-microphone English rate (0.364).
+
+## Motion
+
+Each person walks between their own seats and the house's seat places: departures are a Poisson process with
+`user.motion.rate_per_h` = 2 per hour (assumed) and at least a pause of 30-300 s (assumed); the path is the
+house's door-aware path; the speed is the person's gait speed x `user.indoor_gait_factor` = 0.7 (assumed;
+BOHANNON warns its norms may not hold for short walks with turns):
+
+- adults under 65: comfortable gait by decade and sex (BOHANNON decade table, e.g. women 30-39 1.34 m/s);
+- 65 and over: drawn once per episode from Normal(0.92, 0.27) m/s (STUDENSKI), truncated at mean +- 2.5 SD;
+- children: 1.0 m/s (assumed; no child source).
+
+In `ideal` people do not move. A person's body at a seat other than the starting one is 0.5 m beyond the seat's
+approach pose (or the place's `body_pos` when the house gives one).
+
+## Handover, interruptions
+
+Handover: the person takes the object after a lognormal latency (median 2 s, assumed); with
+`user.p_unresponsive` = 0.02 (assumed), or when asleep, or if the latency exceeds `user.handover_timeout_s` =
+60 s, the handover times out.
+
+Interruptions: tasks of capability `correction` script one (`spec.interrupt`); in addition, with
+`user.p_interrupt_stop` = 0.01 per episode (assumed; anchor OLDERVA, 21 interruptions in 2,552 turns) the user
+says "Stop, please stop." / "잠깐, 멈춰 주세요." after a uniform 1-6 motion calls. Spoken self-repairs are very
+common in task dialogue (23 % of turns contain one, TRAINS), which is why corrections are part of the benchmark;
+we found no per-task rate for a user changing the goal while a robot works.
+
+## Consistency check
+
+`user.consistency(world, profile, n, seed, lang)` and `asr.consistency(profile, n, seed)` run n seeded draws and
+return one row per parameter (`param, expected, observed, n, lo, hi, ok`): the empirical rate must lie in the
+99.9 % binomial interval of the profile value (DESIGN 13.3). Rows: `user.p_no_answer`, `user.answer.p_wrong`,
+`user.answer.p_not_sure` (per answered question), `asr.p_not_heard`, `asr.p_partial` (per utterance) and the four
+WER/CER values (per heard word or syllable). `python -m homeloop_robot.profiles consistency` includes them.
+With n = 20,000 every row passes for `real` and `ideal` in both languages.
+
+## Simulator freeze `sim-freeze-r13`
+
+After the round 11 n = 50 gate the eight simulated-user bugs that remained (gate decisions S1-S8) were fixed in one
+pass and the simulator was frozen with the git tag `sim-freeze-r13`. Every fix is a consistency fix: the same
+reading for English and Korean, no new word list (the colours, class names and aliases are the catalog's), no change
+of a rate, a profile value or a score. Tests: `tests/test_dialog_r13_freeze.py` (each one fails on the code before).
+
+| id | what the user got wrong | the rule now |
+|---|---|---|
+| S1 | "Which book, the red one or the blue one?" was read as a which-place question ("Bring it to me, please.") or not understood | a colour + "one" / "빨간 거 / 빨간 것" is the object of that colour of the class named in the same question (or, when no class is named, of the class of the things asked for): `dialog.expand_one` |
+| S2 | a correct Korean read-back tagged "맞는 거죠?" got a correction while "맞죠?" / "맞아요?" got "네, 맞아요." | one tag pattern for every Korean read-back tag (`dialog.TAG_KO`: 맞 + optional 는 거/건/것 + 죠, 지요, 아요, 나요, 가요, ...) |
+| S3 | the colloquial "폰" was not the phone, so a correct read-back was corrected | "폰" is declared as a Korean alias of the `phone` class in the catalog (the detector reads it too, as for "pill bottle") |
+| S4 | "충전기에 있는 X" / "the X from the charger" (a dock word that only places an object) counted as the dock step of the request, so a read-back without the dock was confirmed | `dialog.says_dock`: a dock word followed by 에 있는 / 에서 가져 ... (Korean) or preceded by "from the" / "that is at the" (English) is a place of the object, not a step |
+| S5 | the Korean "충전기 말씀하셨는데, 거기서 뭘 할까요?" (context clause and question joined by a comma) was read as a where-to-put question; the English two-sentence form was read as "say the request again" | a Korean context clause "... 말씀(얘기)하셨는데/죠/네요, <question>" is split like the English "You mentioned the X." sentence (`intent.CONTEXT_CLAUSE_KO`) |
+| S6 | the Korean help reply "치웠어요." has no acknowledgement word, the English one is "OK, I moved it."; the robot asked for a "네" and read the reply as a correction | the Korean reply is "네, 치웠어요." |
+| S7 | `wrong_places()` could draw the place where the object really is (or where it should go), so a "wrong" where-answer was true and still labelled `user_wrong_answer` | a drawn wrong place that is the true place or the wanted destination of the things asked about is replaced by the next place of the list; the draw itself is unchanged, so the other random streams do not shift and every episode without such a collision is identical |
+| S8 | "Where is the milk, and where would you like me to put it away?" was answered for the first part only; the destination the user knows was never given | a compound question (where is X, joined to where should it go) gets both parts; the knowledge draw only concerns the first (`SimUser._asks_both`) |
+
+Not touched, because they are robot-side or taste: the robot's compound where-is question with a malformed meaning
+(R9), the repair dialogue after a noisy "No" (R3), the Korean help reply read as a correction by the robot's own
+yes/no parser (R4).
+
+Earlier results that are not comparable with later ones (episodes whose logged questions match a fixed pattern;
+the match is by text, so it is an upper bound; S7 cannot be matched by text and may move any episode with a
+where-question): all of `results/r3`, `r4`, `r4a`, `r4b`, `r7`, `r8`, `r8b`, `r9`, `r10`, `r11`, `milestones_r3`,
+`exp_r2`, `lab1`, `perf1`, `gate30_r27`, `live_smoke`. Per directory, episodes with an S1 pattern: r4b 159, r3 134,
+exp_r2 102, r10/n10 66 + 66, r11/n10 64 + 66, r7 64, milestones_r3 44, r8 42, r4 40, r11/n50 25; S5 (Korean context
+clause): r4b 158, milestones_r3 137, r3 66, r8/r8b 53, r4 40, r7 26, r9 16, r11/n50 12 + 13; S2: r4b 7, r11/n50_a2 3,
+milestones_r3 2; S3 and S4: lab1, milestones_r3, r4b, r3, r11/n50 (3-4); S6: exp_r2 20, milestones_r3 41, r4b 34, r11/n50_a2 7;
+S8: r4b 40, r3 54, milestones_r3 24, lab1 16, r11/n50 5. The round 12 results sit in the same case: compare variants
+only within one run set made after the tag.
+
+## Simulator freeze `sim-freeze-r19`
+
+Round 19 unfroze the scoring side for one change: a partial refusal of a robot_agent planner did not reach the judge, so a
+correct "I did the rest, but I won't hand the bleach to the kid" scored as a false success (hl-dev-000118, round 17
+`sage_s9`). The finding is in the judge, and the judge lives in **homeloop_bench** (`EpisodeEnv.judge`, `note_refusal`,
+`metrics.summarize`; homeloop_bench `docs/metrics.md` "Refusals and parts", commits `b107f72` and `f42895b` on its branch
+`r19`), not in this package. What the tag `sim-freeze-r19` marks here:
+
+* the simulator is **unchanged** since `sim-freeze-r13`: no rate, profile value, house, skill, user rule or hazard check moved
+  (`tests/test_freeze_r19.py` pins the selftest traces of `real` and `stress` to the r13 bytes);
+* the robot pack (`configs/`, the robot_agent side, not the simulator) declares the household robot's safety profile,
+  `configs/safety/household.yaml` (manifest `safety.profile`): robot_agent's core holds no hazard rule since round 19, and
+  this profile reproduces the r17 core decisions exactly (`tests/test_configs_safety_profile.py`, golden table of 27,924
+  decisions); the simulator never reads it;
+* the scoring change is the bench commits above: (1) the robot_agent adapter passes the loop's declared partial refusals to
+  `note_refusal` when the run ended `done` (a give-up never told the user, so its refuse part stays `not_refused`); (2) a refusal names a refuse part by an OBJECT (index, object id, or a name of the object in any catalog
+  language), never by a place or a person id alone; (3) new reporting only: `refuse_parts` (`refused_correctly`,
+  `carried_out`, `not_refused`), `feasible_parts` (`done`, `false_refusal`, `not_done`), `misread_refusals`. The success rule
+  and every older key keep their definitions.
+
+Earlier results that are not comparable with later ones:
+
+* the four `sage_s9` hl-dev-000118 episodes of round 17 (`results/r17/fresh` and `fresh_asr`, English and Korean) and every
+  summary row that contains them. Measured by a cache-only replay (no LLM) of the recorded caches on the r19 code: the two
+  English episodes change from false success to success (`refused_correctly`); the two Korean ones stay a false success
+  (the 8B reading names the detergent, not the bleach: `misread_refusals` 1, `unmatched_refusals` 1, `partial_refusals` 1).
+  The same replay (r15 fresh / fresh_asr `sage`, `sage_s6`, `sage_s8`; r17 `sage_s8n`, `sage_s9`; EN and KO; 1,998 episodes
+  complete, dev 158 a cache miss on both codes) left every other episode identical to the r17 heads apart from the new keys;
+* any later robot_agent run on a set with mixed refuse tasks (`compound.mix_clean_refuse`, `mix_fridge_refuse`,
+  `mix_microwave_refuse`) where the loop drops a part and says so: variants with `hazard_receiver` on and every run on the fridge
+  and microwave mix tasks (the household food rule drops those parts);
+* not affected: the oracle and naive baselines (they name the subtask index) and `progprompt_like` (no recorded refusal is
+  credited through a place or a person id only); results of other planners on tasks without a refuse part.
+
+The part split fields exist only in r19+ results; `homeloop-bench rescore` adds them to older runs where the record suffices.
+
+## What the user model is not
+
+It is not a language model: it answers only what its rules and the task's `user` block cover, so a planner
+cannot extract the goal by asking open questions; a vague question gets "not sure". Elderly-specific ASR rates
+(read speech, fine-tuned models) were found but not used, because they are lower than the in-home breakdown
+rates of OLDERVA.
+
+## Sources
+
+Full entries in [calibration.md](calibration.md).
+
+- WHISPER: https://arxiv.org/abs/2212.04356
+- KMETEO: https://arxiv.org/abs/2410.18444
+- SMASSIVE: https://arxiv.org/abs/2408.03900
+- KSPON: https://ksp.etri.re.kr/ksp/article/file/62525.pdf
+- SLURP: https://arxiv.org/abs/2011.13205
+- OLDERVA: https://arxiv.org/abs/2403.02421
+- ZOU: https://arxiv.org/abs/2008.00279
+- BOHANNON: https://doi.org/10.1016/j.physio.2010.12.004 (decade table read from https://www.physicaltherapy.utoronto.ca/sites/default/files/assets/files/11walking-speed-age-and-sex-specific-normative-values-final.pdf)
+- STUDENSKI: https://doi.org/10.1001/jama.2010.1923
+- WALTERS05: https://uhra.herts.ac.uk/id/eprint/265/1/101144.pdf
+- OSKOEI10: https://uhra.herts.ac.uk/id/eprint/13538/2/MohammedrezaEtAl_AISB10Proxemic.pdf
+- TRAINS: https://aclanthology.org/J99-4003/

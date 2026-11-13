@@ -1,0 +1,647 @@
+"""SimUser: the simulated household user (DESIGN 5, docs/user_model.md).
+
+* dialog: answers to the robot's questions (content from ``dialog.py``), with the correct / not-sure / wrong
+  mix and answer latency of Zou et al. 2020 (arXiv:2008.00279, Table 1, Sec. 3.3), a patience limit
+  (same source, Fig. 2), silence (assumed), and ASR noise on what the robot hears (``asr.py``);
+* hearing: same room or within ``user.hearing_range_m``; announcements also reach adjacent rooms;
+* motion: Poisson walks between seats at the person's gait speed (Bohannon & Andrews 2011 decade table;
+  Studenski et al. 2011 for older adults), times an indoor factor (assumed);
+* handover: take latency and an unresponsive probability (assumed);
+* interruptions: the task's scripted interrupt, or a random stop with ``user.p_interrupt_stop`` (assumed).
+
+Everything is a pure function of the episode streams; nothing reads the wall clock.
+"""
+from __future__ import annotations
+
+import math
+import re
+from typing import Any
+
+from homeloop_robot import asr as _asr
+from homeloop_robot import dialog
+from homeloop_robot import intent as _intent
+from homeloop_robot._hs_compat import (
+    Heard,
+    PersonState,
+    UserEvent,
+    UserReply,
+    age_lower,
+    dist,
+    param,
+    point_along,
+    polyline_length,
+    r6,
+    adjacent_rooms,
+    room_of,
+    rooms_at,
+    world_path,
+)
+
+PARAMS = (
+    "user.answer.p_wrong",
+    "user.answer.p_not_sure",
+    "user.latency",
+    "user.patience_questions",
+    "user.p_no_answer",
+    "user.p_interrupt_stop",
+    "user.interrupt_after_calls",
+    "user.gait_mps_men",
+    "user.gait_mps_women",
+    "user.gait_older",
+    "user.gait_child_mps",
+    "user.indoor_gait_factor",
+    "user.motion.rate_per_h",
+    "user.motion.pause_s",
+    "user.hearing_range_m",
+    "user.p_location_unknown",
+    "user.handover_latency",
+    "user.handover_timeout_s",
+    "user.p_unresponsive",
+    "user.approach_distance_m",
+    "user.asr_on_instruction",
+    "user.dialog_channel",
+)
+
+HORIZON_S = 3600.0  # people stop scheduling new walks after this (episodes are much shorter)
+SEAT_BODY_OFFSET_M = 0.5  # body position of a seat = approach pose + 0.5 m along the approach yaw (geometry)
+
+
+def lognormal(rng, median: float, sigma: float, lo: float) -> float:
+    return max(lo, math.exp(math.log(median) + sigma * rng.gauss(0.0, 1.0)))
+
+
+def decade_key(lo: int, keys) -> str | None:
+    for k in sorted(keys):
+        a, b = k.split("-")
+        if int(a) <= lo <= int(b):
+            return k
+    return None
+
+
+class SimUser:
+    """Implements the ``UserModel`` protocol (DESIGN 5.1)."""
+
+    def __init__(self, world: Any, profile: Any, streams: Any, lang: str = "en", spec: dict | None = None):
+        if lang not in ("en", "ko"):
+            raise ValueError(f"lang must be en or ko, not {lang!r}")
+        self.world = world
+        self.profile = profile
+        self.streams = streams
+        self.lang = lang
+        self.spec = spec
+        g = lambda n: param(profile, n)  # noqa: E731
+        self.p_wrong = float(g("user.answer.p_wrong"))
+        self.p_not_sure = float(g("user.answer.p_not_sure"))
+        self.latency = dict(g("user.latency"))
+        self.patience = int(g("user.patience_questions"))
+        self.p_no_answer = float(g("user.p_no_answer"))
+        self.p_interrupt_stop = float(g("user.p_interrupt_stop"))
+        self.interrupt_after = list(g("user.interrupt_after_calls"))
+        self.rate_per_h = float(g("user.motion.rate_per_h"))
+        self.pause_s = list(g("user.motion.pause_s"))
+        self.hearing_range_m = float(g("user.hearing_range_m"))
+        self.p_location_unknown = float(g("user.p_location_unknown"))
+        self.handover_latency = dict(g("user.handover_latency"))
+        self.handover_timeout_s = float(g("user.handover_timeout_s"))
+        self.p_unresponsive = float(g("user.p_unresponsive"))
+        self.approach_distance_m = float(g("user.approach_distance_m"))
+        self.asr_on_instruction = bool(g("user.asr_on_instruction"))
+        # how the task and the robot's questions travel between the user and the robot (docs/user_model.md):
+        # "app" = the user's phone / tablet app (the task is given there, the robot's ask reaches the user there
+        # wherever the robot is, answers are spoken into it); "voice" = the robot's own speaker and microphone
+        self.dialog_channel = str(g("user.dialog_channel"))
+        if self.dialog_channel not in ("app", "voice"):
+            raise ValueError(f"user.dialog_channel must be app or voice, not {self.dialog_channel!r}")
+        # the goal atoms the user asked for ({"all": [...]}); set by the runner (set_wants), None = unknown
+        self.wants: dict | None = None
+        self.request: str | None = None          # the request text as the user said it (hear_instruction)
+        self.asr = _asr.ASRRates(profile)
+        users = sorted(pid for pid, p in world.people.items() if getattr(p, "role", "") == "user")
+        self.user_id = users[0] if users else (sorted(world.people)[0] if world.people else None)
+        self.asleep = set((spec or {}).get("asleep", []) or [])
+        self.n_asks = 0
+        self.last_intent: dict | None = None     # how the last answered question was read (path, qtype, rule)
+        self.last_reading: dict | None = None    # the meaning (qtype + slots) it was answered by, None = a rule's
+        self.n_handovers = 0
+        # what the user has already said about where things are, per object named in the question (True = told a
+        # place, False = said it does not know): a person does not say "I don't know" and later name the place
+        # (consistency fix, docs/user_model.md "Knowledge state"); the key () is a question that names no object
+        self._loc_known: dict[tuple, bool] = {}
+        self._help: tuple[str, float] | None = None
+        self.log: list[dict] = []
+        # the fallback for a free-text question the rules do not understand (docs/user_model.md "Structured
+        # questions"): ``classifier(question, lang) -> {"qtype", slots...} | None``; None = rules only
+        self.classifier = None
+        self._speed = {pid: self._gait(pid) for pid in sorted(world.people)}
+        self._sched = {pid: self._schedule(pid) for pid in sorted(world.people)}
+
+    # ------------------------------------------------------------------ motion
+    def _gait(self, pid: str) -> float:
+        p = self.world.people[pid]
+        g = lambda n: param(self.profile, n)  # noqa: E731
+        factor = float(g("user.indoor_gait_factor"))
+        lo = age_lower(getattr(p, "age_group", None))
+        if getattr(p, "child", False):
+            v = float(g("user.gait_child_mps"))
+        elif lo is not None and lo >= 65:
+            older = dict(g("user.gait_older"))
+            rng = self.streams.rng_for("user", "gait", pid)
+            v = min(older["max"], max(older["min"], rng.gauss(older["mean"], older["sd"])))
+        else:
+            sex = getattr(p, "sex", "")
+            tables = []
+            if sex in ("male", "female"):
+                tables = [dict(g("user.gait_mps_men" if sex == "male" else "user.gait_mps_women"))]
+            else:
+                tables = [dict(g("user.gait_mps_men")), dict(g("user.gait_mps_women"))]
+            vals = []
+            for tab in tables:
+                k = decade_key(lo if lo is not None else 30, tab) or "30-39"
+                vals.append(float(tab[k]))
+            v = sum(vals) / len(vals)
+        return v * factor
+
+    def _seat_pos(self, pid: str, place_id: str) -> tuple[float, float]:
+        person = self.world.people[pid]
+        if place_id == getattr(person, "seat", None):
+            return tuple(map(float, person.pos))
+        pl = self.world.house.places[place_id]
+        body = getattr(pl, "person_pos", None)
+        if body is not None:
+            return tuple(map(float, body))
+        yaw = math.radians(getattr(pl, "yaw_deg", 0.0))
+        return (pl.pos[0] + SEAT_BODY_OFFSET_M * math.cos(yaw), pl.pos[1] + SEAT_BODY_OFFSET_M * math.sin(yaw))
+
+    def destinations(self, pid: str) -> list[str]:
+        person = self.world.people[pid]
+        own = [person.seat] + list(getattr(person, "alt_seats", []) or []) + list(getattr(person, "walks_to", []) or [])
+        seats = [k for k, pl in self.world.house.places.items() if getattr(pl, "kind", "") == "seat"]
+        return sorted({d for d in own + seats if d in self.world.house.places})
+
+    def _schedule(self, pid: str) -> list[tuple]:
+        """Walks: (t_start, t_end, path, place). Departures: Exp(rate) gaps, at least a pause U(pause_s)."""
+        if self.rate_per_h <= 0:
+            return []
+        rng = self.streams.rng_for("user", "motion", pid)
+        dests = self.destinations(pid)
+        cur = self.world.people[pid].seat
+        pos = tuple(map(float, self.world.people[pid].pos))
+        speed = self._speed[pid]
+        t = 0.0
+        out = []
+        while True:
+            gap = rng.expovariate(self.rate_per_h / 3600.0)
+            pause = rng.uniform(self.pause_s[0], self.pause_s[1])
+            depart = t + max(gap, pause)
+            if depart >= HORIZON_S:
+                break
+            choices = [d for d in dests if d != cur]
+            if not choices or speed <= 0:
+                break
+            dest = choices[rng.randrange(len(choices))]
+            dpos = self._seat_pos(pid, dest)
+            path = world_path(self.world, pos, dpos)
+            dur = polyline_length(path) / speed
+            out.append((depart, depart + dur, path, dest))
+            t, pos, cur = depart + dur, dpos, dest
+        return out
+
+    def _state(self, pid: str, t: float) -> PersonState:
+        person = self.world.people[pid]
+        pos = tuple(map(float, person.pos))
+        vel = (0.0, 0.0)
+        for (t0, t1, path, _dest) in self._sched[pid]:
+            if t < t0:
+                break
+            if t < t1:
+                speed = self._speed[pid]
+                s = (t - t0) * speed
+                pos = point_along(path, s)
+                ahead = point_along(path, s + 1e-3)
+                dx, dy = ahead[0] - pos[0], ahead[1] - pos[1]
+                n = math.hypot(dx, dy)
+                vel = (speed * dx / n, speed * dy / n) if n > 0 else (0.0, 0.0)
+                break
+            pos = tuple(map(float, path[-1]))
+        room = room_of(self.world, pos)
+        return PersonState(pid, (r6(pos[0]), r6(pos[1])), (r6(vel[0]), r6(vel[1])), room,
+                           pid not in self.asleep)
+
+    def place_of(self, pid: str, t: float) -> tuple:
+        """(place id, moving): the seat a person is at, or the one they are walking to."""
+        place = self.world.people[pid].seat
+        for (t0, t1, _path, dest) in self._sched[pid]:
+            if t < t0:
+                break
+            if t < t1:
+                return dest, True
+            place = dest
+        return place, False
+
+    def people_at(self, t: float) -> dict:
+        return {pid: self._state(pid, t) for pid in sorted(self.world.people)}
+
+    def walks(self, pid: str) -> list[dict]:
+        return [{"t0": r6(a), "t1": r6(b), "to": d} for (a, b, _p, d) in self._sched[pid]]
+
+    # ------------------------------------------------------------------ hearing
+    def hears(self, person_id: str, robot_xy, t: float, broadcast: bool = False) -> bool:
+        st = self._state(person_id, t)
+        if not st.awake:
+            return False
+        rrooms = rooms_at(self.world, robot_xy)
+        if st.room is not None and st.room in rrooms:
+            return True
+        if broadcast and any(st.room in adjacent_rooms(self.world, r) for r in rrooms):
+            return True
+        return dist(robot_xy, st.pos) <= self.hearing_range_m
+
+    def reachable(self, robot_xy, t: float) -> bool:
+        """Does a question of the robot reach the user (the person who gave the task)? app: whenever the user is
+        awake (their phone is with them); voice: within hearing range of the robot."""
+        uid = self.user_id
+        if uid is None:
+            return False
+        if self.dialog_channel == "app":
+            return self._state(uid, t).awake
+        return self.hears(uid, robot_xy, t, False)
+
+    def ask_audience(self, robot_xy, t: float):
+        """Who a question of the robot reaches: None = the robot's own speaker (everyone in hearing range);
+        else the people the app channel reaches (the user, or nobody)."""
+        if self.dialog_channel != "app":
+            return None
+        return (self.user_id,) if self.reachable(robot_xy, t) else ()
+
+    def set_wants(self, goal: dict | None) -> None:
+        """What the user asked for (goal atoms), so they can answer questions about their own request."""
+        self.wants = {"all": list((goal or {}).get("all") or [])} if goal else None
+
+    # ------------------------------------------------------------------ dialog
+    def hear_instruction(self, text: str, lang: str) -> Heard:
+        """What the robot hears of the task instruction: app = near-field (the user's phone / tablet); voice =
+        spoken at the robot from the approach distance."""
+        self.request = str(text or "")          # what the user said: repeated / confirmed in ASR repair
+        if not self.asr_on_instruction:
+            return Heard(text, "ok")
+        cond = "app" if self.dialog_channel == "app" else self.asr.condition(self.approach_distance_m)
+        return _asr.corrupt(text, lang, cond, self.streams.rng_for("user", "instruction"), self.asr)
+
+    def help_request(self, question: str, t: float) -> None:
+        """The robot asked while a help-clearable fault is active (call before ``answer``)."""
+        self._help = (question, t)
+
+    def _no_answer(self, question: str, t: float, heard_q: bool, why: str):
+        reply = UserReply("", "no_answer", 0.0, heard_q)
+        self.log.append({"t": r6(t), "q": question, "kind": "no_answer", "why": why, "text": "", "heard": ""})
+        return reply, Heard("", "not_heard")
+
+    def _read_text(self, question: str, L: str, kw: dict):
+        """(Content, path, qtype) of a free-text question: rules (the free-text conventions of ``intent.read_free``,
+        then ``dialog.compose`` on the question as it is answered) -> llm (the classifier, only when the rules do
+        not understand it)."""
+        self.last_reading = None
+        if not _intent.in_lang(question, L):             # e.g. English a Korean user does not follow
+            return _intent.not_in_lang(L), "rules", "free"
+        r = _intent.read_free(question, L, self.world)
+        if r is not None and r[0]["qtype"] == "free":        # a remark: nothing to answer
+            return _intent._not_sure(L, self.spec or {}), "rules", "free"
+        if r is not None:
+            c = _intent.answer_structured(r[0], L, self.spec, self.world, **kw)
+            if c is not None:
+                self.last_reading = r[0]
+                return c, "rules", r[0]["qtype"]
+        qt = _intent.text_for_rules(question, L)
+        c = dialog.compose(qt, L, self.spec, self.world, **kw)
+        if c.rule in _intent.NOT_CONFIDENT:
+            # no rule answers it, but what it asks may be plain ("Where should I put the ?", "clear the way")
+            s = _intent.read_surface(question, L, self.world)
+            if s is not None:
+                self.last_reading = s
+                c2 = _intent.answer_structured(s, L, self.spec, self.world, **kw)
+                return (c2 if c2 is not None else c), "rules", s["qtype"]
+        if c.rule not in _intent.NOT_CONFIDENT or self.classifier is None:
+            return c, "rules", _intent.rule_qtype(c, qt, self.spec)
+        m2 = _intent.clean(self.classifier(_intent.strip_preamble(question), L))
+        if m2 is None:
+            return c, "llm", "free"
+        m2 = _intent.ungrounded(m2, self.world, question) or m2
+        self.last_reading = m2
+        c2 = _intent.answer_structured(m2, L, self.spec, self.world, **kw) if m2["qtype"] != "free" else None
+        return (c2 if c2 is not None else c), "llm", m2["qtype"]
+
+    def _content(self, question: str, L: str, meaning, kw: dict):
+        """:meth:`_content_read`, and a question that asks which object AND where it goes gets both parts
+        (:meth:`_with_destination`)."""
+        c, path, qt = self._content_read(question, L, meaning, kw)
+        return self._with_position(self._with_destination(c, question, L, kw), question, L, kw), path, qt
+
+    def _with_position(self, c, question: str, L: str, kw: dict):
+        """'Which place do you mean: ...? Where are you? Which place should I bring it to?' (two questions in one
+        turn): an answer to the first part also says where the user is, as a person answers both (gate pilot
+        round 1, hl-dev-000015: only the first part was answered, twice). Only when the text heard has a sentence of
+        its own that asks where the user is, and the answer is not already that."""
+        up = kw.get("user_place")
+        if c is None or up is None or c.kind != "correct" or c.rule == "self_position":
+            return c
+        sents = [x for x in re.split(r"(?<=[?.!])\s+", str(question or "").strip()) if x.strip()]
+        # (an explicit "where are you?": a plain Korean '어디 있나요?' after "I could not find the mug." asks where the mug
+        # is, sim-user audit q0182)
+        if len(sents) < 2 or not any(dialog.asks_user_position(x) for x in sents):
+            return c
+        pos = dialog.self_position_text(self.world, up[0], bool(up[1]), L)
+        if not pos or pos in c.text:
+            return c
+        return dialog.Content(c.kind, c.text + " " + pos, c.informative,
+                              (c.wrong_text + " " + pos) if c.wrong_text else c.wrong_text, c.rule)
+
+    def _with_destination(self, c, question: str, L: str, kw: dict):
+        """'어떤 물건을 가져다드릴지, 그리고 어디에 놓아드릴지 알려주실 수 있나요?' (which things, and where): the
+        answer names the things and where they go, as a person answers both parts of one question (fresh pilot
+        round 1, hl-dev-000060 KO: only the objects were said)."""
+        gv = kw.get("goal")
+        ql = dialog._q_text(question)
+        if c is not None and gv is not None and c.rule in ("location", "location_unknown") \
+                and c.kind in ("correct", "not_sure") and self._asks_both(question, L):
+            # "Where is the milk, and where would you like me to put it away?": the user answers both questions, the
+            # second one with where they want it (a knowledge draw only concerns the first), gate r12 S8
+            asked = [o for o in dialog.mentioned_objects(self.world, question) if o in gv.objects()]
+            dest = dialog._dest_answer(gv, asked or list(dict.fromkeys(gv.objects())), L) if gv.atoms else None
+            if dest and dest not in c.text and any(a["pred"] in ("on", "in") for a in gv.atoms):
+                return dialog.Content(c.kind, c.text + " " + dest, c.informative,
+                                      (c.wrong_text + " " + dest) if c.wrong_text else c.wrong_text, c.rule)
+            return c
+        if c is None or c.rule != "goal_object" or c.kind != "correct" or gv is None or \
+                not dialog.asks_destination(question) or \
+                dialog.LOC_RX["en"].search(ql.lower()) or dialog.LOC_RX["ko"].search(ql):
+            return c          # (a "... and where is it now?" asks where it is, not where it goes)
+        objs = [o for o in dict.fromkeys(gv.objects())]
+        if not objs:
+            return c
+        dest = dialog._dest_answer(gv, objs, L)
+        if not dest or dest in c.text:
+            return c
+        return dialog.Content(c.kind, c.text + " " + dest, c.informative,
+                              (c.wrong_text + " " + dest) if c.wrong_text else c.wrong_text, c.rule)
+
+    @staticmethod
+    def _asks_both(question: str, L: str) -> bool:
+        """Is the question a compound one: a where-is part, joined to a where-should-it-go part?"""
+        whole = _intent._SENT_RX.split(_intent.first_question(question, L, cut=False))[-1]
+        rx = _intent._JOIN_KO if _intent._hangul(whole) else _intent._JOIN_EN
+        parts = rx.split(whole, maxsplit=1)
+        if len(parts) < 2:
+            parts = [x for x in re.split(r"(?<=[?])\s+", whole) if x.strip()]
+        return len(parts) >= 2 and bool(dialog.LOC_RX["en"].search(parts[0].lower()) or dialog.LOC_RX["ko"].search(parts[0])) \
+            and dialog.asks_destination(parts[-1]) and not (dialog.LOC_RX["en"].search(parts[-1].lower())
+                                                           or dialog.LOC_RX["ko"].search(parts[-1]))
+
+    def _content_read(self, question: str, L: str, meaning, kw: dict):
+        """(Content, path, qtype): structured (the planner's meaning) -> rules -> llm (``_read_text``).
+
+        A meaning about a phrase that names nothing in the house is read as "say the task again"
+        (``intent.ungrounded``). The meaning counts only when the text the user hears reads the same way, in both
+        languages (docs/user_model.md "Heard-text check"): the rules (or the classifier) read the heard text as the
+        same qtype, its slots name the same things, places and people as the text (``intent.slots_agree``), and the
+        text is in the user's language (``intent.in_lang``). Otherwise the user answers what it heard (path
+        ``structured_mismatch``): a planner may derive its meaning from an English question that was translated
+        badly or not at all, or attach a meaning to a text that does not say it, and no real user hears the
+        meaning."""
+        m = _intent.clean(meaning)
+        if m is not None and m["qtype"] != "free":
+            m = _intent.grounded_or_dropped(m, self.world, question)
+            if not _intent.in_lang(question, L):
+                return _intent.not_in_lang(L), "structured_mismatch", "free"
+            ct, _p, qt = self._read_text(question, L, kw)
+            if qt != m["qtype"] or not _intent.slots_agree(m, question, self.world):
+                return ct, "structured_mismatch", qt
+            if m.get("ask") == "coverage" and (self.last_reading or {}).get("ask") != "coverage":
+                # the coverage question (a part not done, do it now?) must read as that question in the text heard
+                # (a Korean phrase that lost it, or an English one left untranslated, is answered as heard)
+                return ct, "structured_mismatch", qt
+            c = _intent.answer_structured(m, L, self.spec, self.world, **kw)
+            if (c is not None and m["qtype"] == "confirm" and m.get("goal") and not m.get("ask") and c.kind in ("yes", "no")
+                    and ct.kind in ("yes", "no") and ct.kind != c.kind
+                    and not _intent.vague_read_back(question, L, self.world)):
+                # a read-back is confirmed or corrected for what the user heard: a translation that drops or changes
+                # the destination or the person ("…주방에 놓겠습니다" for "…on you", "파트너B에게" for "to husband")
+                # names fewer things than the meaning's English read-back (slots_agree lets that pass), but the
+                # user says yes / no to the sentence they heard (pilot round 1, hl-dev-000010 KO); a read-back that
+                # states nothing ("그렇게 할게요. 맞죠?") is taken from context as before
+                return ct, "structured_mismatch", qt
+            if (c is not None and m["qtype"] == "confirm" and m.get("goal") and not m.get("ask") and c.kind == "no" and ct.kind == "no"
+                    and c.text != ct.text and str(m["goal"]).strip() not in str(question)
+                    and self._heard_has_right(kw.get("goal"), str(m["goal"]), question)):
+                # both say "no", but the part the meaning corrects is right in what the user HEARD: a translated
+                # read-back may get right what its English meaning got wrong ('주스는 주방 냉장고에' for "the juice on
+                # the fridge"; gate pilot round 1, sim-user audit q0371), so the user corrects what they heard
+                self.last_reading = m
+                return ct, "structured", m["qtype"]
+            if c is not None:
+                # the same meaning, but its English slot names nothing the user knows ("plates" for 접시): the
+                # answer to what was heard
+                if c.rule in _intent.NOT_CONFIDENT and ct.rule not in _intent.NOT_CONFIDENT:
+                    c = ct
+                else:
+                    self.last_reading = m
+                return c, "structured", m["qtype"]
+        return self._read_text(question, L, kw)
+
+    @staticmethod
+    def _heard_has_right(gv, meant: str, heard: str) -> bool:
+        """Is the first part of the request that read-back ``meant`` gets wrong (the one its correction names) said
+        right in the ``heard`` text?"""
+        if gv is None:
+            return False
+        bad = [a for a in gv.atoms if not gv.covered(a, meant)]
+        return bool(bad) and gv.covered(bad[0], dialog.strip_plan_remarks(dialog._q_text(heard)))
+
+    def wrong_places(self) -> list[str]:
+        """The places a mistaken "where" answer names: a surface or container where an object of this task is
+        usually kept (catalog typical receptacle that fits it, realism R-b), as a person confuses one usual place
+        for another; not the wardrobe for a mug (pilot round 2, hl-dev-000010 KO). With no such object (or no such
+        place in the house), any surface or container."""
+        from .catalog import is_typical, place_category, size_fits
+        w = self.world
+        places = sorted(pid for pid, pl in w.house.places.items() if getattr(pl, "kind", "") in ("surface", "container"))
+        objs = {x for a in dialog._atoms(self.wants) for x in (a.get("args") or []) if x in w.objects}
+        objs |= {c.get("id") for c in (self.spec or {}).get("candidates") or [] if c.get("id") in w.objects}
+        classes = sorted({w.objects[o].cls for o in objs})
+        usual = [pid for pid in places
+                 if any(is_typical(c, place_category(w.house.places[pid])) and size_fits(c, place_category(
+                     w.house.places[pid])) for c in classes)]
+        return usual or places
+
+    def _true_places(self, obj_ids) -> set:
+        """Where the given objects are now and where the user wants them to go."""
+        w = self.world
+        obj_ids = tuple(obj_ids) or tuple(dict.fromkeys(                 # "where should it go?": the things asked for
+            x for a in dialog._atoms(self.wants) for x in (a.get("args") or [])[:1] if x in w.objects))
+        out = {w.objects[o].at for o in obj_ids if o in w.objects}
+        out |= {a["args"][1] for a in dialog._atoms(self.wants)
+                if a.get("pred") in ("on", "in", "held_by") and a["args"][0] in obj_ids and len(a["args"]) > 1}
+        return out
+
+    _LOCATION_RULES = ("location", "location_unknown", "person_location")
+
+    def _loc_key(self, question: str) -> tuple:
+        """The objects a question names: the key of the user's remembered knowledge of where they are."""
+        try:
+            return tuple(dialog.mentioned_objects(self.world, question))
+        except Exception:   # a world without names to match: one shared key
+            return ()
+
+    def answer(self, question: str, lang: str, robot_xy, t: float, meaning: dict | None = None):
+        """The user's reply to ``question`` (what they hear). ``meaning``: the planner's structured form of the
+        question (``intent.QTYPES`` + slots), None = free text (docs/user_model.md)."""
+        self.n_asks += 1
+        self.last_intent = None
+        self.last_reading = None
+        k = self.n_asks
+        rng = self.streams.rng_for("user", "answer", k)
+        uid = self.user_id
+        help_pending = self._help is not None and self._help[0] == question
+        self._help = None
+        if uid is None:
+            return self._no_answer(question, t, False, "nobody")
+        if not self.reachable(robot_xy, t):
+            return self._no_answer(question, t, False, "out_of_range" if self.dialog_channel == "voice"
+                                   else "unreachable")
+        if k > self.patience:
+            return self._no_answer(question, t, True, "patience")
+        if rng.random() < self.p_no_answer:
+            return self._no_answer(question, t, True, "silent")
+        L = self.lang
+        path, qtype = ("structured" if _intent.clean(meaning) else "rules"), "help"
+        if help_pending:
+            kind, text, rule = "yes", dialog.TEXT["help_ok"][L], "help"
+        else:
+            knows = rng.random() >= self.p_location_unknown      # (always drawn: the streams do not shift)
+            lkey = self._loc_key(question)
+            seen = [v for k, v in self._loc_known.items() if k == lkey or set(k) & set(lkey)]
+            if seen:
+                knows = all(seen)
+            places = self.wrong_places()
+            other = places[rng.randrange(len(places))] if places else None
+            if other is not None and other in self._true_places(lkey):
+                # a wrong place is not where the thing asked about is, nor where the user wants it to go: the next
+                # place of the list (the draw itself is unchanged, so the other streams do not shift)
+                rest = [x for x in places[places.index(other) + 1:] + places[:places.index(other)]
+                        if x not in self._true_places(lkey)]
+                other = rest[0] if rest else other
+            gv = None
+            if self.wants:
+                gv = dialog.GoalView(self.world, self.wants, uid, lambda pid: self.place_of(pid, t)[0],
+                                     request=self.request)
+            # the user's last reply that said something (an answer, not "not sure"): what "could you repeat?" repeats
+            last = next((e for e in reversed(self.log) if e.get("text")), None)
+            last = last["text"] if last is not None and last.get("kind") in ("correct", "yes", "no", "wrong") else None
+            c, path, qtype = self._content(question, L, meaning, dict(
+                knows_location=knows, other_place=other, user_place=self.place_of(uid, t), goal=gv,
+                request=self.request, last_answer=last))
+            kind, text, rule = c.kind, c.text, c.rule
+            was_location = rule in self._LOCATION_RULES
+            if c.informative:
+                u = rng.random()
+                if u < self.p_wrong:
+                    if c.wrong_text is not None:
+                        kind, text = "wrong", c.wrong_text
+                    else:  # no alternative answer exists: the user is unsure instead
+                        kind, text = "not_sure", dialog.TEXT["dont_know"][L]
+                elif u < self.p_wrong + self.p_not_sure:
+                    # unsure of the ANSWER to a question it understood: "I don't know.", not the not-understood
+                    # "I'm not sure what you mean." (that one tells the robot its question was unclear; fresh pilot
+                    # round 3, sage EN hl-dev-000016: "Where are the reading glasses and the remote?")
+                    kind, text = "not_sure", dialog.TEXT["dont_know"][L]
+            if was_location:
+                # remember the knowledge state the user just showed (a "not sure" answer to a where question, from
+                # the noise draw or from not knowing, says "I don't know" either way)
+                self._loc_known[lkey] = rule != "location_unknown" and kind != "not_sure"
+        lat = self.latency
+        latency = lognormal(rng, lat["median"], lat["sigma"], lat["min"])
+        st = self._state(uid, t)
+        # app: spoken into the user's own device, the near condition of the instruction; voice: robot-user distance
+        cond = "app" if self.dialog_channel == "app" else self.asr.condition(dist(robot_xy, st.pos))
+        heard = _asr.corrupt(text, L, cond, self.streams.rng_for("user", "asr", k), self.asr)
+        self.log.append({"t": r6(t), "q": question, "kind": kind, "why": rule, "text": text, "heard": heard.text,
+                         "asr": heard.event, "cond": cond, "latency_s": r6(latency), "path": path, "qtype": qtype})
+        self.last_intent = {"path": path, "qtype": qtype, "rule": rule}
+        return UserReply(text, kind, r6(latency), True), heard
+
+    # ------------------------------------------------------------------ handover
+    def take_handover(self, person_id: str, obj_id: str, t: float) -> tuple[bool, float]:
+        """(taken, latency_s). Not taken -> latency = the handover timeout (time the robot waited)."""
+        self.n_handovers += 1
+        rng = self.streams.rng_for("user", "handover", self.n_handovers)
+        if person_id not in self.world.people or not self._state(person_id, t).awake:
+            return False, r6(self.handover_timeout_s)
+        if rng.random() < self.p_unresponsive:
+            return False, r6(self.handover_timeout_s)
+        hl = self.handover_latency
+        lat = lognormal(rng, hl["median"], hl["sigma"], hl["min"])
+        if lat > self.handover_timeout_s:
+            return False, r6(self.handover_timeout_s)
+        return True, r6(lat)
+
+    # ------------------------------------------------------------------ interruptions
+    def events_between(self, t0: float, t1: float) -> list:
+        """Time-scheduled user events. Interruptions are call-indexed (``interrupt_plan``), so none here."""
+        return []
+
+    def interrupt_plan(self) -> dict | None:
+        """The interruption the runner triggers at the start of motion call ``after_calls + 1`` (DESIGN 5.5):
+        the task's scripted ``spec.interrupt``, else a random stop with ``user.p_interrupt_stop``."""
+        spec_i = (self.spec or {}).get("interrupt")
+        if spec_i:
+            return dict(spec_i)
+        rng = self.streams.rng_for("user", "interrupt")
+        if rng.random() < self.p_interrupt_stop:
+            lo, hi = int(self.interrupt_after[0]), int(self.interrupt_after[1])
+            return {"after_calls": rng.randint(lo, hi), "kind": "stop", "text": dict(dialog.TEXT["stop"]),
+                    "new_goal": None, "random": True}
+        return None
+
+    def interrupt_event(self, t: float) -> UserEvent | None:
+        plan = self.interrupt_plan()
+        if plan is None:
+            return None
+        return UserEvent(r6(t), plan["kind"], plan["text"][self.lang], plan.get("new_goal"))
+
+    def stats(self) -> dict:
+        kinds: dict[str, int] = {}
+        for e in self.log:
+            kinds[e["kind"]] = kinds.get(e["kind"], 0) + 1
+        return {"asks": self.n_asks, "handovers": self.n_handovers, "answers": dict(sorted(kinds.items()))}
+
+
+def consistency(world: Any, profile: Any, n: int = 20000, seed: int = 0, lang: str = "en") -> list[dict]:
+    """Empirical answer-kind rates of SimUser vs the profile (DESIGN 13.3), on a clarification question
+    between two objects of ``world`` asked from next to the user. One row per parameter."""
+    from homeloop_robot._hs_compat import Streams, binomial_row
+
+    oids = sorted(world.objects)[:2]
+    if len(oids) < 2:
+        raise ValueError("consistency needs a world with two objects")
+    names = {o: {lg: dialog.object_names(world, o, lg)[0] for lg in ("en", "ko")} for o in oids}
+    spec = {"intended": oids[1],
+            "candidates": [{"id": o, "mentions": {lg: [names[o][lg]] for lg in ("en", "ko")}} for o in oids],
+            "answer": {lg: dialog.TEXT["candidate"][lg].format(mention=names[oids[1]][lg]) for lg in ("en", "ko")}}
+    q = {"en": f"Which one, the {names[oids[0]]['en']} or the {names[oids[1]]['en']}?",
+         "ko": f"{names[oids[0]]['ko']}이요, {names[oids[1]]['ko']}이요? 어느 거요?"}[lang]
+    u = SimUser(world, profile, Streams(seed, "user-consistency"), lang, spec)
+    u.patience = n + 1
+    if u.user_id is None:
+        raise ValueError("consistency needs a world with a user")
+    xy = tuple(world.people[u.user_id].pos)
+    kinds: dict[str, int] = {}
+    for _ in range(n):
+        r, _h = u.answer(q, lang, xy, 0.0)
+        kinds[r.kind] = kinds.get(r.kind, 0) + 1
+        u.log.clear()
+    answered = n - kinds.get("no_answer", 0)
+    return [
+        binomial_row("user.p_no_answer", u.p_no_answer, kinds.get("no_answer", 0), n, "per question in range"),
+        binomial_row("user.answer.p_wrong", u.p_wrong, kinds.get("wrong", 0), answered, "per answered question"),
+        binomial_row("user.answer.p_not_sure", u.p_not_sure, kinds.get("not_sure", 0), answered,
+                     "per answered question"),
+    ]
