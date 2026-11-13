@@ -1,0 +1,65 @@
+{
+ "by_mode": {
+  "hand": 1898,
+  "reach": 3273
+ },
+ "by_mode_reason": {
+  "hand:explicit": 416,
+  "hand:no_surface": 1029,
+  "hand:user_needs": 453,
+  "reach:None": 3273
+ },
+ "by_split": {
+  "dev": {
+   "by_mode": {
+    "hand": 153,
+    "reach": 337
+   },
+   "by_mode_reason": {
+    "hand:explicit": 40,
+    "hand:no_surface": 91,
+    "hand:user_needs": 22,
+    "reach:None": 337
+   },
+   "delivered_atoms": 490,
+   "hand_share": 0.3122
+  },
+  "test": {
+   "by_mode": {
+    "hand": 940,
+    "reach": 1478
+   },
+   "by_mode_reason": {
+    "hand:explicit": 192,
+    "hand:no_surface": 429,
+    "hand:user_needs": 319,
+    "reach:None": 1478
+   },
+   "delivered_atoms": 2418,
+   "hand_share": 0.3888
+  },
+  "train": {
+   "by_mode": {
+    "hand": 805,
+    "reach": 1458
+   },
+   "by_mode_reason": {
+    "hand:explicit": 184,
+    "hand:no_surface": 509,
+    "hand:user_needs": 112,
+    "reach:None": 1458
+   },
+   "delivered_atoms": 2263,
+   "hand_share": 0.3557
+  }
+ },
+ "delivered_atoms": 5171,
+ "hand_share": 0.367,
+ "reseed_pass1": 510,
+ "reseed_pass2": 52,
+ "tasks_with_delivery": 4615,
+ "variant_append": 242,
+ "variant_append_named": 122,
+ "variant_ko_verb": 66,
+ "within_reach_at_start": []
+}

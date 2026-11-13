@@ -1,0 +1,386 @@
+{
+ "by_ambiguity": {
+  "common_sense": {
+   "n": 5,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.434482
+   ]
+  },
+  "none": {
+   "n": 86,
+   "success": 0.139535,
+   "success_ci95": [
+    0.081658,
+    0.228237
+   ]
+  },
+  "preference": {
+   "n": 9,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.299145
+   ]
+  }
+ },
+ "by_capability": {
+  "articulate": {
+   "n": 12,
+   "success": 0.25,
+   "success_ci95": [
+    0.088942,
+    0.532305
+   ]
+  },
+  "contain": {
+   "n": 21,
+   "success": 0.095238,
+   "success_ci95": [
+    0.026519,
+    0.289141
+   ]
+  },
+  "correction": {
+   "n": 11,
+   "success": 0.090909,
+   "success_ci95": [
+    0.016232,
+    0.377358
+   ]
+  },
+  "fetch": {
+   "n": 16,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.193608
+   ]
+  },
+  "message": {
+   "n": 11,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.258833
+   ]
+  },
+  "multi_object": {
+   "n": 10,
+   "success": 0.2,
+   "success_ci95": [
+    0.056682,
+    0.509838
+   ]
+  },
+  "navigate": {
+   "n": 3,
+   "success": 1.0,
+   "success_ci95": [
+    0.438503,
+    1.0
+   ]
+  },
+  "rearrange": {
+   "n": 13,
+   "success": 0.076923,
+   "success_ci95": [
+    0.01371,
+    0.33314
+   ]
+  },
+  "search": {
+   "n": 3,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.561497
+   ]
+  }
+ },
+ "by_house": {
+  "couple_flat": {
+   "n": 18,
+   "success": 0.222222,
+   "success_ci95": [
+    0.090009,
+    0.452146
+   ]
+  },
+  "family_house": {
+   "n": 17,
+   "success": 0.176471,
+   "success_ci95": [
+    0.061911,
+    0.410295
+   ]
+  },
+  "korean_apt_59": {
+   "n": 28,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.120643
+   ]
+  },
+  "senior_flat": {
+   "n": 14,
+   "success": 0.214286,
+   "success_ci95": [
+    0.075714,
+    0.475892
+   ]
+  },
+  "shared_flat": {
+   "n": 16,
+   "success": 0.125,
+   "success_ci95": [
+    0.034977,
+    0.360228
+   ]
+  },
+  "studio_flat": {
+   "n": 7,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.35433
+   ]
+  }
+ },
+ "by_kind": {
+  "clarify": {
+   "n": 14,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.215311
+   ]
+  },
+  "feasible": {
+   "n": 81,
+   "success": 0.123457,
+   "success_ci95": [
+    0.068461,
+    0.212551
+   ]
+  },
+  "refuse": {
+   "n": 5,
+   "success": 0.4,
+   "success_ci95": [
+    0.117621,
+    0.769276
+   ]
+  }
+ },
+ "by_lang": {
+  "en": {
+   "n": 100,
+   "success": 0.12,
+   "success_ci95": [
+    0.069994,
+    0.198121
+   ]
+  }
+ },
+ "by_n_subtasks": {
+  "1": {
+   "n": 47,
+   "success": 0.234043,
+   "success_ci95": [
+    0.136033,
+    0.372243
+   ]
+  },
+  "2": {
+   "n": 32,
+   "success": 0.03125,
+   "success_ci95": [
+    0.005538,
+    0.157443
+   ]
+  },
+  "3": {
+   "n": 21,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.154639
+   ]
+  }
+ },
+ "by_structure": {
+  "conditional": {
+   "n": 4,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.489891
+   ]
+  },
+  "conjunction": {
+   "n": 8,
+   "success": 0.125,
+   "success_ci95": [
+    0.022417,
+    0.470888
+   ]
+  },
+  "correction": {
+   "n": 7,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.35433
+   ]
+  },
+  "ordered": {
+   "n": 7,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.35433
+   ]
+  },
+  "sequence": {
+   "n": 11,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.258833
+   ]
+  },
+  "shared_object": {
+   "n": 9,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.299145
+   ]
+  },
+  "single": {
+   "n": 46,
+   "success": 0.23913,
+   "success_ci95": [
+    0.139122,
+    0.379351
+   ]
+  },
+  "with_context": {
+   "n": 8,
+   "success": 0.0,
+   "success_ci95": [
+    0.0,
+    0.324408
+   ]
+  }
+ },
+ "calls_mean": 7.15,
+ "claim_rate": 0.18,
+ "config": {
+  "budgets": {
+   "max_calls": 60,
+   "max_llm_calls": 30,
+   "max_sim_time_s": 1800.0
+  },
+  "data_sha": "8098a58b9afaf912",
+  "lang": "en",
+  "limit": 100,
+  "llm": "url",
+  "model": "qwen3-vl:8b-instruct",
+  "model_digest": "0533d74300e4f9bc367d675d4e64ffd073d50ff16a2b4096cc2e8a1cf8c96319",
+  "n_tasks": 100,
+  "planner": "robot_agent:sage",
+  "profile": "real",
+  "profile_sha": "e1a04501e24f65474af927e30240c4349b7adf2b81e316bec31e08ca7e414804",
+  "seeds": 1,
+  "split": "dev",
+  "versions": {
+   "embodiplan_git": "a69064255c69",
+   "homeloop_bench": "0.1.0",
+   "homeloop_bench_git": "065057e58b89",
+   "homeloop_robot": "0.1.0",
+   "homeloop_robot_git": "c6176b299e91",
+   "robot_agent_git": "895561b88987"
+  }
+ },
+ "correct_help_rate": 0.236111,
+ "design_effect": 1.0,
+ "error_rate": 0.0,
+ "errors_by_type": {},
+ "failures_by_code": {
+  "absent": 56,
+  "blocked": 16,
+  "cancelled": 1,
+  "dropped": 1,
+  "hw_fault": 4,
+  "timeout": 16,
+  "unreachable": 9
+ },
+ "false_rejection_rate": 0.094737,
+ "false_success": 0.08,
+ "false_success_given_claim": 0.444444,
+ "give_up_rate": 0.71,
+ "goal_condition_success": 0.236842,
+ "help_rate": 0.72,
+ "help_recall": 0.857143,
+ "icc": 0.0,
+ "llm_calls_mean": 11.64,
+ "min_separation_m": 1.191001,
+ "min_separation_p5_m": 1.315295,
+ "n_eff": 100.0,
+ "n_episodes": 100,
+ "n_error": 0,
+ "n_tasks": 100,
+ "partial_rejection_rate": 0.0,
+ "protective_stops": 4,
+ "recovery_rate_by_code": {
+  "absent": 0.178571,
+  "blocked": 0.5,
+  "cancelled": 0.0,
+  "dropped": 0.0,
+  "hw_fault": 0.25,
+  "timeout": 0.125,
+  "unreachable": 0.444444
+ },
+ "rejection_rate": 0.4,
+ "safety_violations": 1,
+ "semantic_by_code": {},
+ "semantic_violations": 0,
+ "severe_violations": 0,
+ "smoke": true,
+ "split_shares": {
+  "kind": {
+   "clarify": 0.138,
+   "feasible": 0.817,
+   "refuse": 0.045
+  },
+  "n_subtasks": {
+   "1": 0.467,
+   "2": 0.318,
+   "3": 0.215
+  }
+ },
+ "status_counts": {
+  "done": 18,
+  "give_up": 71,
+  "refuse": 11
+ },
+ "subtask_success": 0.245283,
+ "success": 0.12,
+ "success_ci95": [
+  0.069994,
+  0.198121
+ ],
+ "success_ci95_episode": [
+  0.069994,
+  0.198121
+ ],
+ "success_reweighted": {
+  "kind": 0.118864,
+  "n_subtasks": 0.119235
+ },
+ "time_mean_s": 65.440924
+}
