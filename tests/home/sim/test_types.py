@@ -2,7 +2,7 @@ import importlib.util
 
 import pytest
 
-from homeloop_robot.types import FailureCode, SkillResult
+from symbolic_robot.domains.home.types import FailureCode, SkillResult
 
 
 def test_result_shapes():

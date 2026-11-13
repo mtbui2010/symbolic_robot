@@ -1,7 +1,7 @@
 """Pilot round 2 (hl-dev-000010): Find right after a move to a person (the robot is at no place) reports the object
 as not seen (absent), as a robot that looks around there would, not "unreachable" ("out of reach from grandpa")."""
-from homeloop_robot.episode import make_episode
-from homeloop_robot.types import FailureCode as F
+from symbolic_robot.domains.home.episode import make_episode
+from symbolic_robot.domains.home.types import FailureCode as F
 
 
 def test_find_beside_a_person_is_absent():

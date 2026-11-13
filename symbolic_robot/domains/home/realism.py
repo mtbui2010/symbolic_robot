@@ -10,7 +10,7 @@
          apart by path; objects per house and per receptacle within plausible ranges (assumed)
 
 ``homeloop_bench`` reuses :func:`placement_ok` for goal destinations (R-b) and :func:`report` in its
-``data realism`` command. ``python -m homeloop_robot.realism [--strict]`` prints the JSON report.
+``data realism`` command. ``python -m symbolic_robot.domains.home.realism [--strict]`` prints the JSON report.
 """
 
 from __future__ import annotations

@@ -7,9 +7,9 @@ hl-dev-000060 / 000057:
   a right Korean read-back agrees with its English meaning (no structured_mismatch)."""
 import pytest
 
-from homeloop_robot import dialog as D
-from homeloop_robot import intent
-from homeloop_robot.episode import make_episode
+from symbolic_robot.domains.home import dialog as D
+from symbolic_robot.domains.home import intent
+from symbolic_robot.domains.home.episode import make_episode
 
 GRANDPA_GOAL = {"all": [{"pred": "delivered", "args": ["glasses_1", "user"], "mode": "reach", "mode_reason": None},
                         {"pred": "delivered", "args": ["remote_1", "grandpa"], "mode": "hand",

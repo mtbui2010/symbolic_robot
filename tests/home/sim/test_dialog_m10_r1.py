@@ -3,8 +3,8 @@
 * "Did you mean X?" about a word of the user's own LAST ANSWER is a yes, and the user says that answer again.
 * A plan read-back on a task with no goal view (a refused request) is answered about the plan; the refusal script
   ("Oh, right. Never mind.") answers an explanation, not a read-back."""
-from homeloop_robot.dialog import compose, is_plan_readback
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home.dialog import compose, is_plan_readback
+from symbolic_robot.domains.home.world import from_house
 
 HOUSE = "korean_apt_59"
 REQ = {"en": "Could you stash the bleach in the kimchi fridge? I'll handle it later.",

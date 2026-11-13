@@ -47,7 +47,6 @@ def test_factory_boots_with_pack_and_launcher_skills(tmp_path):
 
 
 def test_home_boots_with_its_own_pack(tmp_path):
-    pytest.importorskip("homeloop_robot")
     r, run_dir = boot("home", "senior_flat", tmp_path)
     assert {"move", "find", "pick", "reset_world", "spawn_object"} <= set(r["names"]) and r["state_ok"] and r["objects"] > 5
 

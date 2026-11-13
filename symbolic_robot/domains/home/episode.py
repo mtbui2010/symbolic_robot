@@ -1,7 +1,7 @@
 """Episode factory: one house + profile + seed -> world, robot, user, safety monitor (docs/architecture.md).
 
 The bench always builds episodes with :func:`make_episode`. When the simulated user
-(``homeloop_robot.user``) or the safety monitor (``homeloop_robot.safety``) is not installed, the
+(``symbolic_robot.domains.home.user``) or the safety monitor (``symbolic_robot.domains.home.safety``) is not installed, the
 Null fallbacks below are used: nobody answers questions, everyone stays at their seat, and motion is
 never slowed or stopped (minimum separation is still measured from geometry).
 """
@@ -106,8 +106,8 @@ class Episode:
 
 
 def _optional(module: str, attr: str):
-    """``homeloop_robot.<module>.<attr>`` or None when that module is not installed."""
-    name = f"homeloop_robot.{module}"
+    """``symbolic_robot.domains.home.<module>.<attr>`` or None when that module is not installed."""
+    name = f"symbolic_robot.domains.home.{module}"
     try:
         mod = importlib.import_module(name)
     except ModuleNotFoundError as e:

@@ -1,6 +1,6 @@
-from homeloop_robot import goals
-from homeloop_robot.types import Utterance
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home import goals
+from symbolic_robot.domains.home.types import Utterance
+from symbolic_robot.domains.home.world import from_house
 
 
 def test_parse_format_roundtrip():

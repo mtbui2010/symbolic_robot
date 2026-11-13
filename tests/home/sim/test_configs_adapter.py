@@ -3,11 +3,11 @@ from pathlib import Path
 import pytest
 
 from helpers import HAS_RA, episode
-from homeloop_robot.configs import ra_skills
-from homeloop_robot.configs.backend import reset_backend, set_backend
-from homeloop_robot.configs.tasks import ENV, env_for
+from symbolic_robot.domains.home.configs import ra_skills
+from symbolic_robot.domains.home.configs.backend import reset_backend, set_backend
+from symbolic_robot.domains.home.configs.tasks import ENV, env_for
 
-PKG = Path(__file__).resolve().parents[1] / "homeloop_robot"
+PKG = Path(__file__).resolve().parents[3] / "symbolic_robot" / "domains" / "home"
 
 
 def test_env_shape():
@@ -40,14 +40,17 @@ def test_ra_skills_legacy_dicts():
 
 @pytest.mark.skipif(not HAS_RA, reason="robot_agent not importable")
 def test_check_manifest_strict():
+    """Was `strict=True` in the standalone package. The pack name is dotted now (symbolic_robot.domains.home) and robot_agent's checker
+    assumes a top-level pack name: `strict` would fail only on its 'module is outside <pkg>, not inspected' warnings (the same
+    reported limitation as the factory pack, tests/test_server.py). The checker's errors are still asserted to be none."""
     from robot_agent.contract.check_manifest import assert_manifest_matches
-    assert_manifest_matches(PKG, strict=True)
+    assert_manifest_matches(PKG, strict=False)
 
 
 @pytest.mark.skipif(not HAS_RA, reason="robot_agent not importable")
 def test_adapter_bind_and_codes():
     from robot_agent.contract import FailureCode, Unbindable
-    from homeloop_robot.configs.adapter import make_adapter
+    from symbolic_robot.domains.home.configs.adapter import make_adapter
     ep = episode()
     set_backend(ep.robot)
     try:
@@ -76,7 +79,7 @@ def test_adapter_bind_and_codes():
 
 
 def test_env_aliases_resolve_copied_keys():
-    from homeloop_robot.world import from_house
+    from symbolic_robot.domains.home.world import from_house
     env = env_for(from_house("studio_flat", 0))
     al = env["bath_cabinet@bathroom"]["aliases"]
     assert "bath cabinet@bathroom" in al
@@ -86,7 +89,7 @@ def test_env_aliases_resolve_copied_keys():
 @pytest.mark.skipif(not HAS_RA, reason="robot_agent not importable")
 def test_robot_agent_grounds_a_copied_key():
     from robot_agent.core.planning.assist_loop import Places
-    from homeloop_robot.world import from_house
+    from symbolic_robot.domains.home.world import from_house
     places = Places(env_for(from_house("studio_flat", 0)))
     task = "Could you stash that gray towel in the bathroom cabinet?"
     assert places.candidates("bath_cabinet@bathroom", task) == ["bath_cabinet@bathroom"]
@@ -108,7 +111,7 @@ def test_ra_skills_report_names_not_ids_and_dock_on_move():
 
 
 def test_env_dock_aliases_name_charging():
-    from homeloop_robot.world import from_house
+    from symbolic_robot.domains.home.world import from_house
     env = env_for(from_house("family_house", 0))
     assert {"charge", "충전"} <= set(env["dock@living"]["aliases"])
     env = env_for(from_house("shared_flat", 0))
@@ -119,7 +122,7 @@ def test_env_dock_aliases_name_charging():
 def test_korean_choice_question_for_a_refused_reading():
     """q_which_part (robot_agent's dialogue convergence) is said from the pack, in Hangul, without a translator."""
     import re
-    from homeloop_robot.configs.adapter import PHRASES
+    from symbolic_robot.domains.home.configs.adapter import PHRASES
     ko = PHRASES["q_which_part"]["ko"]
     assert re.search(r"[가-힣]", ko) and not re.search(r"[一-鿿]", ko) and ko.endswith("주세요.")
 
@@ -127,5 +130,5 @@ def test_korean_choice_question_for_a_refused_reading():
 @pytest.mark.skipif(not HAS_RA, reason="robot_agent not importable")
 def test_pack_says_the_restated_readback_lead_in_korean():
     """V1 (lab round 3): the restated read-back is a lead sentence + the ordinary read-back phrase, both data of the pack."""
-    from homeloop_robot.configs.adapter import PHRASES
+    from symbolic_robot.domains.home.configs.adapter import PHRASES
     assert PHRASES["rb_restated"]["ko"] and PHRASES["q_confirm"]["ko"]

@@ -1,4 +1,4 @@
-from homeloop_robot.rng import Streams, derive_seed, r6, rng_for
+from symbolic_robot.domains.home.rng import Streams, derive_seed, r6, rng_for
 
 
 def test_derive_seed_stable():

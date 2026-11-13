@@ -5,12 +5,12 @@ import math
 
 import pytest
 
-from homeloop_robot.configs import ra_skills
-from homeloop_robot.configs.backend import reset_backend, set_backend
-from homeloop_robot.configs.tasks import SPEAKER_KEY, env_for, person_key, person_target
-from homeloop_robot.episode import make_episode
-from homeloop_robot.houses import list_houses
-from homeloop_robot.skills import person_stop_xy
+from symbolic_robot.domains.home.configs import ra_skills
+from symbolic_robot.domains.home.configs.backend import reset_backend, set_backend
+from symbolic_robot.domains.home.configs.tasks import SPEAKER_KEY, env_for, person_key, person_target
+from symbolic_robot.domains.home.episode import make_episode
+from symbolic_robot.domains.home.houses import list_houses
+from symbolic_robot.domains.home.skills import person_stop_xy
 
 
 def _houses():

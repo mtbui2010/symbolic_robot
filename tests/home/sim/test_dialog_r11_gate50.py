@@ -2,7 +2,7 @@
 the per-task analysis. Worlds: the gate tasks' houses and start states. No rate or scoring value changed."""
 import pytest
 
-from homeloop_robot.episode import make_episode
+from symbolic_robot.domains.home.episode import make_episode
 
 
 def _ep(house, seed_state, persona, L, goal, request):
@@ -42,7 +42,7 @@ M042 = {"options": ["desk in the room_a", "desk in the room_c"], "qtype": "which
 
 
 def test_042_desk_is_not_book_with_a_particle():
-    from homeloop_robot import dialog as D, intent as I
+    from symbolic_robot.domains.home import dialog as D, intent as I
     ep = _ep("shared_flat", 514, "adult", "ko", G042, R042)
     w = ep.world
     assert {w.objects[o].cls for o in w.objects} >= {"book"}           # the house has books (책)

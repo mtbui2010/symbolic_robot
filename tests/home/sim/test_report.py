@@ -1,7 +1,7 @@
 import math
 
-from homeloop_robot.profiles import load_profile
-from homeloop_robot.report import OKROBOT_HW_PER_TRIAL, hw_episode_rates, hw_rates_table, oracle_mix
+from symbolic_robot.domains.home.profiles import load_profile
+from symbolic_robot.domains.home.report import OKROBOT_HW_PER_TRIAL, hw_episode_rates, hw_rates_table, oracle_mix
 
 
 def test_hw_rates_closed_form_and_okrobot():
@@ -30,7 +30,7 @@ def test_oracle_mix_deterministic_and_ideal_clean():
 
 
 def test_okrobot_trials_deterministic_and_ideal_succeeds():
-    from homeloop_robot.report import okrobot_trials
+    from symbolic_robot.domains.home.report import okrobot_trials
     a = okrobot_trials(0, 20, "real")
     assert a == okrobot_trials(0, 20, "real") and a["n_trials"] == 20
     assert abs(sum(a["sim"].values()) - 1.0) < 1e-9

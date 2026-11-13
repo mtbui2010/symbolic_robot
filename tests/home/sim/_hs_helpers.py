@@ -2,7 +2,7 @@
 
 ``load_params(name)`` resolves the user and safety fragments of a profile from the YAML files (real) or by
 the documented derive rules (ideal: zero every user_noise / safety_noise value, people static). A small fake
-world mirrors the attribute names of ``homeloop_robot.world`` (DESIGN 2.1) so these tests run without the
+world mirrors the attribute names of ``symbolic_robot.domains.home.world`` (DESIGN 2.1) so these tests run without the
 robot core.
 """
 from __future__ import annotations
@@ -15,8 +15,9 @@ from dataclasses import dataclass, field
 
 import yaml
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
-PKG = ROOT / "homeloop_robot"
+REPO = pathlib.Path(__file__).resolve().parents[3]
+ROOT = REPO / "docs" / "home" / "sim"          # (was the repository root: docs/ lives here now)
+PKG = REPO / "symbolic_robot" / "domains" / "home"
 FRAGMENTS = [PKG / "profiles" / "real" / "user.yaml", PKG / "profiles" / "real" / "safety.yaml"]
 NOISE_ROLES = ("failure", "user_noise", "safety_noise")
 
@@ -63,7 +64,7 @@ def load_params(name: str = "real", **overrides) -> dict:
 
 class Streams:
     def __init__(self, seed: int = 0, key: str = "test"):
-        from homeloop_robot._hs_compat import Streams as S
+        from symbolic_robot.domains.home._hs_compat import Streams as S
         self._s = S(seed, key)
 
     def rng_for(self, *parts):
@@ -241,14 +242,14 @@ class FakeWorld:
 
 
 def static_people(world, t=0.0):
-    from homeloop_robot._hs_compat import PersonState
+    from symbolic_robot.domains.home._hs_compat import PersonState
     return {pid: PersonState(pid, tuple(p.pos), (0.0, 0.0), world.room_of(p.pos), True)
             for pid, p in sorted(world.people.items())}
 
 
 def walker(pid, start, end, speed, t_start=0.0, room_fn=None):
     """people(t) for one person walking a straight line at constant speed from t_start, then standing."""
-    from homeloop_robot._hs_compat import PersonState
+    from symbolic_robot.domains.home._hs_compat import PersonState
     L = math.dist(start, end)
     ux, uy = ((end[0] - start[0]) / L, (end[1] - start[1]) / L) if L else (0.0, 0.0)
 
@@ -263,8 +264,8 @@ def walker(pid, start, end, speed, t_start=0.0, room_fn=None):
 
 def world_available() -> bool:
     try:
-        from homeloop_robot.world import from_house  # noqa: F401
-        from homeloop_robot.houses import list_houses  # noqa: F401
+        from symbolic_robot.domains.home.world import from_house  # noqa: F401
+        from symbolic_robot.domains.home.houses import list_houses  # noqa: F401
         return True
     except ImportError:
         return False
@@ -273,7 +274,7 @@ def world_available() -> bool:
 def core_profile(name: str):
     """The core's resolved profile when the profiles package exists, else this stream's fragments."""
     try:
-        from homeloop_robot.profiles import load_profile
+        from symbolic_robot.domains.home.profiles import load_profile
         return load_profile(name)
     except ImportError:
         return load_params(name)
@@ -281,8 +282,8 @@ def core_profile(name: str):
 
 def core_available() -> bool:
     try:
-        import homeloop_robot.world  # noqa: F401
-        import homeloop_robot.profiles  # noqa: F401
-        return hasattr(homeloop_robot.profiles, "load_profile")
+        import symbolic_robot.domains.home.world  # noqa: F401
+        import symbolic_robot.domains.home.profiles  # noqa: F401
+        return hasattr(symbolic_robot.domains.home.profiles, "load_profile")
     except ImportError:
         return False

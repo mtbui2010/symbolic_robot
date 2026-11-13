@@ -4,7 +4,7 @@ import random
 import pytest
 
 from _hs_helpers import load_params
-from homeloop_robot.asr import ASRRates, corrupt, is_hangul, ko_confuse, token_error_rate
+from symbolic_robot.domains.home.asr import ASRRates, corrupt, is_hangul, ko_confuse, token_error_rate
 
 EN = "could you please bring the red mug from the kitchen counter to grandma in the living room"
 KO = "부엌 조리대에 있는 빨간 머그컵을 거실에 계신 할머니께 가져다 주세요"
@@ -66,7 +66,7 @@ def test_condition_threshold():
 
 def test_korean_confusions_stay_hangul():
     rng = random.Random(0)
-    from homeloop_robot.asr import is_common_syllable
+    from symbolic_robot.domains.home.asr import is_common_syllable
     for ch in "컵물약칼부엌조리대에있는빨간머그가져다주세요":
         for _ in range(20):
             c = ko_confuse(ch, rng)
@@ -98,7 +98,7 @@ def test_token_error_rate():
 
 
 def test_consistency_rows_pass():
-    from homeloop_robot.asr import consistency
+    from symbolic_robot.domains.home.asr import consistency
     rows = consistency(load_params("real"), n=4000, seed=2)
     assert len(rows) == 8 and all(r["ok"] for r in rows), rows
     rows = consistency(load_params("ideal"), n=300, seed=2)
@@ -106,7 +106,7 @@ def test_consistency_rows_pass():
 
 
 def test_english_substitutions_are_real_words():
-    from homeloop_robot.asr import CONFUSIONS_EN, FILLERS, VOCAB_EN, en_confuse
+    from symbolic_robot.domains.home.asr import CONFUSIONS_EN, FILLERS, VOCAB_EN, en_confuse
     real = set(VOCAB_EN) | {w for v in CONFUSIONS_EN.values() for x in v for w in x.split()} | set(FILLERS["en"])
     rng = random.Random(0)
     for w in EN.split() + ["don't", "know", "grandmother", "xylophone"]:
@@ -122,8 +122,8 @@ def test_english_substitutions_are_real_words():
 
 
 def test_app_near_field_rates_and_corruption_share():
-    from homeloop_robot.asr import ASRRates, corruption_share, corrupt
-    from homeloop_robot.profiles import load_profile
+    from symbolic_robot.domains.home.asr import ASRRates, corruption_share, corrupt
+    from symbolic_robot.domains.home.profiles import load_profile
     real = load_profile("real")
     r = ASRRates(real)
     assert r.rate[("ko", "app")] == 0.0521 and r.rate[("en", "app")] == 0.044

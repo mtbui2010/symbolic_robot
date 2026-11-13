@@ -1,7 +1,7 @@
-from homeloop_robot.outcomes import U, Ctx, N_UNIFORMS, container_class, p_fail, sample_outcome, split_code
-from homeloop_robot.profiles import load_profile
-from homeloop_robot.rng import rng_for
-from homeloop_robot.types import FailureCode as F
+from symbolic_robot.domains.home.outcomes import U, Ctx, N_UNIFORMS, container_class, p_fail, sample_outcome, split_code
+from symbolic_robot.domains.home.profiles import load_profile
+from symbolic_robot.domains.home.rng import rng_for
+from symbolic_robot.domains.home.types import FailureCode as F
 
 REAL = load_profile("real")
 

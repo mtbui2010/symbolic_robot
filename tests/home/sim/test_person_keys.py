@@ -7,11 +7,11 @@ import pytest
 
 from helpers import HAS_RA
 
-from homeloop_robot.configs.tasks import (RESERVED_USER_WORDS, SPEAKER_KEY, _words, env_for, person_key,
+from symbolic_robot.domains.home.configs.tasks import (RESERVED_USER_WORDS, SPEAKER_KEY, _words, env_for, person_key,
                                           person_keys)
-from homeloop_robot.episode import make_episode
-from homeloop_robot.houses import list_houses
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home.episode import make_episode
+from symbolic_robot.domains.home.houses import list_houses
+from symbolic_robot.domains.home.world import from_house
 
 
 @pytest.mark.parametrize("house", list_houses())

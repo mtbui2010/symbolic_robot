@@ -9,17 +9,17 @@ import types
 
 import pytest
 
-from homeloop_robot.configs import ra_skills
-from homeloop_robot.configs.backend import reset_backend, set_backend
-from homeloop_robot.configs.tasks import env_for, person_key, refresh_person_spot
-from homeloop_robot.episode import make_episode
-from homeloop_robot.houses import list_houses
+from symbolic_robot.domains.home.configs import ra_skills
+from symbolic_robot.domains.home.configs.backend import reset_backend, set_backend
+from symbolic_robot.domains.home.configs.tasks import env_for, person_key, refresh_person_spot
+from symbolic_robot.domains.home.episode import make_episode
+from symbolic_robot.domains.home.houses import list_houses
 
 
 def _arrive_tol():
     import yaml
     from pathlib import Path
-    import homeloop_robot.configs as C
+    import symbolic_robot.domains.home.configs as C
     m = yaml.safe_load((Path(C.__file__).parent / "manifest.yaml").read_text())
     return float(m["geometry"]["arrive_tol_m"])
 
@@ -44,7 +44,7 @@ def _walk(ep, pid):
     dpos = u._seat_pos(pid, dest)
     if math.dist(start, dpos) < 1.0:
         return None
-    from homeloop_robot.user import polyline_length, world_path
+    from symbolic_robot.domains.home.user import polyline_length, world_path
     path = world_path(w, start, dpos)
     dur = polyline_length(path) / u._speed[pid]
     u._sched[pid] = [(1.0, 1.0 + dur, path, dest)]

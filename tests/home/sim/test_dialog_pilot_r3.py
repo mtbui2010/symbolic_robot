@@ -6,7 +6,7 @@ plain fridge. A remark is context: the read-back after it is what the user answe
 import pytest
 
 import test_dialog_structured as T
-from homeloop_robot import intent
+from symbolic_robot.domains.home import intent
 
 GOAL = {"all": [{"pred": "in", "args": ["milk_1", "kimchi_fridge@kitchen"]}]}
 REQ = {"en": "I'd like you to put the milk away.", "ko": "우유를 넣어 둘래요?"}

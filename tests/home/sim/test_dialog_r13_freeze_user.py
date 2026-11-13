@@ -3,7 +3,7 @@ two consistency fixes found by the per-task analysis of the n=50 gate. Worlds: t
 states. No rate or scoring value changed."""
 import pytest
 
-from homeloop_robot.episode import make_episode
+from symbolic_robot.domains.home.episode import make_episode
 from helpers import patched
 
 

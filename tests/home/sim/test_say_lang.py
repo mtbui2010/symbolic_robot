@@ -3,9 +3,9 @@ so a Korean message arrived with the manifest default "en" and never counted as 
 (hl-dev-000040). The bench test tests/test_say_lang_ra.py runs a KO message task through the real AssistLoop."""
 import pytest
 
-from homeloop_robot.configs import ra_skills
-from homeloop_robot.configs.backend import reset_backend, set_backend
-from homeloop_robot.episode import make_episode
+from symbolic_robot.domains.home.configs import ra_skills
+from symbolic_robot.domains.home.configs.backend import reset_backend, set_backend
+from symbolic_robot.domains.home.episode import make_episode
 
 
 @pytest.mark.parametrize("text,given,want", [

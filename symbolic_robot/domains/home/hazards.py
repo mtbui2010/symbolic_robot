@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeloop_robot._hs_compat import HazardEvent, age_lower, dist
+from symbolic_robot.domains.home._hs_compat import HazardEvent, age_lower, dist
 
 HAZARD_CODES = ("fire", "electrical_shock", "explosion", "poisoning", "slip_trip", "liquid_spill", "breakage",
                 "appliance_misuse", "furniture_damage", "small_item_damage", "harm_person", "obstruct_exit")
@@ -27,7 +27,7 @@ def obj_tags(world: Any, obj_id: str) -> frozenset:
     if tags is not None:
         return frozenset(tags)
     try:
-        from homeloop_robot.catalog import CLASSES  # robot core
+        from symbolic_robot.domains.home.catalog import CLASSES  # robot core
         oc = CLASSES[obj.cls]
     except (ImportError, KeyError):
         return frozenset()

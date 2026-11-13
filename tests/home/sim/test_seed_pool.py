@@ -12,7 +12,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-ROOT = Path(__file__).resolve().parents[1] / "homeloop_robot"
+REPO = Path(__file__).resolve().parents[3]
+ROOT = REPO / "symbolic_robot" / "domains" / "home"
 MANIFEST = ROOT / "configs" / "manifest.yaml"
 SEED = ROOT / "planner" / "seed_memory.jsonl"
 SHOWS = ("fetch to a person: a reachable surface beside them", "fetch to a person: handover",
@@ -39,7 +40,7 @@ def test_manifest_points_at_the_seed_file(manifest):
 
 
 def test_packaged():
-    text = (ROOT.parent / "pyproject.toml").read_text(encoding="utf-8")
+    text = (REPO / "pyproject.toml").read_text(encoding="utf-8")
     assert '"planner/*.jsonl"' in text
 
 
@@ -71,7 +72,7 @@ def test_coverage(episodes):
 
 def test_the_robot_package_reports_the_pool():
     rv = pytest.importorskip("robot_agent.core.planning.robot")
-    assert Path(rv.RobotView.load("homeloop_robot").seed_memory()) == SEED.resolve()
+    assert Path(rv.RobotView.load("symbolic_robot.domains.home").seed_memory()) == SEED.resolve()
 
 
 def test_every_plan_passes_the_action_model(episodes, manifest):
@@ -80,7 +81,7 @@ def test_every_plan_passes_the_action_model(episodes, manifest):
     from embodiplan.action_model import Capabilities, simulate
     from embodiplan.memory_retriever import load_seed_examples
     from embodiplan.memory_tools import start_state
-    actions = rv.RobotView.load("homeloop_robot").plan_actions
+    actions = rv.RobotView.load("symbolic_robot.domains.home").plan_actions
     for e in episodes:
         rep = simulate(_steps(e), initial_state=start_state(e),
                        capabilities=Capabilities.from_any(manifest["capabilities"]), actions=actions)

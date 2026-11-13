@@ -2,8 +2,8 @@
 idle run clears a camera fault that clears on waiting, as the wait skill does."""
 import pytest
 
-from homeloop_robot.episode import make_episode
-from homeloop_robot.types import FailureCode, FaultState
+from symbolic_robot.domains.home.episode import make_episode
+from symbolic_robot.domains.home.types import FailureCode, FaultState
 
 
 def _down(ep):

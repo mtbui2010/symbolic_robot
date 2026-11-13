@@ -4,9 +4,9 @@ him we leave in 10 minutes, please"). That is the request relayed word for word,
 message, and said_to must not count it (R2-1: scoring stays strict). A message said to the person still counts."""
 import pytest
 
-from homeloop_robot.goals import holds
-from homeloop_robot.types import Utterance
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home.goals import holds
+from symbolic_robot.domains.home.types import Utterance
+from symbolic_robot.domains.home.world import from_house
 
 ATOM = {"pred": "said_to", "args": ["partner_b", "leaving_soon"]}
 

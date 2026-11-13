@@ -3,7 +3,7 @@ eight consistency fixes found by the per-task analysis of the n=50 gate. Worlds:
 states. No rate or scoring value changed."""
 import pytest
 
-from homeloop_robot.episode import make_episode
+from symbolic_robot.domains.home.episode import make_episode
 from helpers import patched
 
 
@@ -65,7 +65,7 @@ G033 = {"all": [{"pred": "on", "args": ["phone_1", "sofa@living"]}]}
 
 
 def test_s3_pon_is_the_phone():
-    from homeloop_robot import dialog as D
+    from symbolic_robot.domains.home import dialog as D
     ep = _ep("shared_flat", 9504, "ko", G033, "휴대폰 소파에 갖다 놔 주세요.")
     assert D.mentions("검은 폰", "폰", "ko") and "폰" in D.object_names(ep.world, "phone_1", "ko")
     r, log = _ask(ep, "사이드 테이블에 있는 폰 소파에 놓을게요. 맞죠?", "ko")
@@ -118,6 +118,6 @@ def test_s5_a_mentioned_place_question_asks_for_the_request_again(L, q):
 
 # ── S6: the help reply carries an acknowledgement word in Korean as in English ───────────────────────────────────
 def test_s6_help_reply_has_an_acknowledgement_in_both_languages():
-    from homeloop_robot import dialog as D
+    from symbolic_robot.domains.home import dialog as D
     assert D.TEXT["help_ok"]["en"].startswith("OK")
     assert D.TEXT["help_ok"]["ko"].startswith("네")

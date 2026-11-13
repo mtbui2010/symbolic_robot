@@ -1,7 +1,7 @@
 """A wrong user reply (user.answer.p_wrong draw) is an injected user error: the ask call stays ok and carries the event
 ``user_wrong_answer`` in its truth, so the episode record can count it (homeloop_bench metrics.failure_events)."""
 from helpers import patched
-from homeloop_robot.episode import make_episode
+from symbolic_robot.domains.home.episode import make_episode
 from test_dialog_structured import GLASS_SPEC, HOUSE
 
 Q = "Which mug do you mean: the white mug or the green mug?"

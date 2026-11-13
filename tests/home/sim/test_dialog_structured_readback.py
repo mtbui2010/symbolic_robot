@@ -3,7 +3,7 @@ mentioned is not in my plan). I will put the remote on the sofa. Is that right?"
 in the remark are not part of the plan read back, so a wrong read-back is not confirmed (review round 1)."""
 import pytest
 
-from homeloop_robot import dialog as D
+from symbolic_robot.domains.home import dialog as D
 from test_dialog_structured import _ask
 
 REMOTE_GOAL = {"all": [{"pred": "on", "args": ["remote_1", "tv_stand@living"]}]}

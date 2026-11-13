@@ -13,9 +13,9 @@ import yaml
 
 import _safety_golden as SG
 from helpers import HAS_RA
-from homeloop_robot.configs.tasks import env_for
+from symbolic_robot.domains.home.configs.tasks import env_for
 
-PKG = Path(__file__).resolve().parents[1] / "homeloop_robot"
+PKG = Path(__file__).resolve().parents[3] / "symbolic_robot" / "domains" / "home"
 PROFILE = PKG / "configs" / "safety" / "household.yaml"
 HERE = Path(__file__).parent
 
@@ -39,7 +39,7 @@ def test_the_simulator_never_reads_the_robot_profile():
 
 def test_the_robot_env_has_no_scoring_tags():
     """The profile's place classes share names with house tags (food_storage, food_prep); the robot must not see the tags."""
-    from homeloop_robot.world import from_house
+    from symbolic_robot.domains.home.world import from_house
     houses = sorted(p.stem for p in (PKG / "houses").glob("*.yaml"))
     assert len(houses) >= 6
     for h in houses:

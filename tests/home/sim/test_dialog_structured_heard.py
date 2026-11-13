@@ -4,8 +4,8 @@ things / places / people as the text, and a text in the user's language. Otherwi
 heard (path structured_mismatch), so no answer comes through a channel a real user does not hear."""
 import pytest
 
-from homeloop_robot import intent
-from homeloop_robot.episode import make_episode
+from symbolic_robot.domains.home import intent
+from symbolic_robot.domains.home.episode import make_episode
 from test_dialog_structured import FETCH_GOAL, FETCH_REQ, GLASS_GOAL, GLASS_REQ, GLASS_SPEC, HOUSE, _ask
 
 REMOTE_GOAL = {"all": [{"pred": "on", "args": ["remote_1", "tv_stand@living"]}]}
@@ -14,7 +14,7 @@ REMOTE_REQ = {"en": "Put the remote on the TV stand.", "ko": "리모컨 티비�
 
 def _remote_where(L):
     w = make_episode(HOUSE, 0, "ideal", 0).world
-    from homeloop_robot import dialog as D
+    from symbolic_robot.domains.home import dialog as D
     return D.location_text(w, "remote_1", L), D.location_text(w, "apple_1", L)
 
 
@@ -120,9 +120,9 @@ def test_in_lang():
 def test_said_to_needs_the_household_language(L, text, ok):
     """A message counts only in the household's language: "Dad, lunch is ready." said in English in a Korean home
     (KO hl-dev-000040) does not tell dad."""
-    from homeloop_robot import goals as G
-    from homeloop_robot.catalog import MESSAGES, message_matches
-    from homeloop_robot.types import Utterance
+    from symbolic_robot.domains.home import goals as G
+    from symbolic_robot.domains.home.catalog import MESSAGES, message_matches
+    from symbolic_robot.domains.home.types import Utterance
     key = next(k for k in MESSAGES if message_matches(k, "Dad, lunch is ready.", "en")
                and message_matches(k, "아빠, 점심 준비됐어요.", "ko"))
     ep = make_episode(HOUSE, 0, "ideal", 0, lang=L)
@@ -162,7 +162,7 @@ SAGE_EN = [
 def test_sage_english_templates_read_as_their_meaning(q):
     """In an English episode the user hears SAGE's template itself: the rules read it as the adapter's meaning,
     so the heard-text check never rejects a faithful question (no classifier: rules only)."""
-    from homeloop_robot.configs.ra_dialog import derive
+    from symbolic_robot.domains.home.configs.ra_dialog import derive
     m = derive(q)
     assert m is not None
     _r, log = _ask("en", q, m)

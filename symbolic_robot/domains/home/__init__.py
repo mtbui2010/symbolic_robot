@@ -1,6 +1,6 @@
 """homeloop_robot: a stochastic mock household robot (docs/architecture.md).
 
-Public API (DESIGN 13.1). Names are resolved lazily, so ``import homeloop_robot`` is cheap and a
+Public API (DESIGN 13.1). Names are resolved lazily, so ``import symbolic_robot.domains.home`` is cheap and a
 module of the package can import another without cycles.
 """
 

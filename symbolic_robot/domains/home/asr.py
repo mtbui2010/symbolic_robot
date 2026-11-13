@@ -15,7 +15,7 @@ import random
 import re
 from typing import Any
 
-from homeloop_robot._hs_compat import Heard, param
+from symbolic_robot.domains.home._hs_compat import Heard, param
 
 PARAMS = (
     "asr.en.near_wer",
@@ -252,7 +252,7 @@ def token_error_rate(ref: str, hyp: str, lang: str) -> float:
 
 def consistency(profile: Any, n: int = 20000, seed: int = 0) -> list[dict]:
     """Empirical ASR event and token-error rates vs the profile (DESIGN 13.3). One row per parameter."""
-    from homeloop_robot._hs_compat import binomial_row, rng_for
+    from symbolic_robot.domains.home._hs_compat import binomial_row, rng_for
 
     r = ASRRates(profile)
     rows = []
@@ -285,7 +285,7 @@ def corruption_share(texts: list, lang: str, profile: Any, condition: str = "app
     "changed"} (changed = corrupted + partial + not_heard), each instruction heard once with its own stream.
     With ``entities`` (per text: a list of entity groups, each a list of accepted spellings) also
     "entity_changed": the share of instructions where some entity group no longer appears in what was heard."""
-    from homeloop_robot._hs_compat import rng_for
+    from symbolic_robot.domains.home._hs_compat import rng_for
 
     r = ASRRates(profile)
     c = {"ok": 0, "corrupted": 0, "partial": 0, "not_heard": 0}

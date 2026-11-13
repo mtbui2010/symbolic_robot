@@ -12,7 +12,7 @@ pytestmark = pytest.mark.skipif(not HAS_RA, reason="robot_agent not importable")
 
 def _announcer(lang):
     from robot_agent.core.planning.announcer import Announcer
-    from homeloop_robot.configs.adapter import make_adapter
+    from symbolic_robot.domains.home.configs.adapter import make_adapter
     ad = make_adapter()
     return Announcer(lang=lang, speak_backend=False, i18n=ad.i18n, quiet=ad.quiet_skills)
 
@@ -23,7 +23,7 @@ def _hangul(s):
 
 def test_every_core_milestone_has_a_korean_phrase():
     from robot_agent.core.planning.announcer import PHRASES as CORE
-    from homeloop_robot import intent
+    from symbolic_robot.domains.home import intent
     a = _announcer("ko")
     assert a.lang == "ko"
     for kind in CORE["en"]:

@@ -1,4 +1,4 @@
-"""``python -m homeloop_robot.report {hw-rates, oracle-mix}`` (docs/calibration.md, docs/testing.md).
+"""``python -m symbolic_robot.domains.home.report {hw-rates, oracle-mix}`` (docs/calibration.md, docs/testing.md).
 
 - ``hw-rates``: the episode-level hardware-failure rate for tasks of N motion calls, in closed form from
   ``hw.p_per_motion_call`` and a sweep over ``hw.p_persistent``, next to OK-Robot's 7.5 % per 4-primitive trial.
@@ -205,7 +205,7 @@ def asr_share(tasks_path: str, profile: str = "real", condition: str = "app", se
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog="python -m homeloop_robot.report", description=__doc__.split("\n")[0])
+    ap = argparse.ArgumentParser(prog="python -m symbolic_robot.domains.home.report", description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
     h = sub.add_parser("hw-rates", help="episode-level hardware-failure rates, sweep over hw.p_persistent")
     h.add_argument("--profile", default="real")

@@ -4,8 +4,8 @@ usually kept (catalog typical receptacle, realism R-b), not any surface or conta
 import pytest
 
 import test_dialog_structured as T
-from homeloop_robot.catalog import is_typical, place_category, size_fits
-from homeloop_robot.houses import list_houses
+from symbolic_robot.domains.home.catalog import is_typical, place_category, size_fits
+from symbolic_robot.domains.home.houses import list_houses
 
 MUG_GOAL = {"all": [{"pred": "delivered", "args": ["mug_2", "user"], "mode": "reach", "mode_reason": None}]}
 MUG_REQ = {"en": "Hey, can you grab me that green mug and put it over here?", "ko": "초록색 머그컵 좀 가져와 주실래요?"}

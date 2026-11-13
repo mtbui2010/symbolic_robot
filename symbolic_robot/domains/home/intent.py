@@ -39,7 +39,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from homeloop_robot import dialog as D
+from symbolic_robot.domains.home import dialog as D
 
 QTYPES = ("which_object", "which_place", "confirm", "where_are_you", "where_is", "repeat", "did_you_mean",
           "what_to_say", "help", "free")
@@ -335,7 +335,7 @@ def read_coverage(question: str, L: str) -> "dict | None":
 def _coverage_answer(part: str, L: str, world: Any, goal: "D.GoalView | None", spec: dict) -> "D.Content":
     """The user answers "should I do this part now?" from the TRUE state: yes when an atom of their request that the
     part is about does not hold, no when all of them hold, not sure when the part is about no atom."""
-    from homeloop_robot import goals as G
+    from symbolic_robot.domains.home import goals as G
     if goal is None:
         return _not_sure(L, spec)
     rel = [a for a in goal.atoms if goal.subject_said(a, part)]
@@ -481,7 +481,7 @@ def _where_is(obj: str, L: str, spec: dict, world: Any, goal, knows_location: bo
 
 
 def _what_to_say(person: str | None, L: str, spec: dict, world: Any, goal) -> "D.Content":
-    from homeloop_robot.catalog import MESSAGE_TEXT
+    from symbolic_robot.domains.home.catalog import MESSAGE_TEXT
     atoms = [a for a in (goal.atoms if goal is not None else []) if a["pred"] == "said_to"]
     if person and len(atoms) > 1:
         named = [a for a in atoms if D._mentions_any(person, D._person_words(world, a["args"][0]), world)]

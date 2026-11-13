@@ -1,10 +1,10 @@
 import json
 
 from helpers import episode
-from homeloop_robot import oracle
-from homeloop_robot.episode import make_episode
-from homeloop_robot.rng import rng_for
-from homeloop_robot.selftest import random_call, random_goal
+from symbolic_robot.domains.home import oracle
+from symbolic_robot.domains.home.episode import make_episode
+from symbolic_robot.domains.home.rng import rng_for
+from symbolic_robot.domains.home.selftest import random_call, random_goal
 
 
 def trace(profile, seed, key, user_impl="null"):

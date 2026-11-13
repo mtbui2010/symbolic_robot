@@ -4,9 +4,9 @@ the user answers with the container the request opens / closes (review round 1).
 same question the same way, in English and Korean."""
 import pytest
 
-from homeloop_robot import intent
-from homeloop_robot.configs.ra_dialog import derive
-from homeloop_robot.episode import make_episode
+from symbolic_robot.domains.home import intent
+from symbolic_robot.domains.home.configs.ra_dialog import derive
+from symbolic_robot.domains.home.episode import make_episode
 
 HOUSE = "shared_flat"
 # the goals of dev tasks hl-dev-000001 / -000026 ("open the fridge and put the plate in") and hl-dev-000000 /

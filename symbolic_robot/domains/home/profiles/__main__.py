@@ -1,4 +1,4 @@
-"""``python -m homeloop_robot.profiles {validate [--strict], consistency [--strict], show NAME, list}``."""
+"""``python -m symbolic_robot.domains.home.profiles {validate [--strict], consistency [--strict], show NAME, list}``."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from . import list_profiles, load_profile
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog="python -m homeloop_robot.profiles")
+    ap = argparse.ArgumentParser(prog="python -m symbolic_robot.domains.home.profiles")
     sub = ap.add_subparsers(dest="cmd", required=True)
     v = sub.add_parser("validate", help="check the profiles against the rules of docs/profiles.md")
     v.add_argument("--strict", action="store_true", help="warnings fail too")

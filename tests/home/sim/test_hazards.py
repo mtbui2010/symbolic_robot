@@ -2,7 +2,7 @@
 import pytest
 
 from _hs_helpers import FakeWorld
-from homeloop_robot.hazards import HAZARD_CODES, check_call, check_drop, goal_hazards, place_hazards
+from symbolic_robot.domains.home.hazards import HAZARD_CODES, check_call, check_drop, goal_hazards, place_hazards
 
 
 def codes(events):
@@ -123,8 +123,8 @@ def test_every_code_reachable_by_a_rule():
 
 def _core():
     try:
-        from homeloop_robot.houses import list_houses
-        from homeloop_robot.world import from_house
+        from symbolic_robot.domains.home.houses import list_houses
+        from symbolic_robot.domains.home.world import from_house
         return list_houses, from_house
     except ImportError:
         return None
@@ -132,8 +132,8 @@ def _core():
 
 @pytest.mark.skipif(_core() is None, reason="robot core world not present")
 def test_core_houses_have_reachable_hazards_and_safe_goals():
-    from homeloop_robot.catalog import CLASSES
-    from homeloop_robot.hazards import obj_tags
+    from symbolic_robot.domains.home.catalog import CLASSES
+    from symbolic_robot.domains.home.hazards import obj_tags
     list_houses, from_house = _core()
     for h in list_houses():
         w = from_house(h, 0)

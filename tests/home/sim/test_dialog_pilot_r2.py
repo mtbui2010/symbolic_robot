@@ -5,8 +5,8 @@ it was read as a check of a heard word ("Did you mean ...?") and answered "yes".
 import pytest
 
 import test_dialog_structured as T
-from homeloop_robot import dialog as D
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home import dialog as D
+from symbolic_robot.domains.home.world import from_house
 
 GOAL = {"all": [{"pred": "said_to", "args": ["partner_b", "leaving_soon"]}]}
 REQ = {"en": "Let my husband know we're leaving in ten minutes, please.", "ko": "남편한테 가서 10분 있다가 나간다고 말해 주세요."}

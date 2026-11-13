@@ -1,10 +1,10 @@
 import pytest
 
 from helpers import episode
-from homeloop_robot import goals, oracle
-from homeloop_robot.houses import list_houses
-from homeloop_robot.rng import rng_for
-from homeloop_robot.selftest import random_goal
+from symbolic_robot.domains.home import goals, oracle
+from symbolic_robot.domains.home.houses import list_houses
+from symbolic_robot.domains.home.rng import rng_for
+from symbolic_robot.domains.home.selftest import random_goal
 
 
 @pytest.mark.parametrize("house", list_houses())

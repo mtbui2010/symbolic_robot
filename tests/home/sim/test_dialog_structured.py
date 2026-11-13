@@ -8,13 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from homeloop_robot import intent
-from homeloop_robot.dialog import GoalView
-from homeloop_robot.episode import make_episode
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home import intent
+from symbolic_robot.domains.home.dialog import GoalView
+from symbolic_robot.domains.home.episode import make_episode
+from symbolic_robot.domains.home.world import from_house
 
 HOUSE = "korean_apt_59"
-DOCS = Path(__file__).resolve().parents[1] / "docs" / "user_model.md"
+DOCS = Path(__file__).resolve().parents[3] / "docs" / "home" / "sim" / "user_model.md"
 
 GLASS_SPEC = {"persona": "adult", "slot": "object", "intended": "mug_2",
               "candidates": [{"id": "mug_1", "mentions": {"en": ["white mug", "white one"], "ko": ["하얀 머그컵", "하얀 거"]}},
@@ -255,7 +255,7 @@ def test_meaning_does_not_change_the_outcome_draws():
 
 def test_help_meaning_counts_as_a_help_request():
     """A structured help question is a help request: with a help-clearable fault the user says they moved it."""
-    from homeloop_robot.skills import Robot  # noqa: F401 - the robot core handles help faults
+    from symbolic_robot.domains.home.skills import Robot  # noqa: F401 - the robot core handles help faults
     ep, u = _user("en", {"persona": "adult"}, FETCH_GOAL, FETCH_REQ)
     u.help_request("Could you give me a hand?", 0.0)
     r, h = u.answer("Could you give me a hand?", "en", tuple(ep.world.people["user"].pos), 0.0,

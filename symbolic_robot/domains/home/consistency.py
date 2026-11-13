@@ -1,4 +1,4 @@
-"""Outcome consistency (DESIGN 13.3; docs/realism.md): ``python -m homeloop_robot.profiles consistency``.
+"""Outcome consistency (DESIGN 13.3; docs/realism.md): ``python -m symbolic_robot.domains.home.profiles consistency``.
 
 1. Rates: for each skill / failure parameter of the ``real`` profile, N seeded calls (default 20,000) in
    the parameter's reference context; the empirical rate must not differ from the profile's rate at the
@@ -528,7 +528,7 @@ def hook_checks(n: int, seed: int) -> list:
     for mod, fn, call in (("user", "consistency", lambda f: f(_world(), _real(), n, seed, "en")),
                           ("user", "consistency", lambda f: f(_world(), _real(), n, seed, "ko")),
                           ("asr", "consistency", lambda f: f(_real(), n, seed))):
-        name = f"homeloop_robot.{mod}"
+        name = f"symbolic_robot.domains.home.{mod}"
         try:
             m = importlib.import_module(name)
         except ModuleNotFoundError as e:
@@ -604,7 +604,7 @@ def run(n: int = 20000, seed: int = 0, strict: bool = False, out=print, episodes
 
 def main(argv=None) -> int:
     import argparse
-    ap = argparse.ArgumentParser(prog="python -m homeloop_robot.consistency")
+    ap = argparse.ArgumentParser(prog="python -m symbolic_robot.domains.home.consistency")
     ap.add_argument("--strict", action="store_true")
     ap.add_argument("--n", type=int, default=20000)
     ap.add_argument("--seed", type=int, default=0)

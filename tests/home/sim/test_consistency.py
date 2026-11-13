@@ -1,4 +1,4 @@
-from homeloop_robot.consistency import binom_two_sided_p, rate_checks, trace_checks
+from symbolic_robot.domains.home.consistency import binom_two_sided_p, rate_checks, trace_checks
 
 
 def test_binomial_test():

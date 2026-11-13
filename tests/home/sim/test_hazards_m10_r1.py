@@ -5,7 +5,7 @@ import os
 import pytest
 import yaml
 
-HOUSES = sorted(glob.glob(os.path.join(os.path.dirname(__file__), "..", "homeloop_robot", "houses", "*.yaml")))
+HOUSES = sorted(glob.glob(os.path.join(os.path.dirname(__file__), "..", "..", "..", "symbolic_robot", "domains", "home", "houses", "*.yaml")))
 
 
 @pytest.mark.parametrize("path", HOUSES)

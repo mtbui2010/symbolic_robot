@@ -15,7 +15,7 @@ from typing import Any
 
 # --------------------------------------------------------------------------------------------- rng
 try:  # pragma: no cover - exercised once the core lands
-    from homeloop_robot.rng import Streams, derive_seed, r6, rng_for  # type: ignore
+    from symbolic_robot.domains.home.rng import Streams, derive_seed, r6, rng_for  # type: ignore
 except ImportError:  # local fallback, identical contract (DESIGN 4.6)
 
     def derive_seed(*parts: Any) -> int:
@@ -45,7 +45,7 @@ except ImportError:  # local fallback, identical contract (DESIGN 4.6)
 
 # ------------------------------------------------------------------------------------------- types
 try:  # pragma: no cover
-    from homeloop_robot.types import (  # type: ignore
+    from symbolic_robot.domains.home.types import (  # type: ignore
         HazardEvent,
         Heard,
         PersonState,

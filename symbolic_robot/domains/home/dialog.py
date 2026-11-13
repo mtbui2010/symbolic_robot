@@ -210,7 +210,7 @@ def object_names(world: Any, oid: str, lang: str) -> list[str]:
         base = nm.get(lang)
     if base is None:
         try:
-            from homeloop_robot.catalog import CLASSES, class_names  # robot core
+            from symbolic_robot.domains.home.catalog import CLASSES, class_names  # robot core
             base = CLASSES[obj.cls].name[lang]
             names.extend(class_names(obj.cls, lang))
         except (ImportError, KeyError):
@@ -220,7 +220,7 @@ def object_names(world: Any, oid: str, lang: str) -> list[str]:
     if color:
         cname = color
         try:
-            from homeloop_robot.catalog import COLORS
+            from symbolic_robot.domains.home.catalog import COLORS
             cname = COLORS[color][lang]
         except (ImportError, KeyError):
             pass
@@ -857,14 +857,14 @@ def _specific_name(world: Any, oid: str, L: str) -> str:
     base = nm.get(L) if isinstance(nm, dict) else None
     if base is None:
         try:
-            from homeloop_robot.catalog import CLASSES
+            from symbolic_robot.domains.home.catalog import CLASSES
             base = CLASSES[obj.cls].name[L]
         except (ImportError, KeyError):
             base = obj.cls.replace("_", " ")
     color = (getattr(obj, "attrs", {}) or {}).get("color")
     if color:
         try:
-            from homeloop_robot.catalog import COLORS
+            from symbolic_robot.domains.home.catalog import COLORS
             color = COLORS[color][L]
         except (ImportError, KeyError):
             pass
@@ -960,7 +960,7 @@ class GoalView:
             if q is not None and self._person_ok(args[0], q) and speech_role(self.w, args[0], q) != "speaker":
                 # the right person, the wrong message: the user corrects what is to be said (fresh pilot round 1,
                 # hl-dev-000057: "No, I asked you to tell the kid." when the kid was named)
-                from homeloop_robot.catalog import MESSAGE_TEXT  # robot core
+                from symbolic_robot.domains.home.catalog import MESSAGE_TEXT  # robot core
                 msg = (MESSAGE_TEXT.get(args[1]) or {}).get(L)
                 if msg:
                     return _say("fix_say_msg", L, person=person_name(self.w, args[0], L),
@@ -1024,7 +1024,7 @@ class GoalView:
                 return False
             quoted = quoted_texts(q)
             if quoted:
-                from homeloop_robot.catalog import MESSAGES, message_matches  # robot core
+                from symbolic_robot.domains.home.catalog import MESSAGES, message_matches  # robot core
                 if args[1] in MESSAGES and not any(message_matches(args[1], t, detect_lang(t)) for t in quoted):
                     return False
             return self._person_ok(args[0], q)
@@ -1053,7 +1053,7 @@ class GoalView:
         bare = _blank(own, _obj_words(self.w, oid))
         if any(_mentions_any(bare, _person_words(self.w, x), self.w) for x in sorted(self.w.people) if x != pid):
             return None
-        from homeloop_robot.reach import place_reachable  # robot core
+        from symbolic_robot.domains.home.reach import place_reachable  # robot core
         for k in sorted(self.w.house.places):
             if said_put_on(self.w, own, k) and place_reachable(self.w, k, pid):
                 return True
@@ -1198,7 +1198,7 @@ class GoalView:
 
 
 def _is_support(pl) -> bool:
-    from homeloop_robot.reach import is_support  # robot core
+    from symbolic_robot.domains.home.reach import is_support  # robot core
     return is_support(pl)
 
 
@@ -1455,7 +1455,7 @@ def message_room_answer(world: Any, gv: "GoalView", places: list, L: str, q: str
     in what the user asked the robot to SAY ("tell Grandpa to head to the kitchen"): the user says the message is the
     point, not a place there (gate pilot round 1, hl-dev-000015: it got "Grandpa is at the bed." twice); None when
     the offered places are not all in a room a message of the request names."""
-    from homeloop_robot.catalog import MESSAGE_TEXT  # robot core
+    from symbolic_robot.domains.home.catalog import MESSAGE_TEXT  # robot core
     rooms = {world.house.places[p].room for p in places if p in world.house.places}
     if len(rooms) > 1 and q is not None:
         # "drawer in the kitchen" also names the bedroom drawer: the rooms the question itself says
@@ -1502,7 +1502,7 @@ def expand_one(world: Any, text: str, hint: Any = ()) -> str:
     an object of the house is a red book (an ellipsis, not a new name; the colours and class names are the
     catalog's). When the question names no class, the class of the things asked for (``hint``: object ids) is
     taken if only one class of that colour is among them."""
-    from homeloop_robot.catalog import COLORS, class_names
+    from symbolic_robot.domains.home.catalog import COLORS, class_names
     out = text
     for lg, rx in (("en", r"\b{c}\s+ones?\b"), ("ko", r"{c}\s*(?:것|거)(?=\W|[을를은는이가도만과와로요]|$)")):
         for ckey, cn in COLORS.items():

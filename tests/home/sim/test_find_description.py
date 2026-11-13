@@ -2,7 +2,7 @@
 table where the milk carton stood and got "no such object": the camera matched catalog names only. An
 open-vocabulary detector reads a description: the object's name in the query, with extra words before it or a
 packaging noun after it, and no colour word that contradicts the object's colour."""
-from homeloop_robot.skills import detector_hits
+from symbolic_robot.domains.home.skills import detector_hits
 
 from helpers import episode
 
@@ -52,8 +52,8 @@ def test_english_plural_inflection_is_the_same_name():
     """r11 n50 gate (hl-dev-000024): the task says "vitamin bottle", the catalog alias is "vitamins"; find("vitamin") was
     `absent` with no event. An English query word matches a name word that differs only by the regular plural
     (-s, -es, -ies); a general rule, so "mugs" / "mug" and "shelves"-like regular forms work for every object."""
-    from homeloop_robot.episode import make_episode
-    from homeloop_robot.world import stem_en
+    from symbolic_robot.domains.home.episode import make_episode
+    from symbolic_robot.domains.home.world import stem_en
     ep = make_episode("family_house", 4436, "ideal", 0, lang="en", user_spec={"persona": "child_present"}, key="s1")
     w = ep.world
     assert detector_hits(w, "vitamin") == ["vitamins_1"]

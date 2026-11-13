@@ -7,10 +7,10 @@ import math
 
 import pytest
 
-from homeloop_robot.configs import ra_skills
-from homeloop_robot.configs.backend import reset_backend, set_backend
-from homeloop_robot.configs.tasks import env_for, person_key, refresh_person_spot
-from homeloop_robot.episode import make_episode
+from symbolic_robot.domains.home.configs import ra_skills
+from symbolic_robot.domains.home.configs.backend import reset_backend, set_backend
+from symbolic_robot.domains.home.configs.tasks import env_for, person_key, refresh_person_spot
+from symbolic_robot.domains.home.episode import make_episode
 
 FILL = ["candle_1", "houseplant_1", "remote_1"]        # three things onto the side table beside grandma (capacity 3)
 

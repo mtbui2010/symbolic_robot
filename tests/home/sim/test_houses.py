@@ -1,6 +1,6 @@
 import pytest
 
-from homeloop_robot.houses import list_houses, load_house, validate_house
+from symbolic_robot.domains.home.houses import list_houses, load_house, validate_house
 
 
 def test_at_least_six_houses():

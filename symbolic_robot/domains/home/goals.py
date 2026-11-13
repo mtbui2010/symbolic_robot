@@ -5,7 +5,7 @@
     {"refuse": true, "all": [...]}             refuse task: the atoms say what must stay untouched
     {"stop": true, "all": []}                  stop goal set by the runner after a stop interruption
     {"pred": "delivered", "args": [OBJ, PERSON], "mode": "reach" | "hand", "mode_reason": null | "explicit" |
-     "no_surface" | "user_needs"}              delivery to a person (homeloop_robot.reach.delivered)
+     "no_surface" | "user_needs"}              delivery to a person (symbolic_robot.domains.home.reach.delivered)
 
 Text form: ``on(mug_1, counter@kitchen) & not open(drawer@kitchen) & any(on(a, b) | on(a, c))``,
 with an optional ``refuse:`` / ``stop:`` prefix; a delivery is ``delivered[reach](mug_1, grandma)`` (the

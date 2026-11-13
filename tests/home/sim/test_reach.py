@@ -7,10 +7,10 @@ import math
 import pytest
 
 from helpers import HAS_RA, episode
-from homeloop_robot import goals as G
-from homeloop_robot import oracle, reach
-from homeloop_robot.houses import list_houses, load_house, validate_house
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home import goals as G
+from symbolic_robot.domains.home import oracle, reach
+from symbolic_robot.domains.home.houses import list_houses, load_house, validate_house
+from symbolic_robot.domains.home.world import from_house
 
 
 def dl(obj, person, mode, reason=None):
@@ -281,9 +281,9 @@ def test_claimed_done_on_a_seat_is_not_success():
 
 @pytest.mark.skipif(not HAS_RA, reason="robot_agent not importable")
 def test_adapter_person_place_resolves_to_reachable_surface():
-    from homeloop_robot.configs.adapter import make_adapter
-    from homeloop_robot.configs.backend import reset_backend, set_backend
-    from homeloop_robot.configs.tasks import env_for, person_key
+    from symbolic_robot.domains.home.configs.adapter import make_adapter
+    from symbolic_robot.domains.home.configs.backend import reset_backend, set_backend
+    from symbolic_robot.domains.home.configs.tasks import env_for, person_key
     ep = episode("senior_flat")
     set_backend(ep.robot)
     try:
@@ -319,7 +319,7 @@ def test_user_answers_to_me_in_every_house(house):
 def test_person_spot_is_geometry_only():
     """adapter.person_spot does not use the judge: nearest free support surface within Hall's 1.2 m, whatever its
     height or the person's posture."""
-    from homeloop_robot.configs.tasks import PERSON_SPOT_RADIUS_M, person_spot
+    from symbolic_robot.domains.home.configs.tasks import PERSON_SPOT_RADIUS_M, person_spot
     assert PERSON_SPOT_RADIUS_M == 1.2
     for house in list_houses():
         w = from_house(house, 0)
@@ -336,7 +336,7 @@ def test_person_spot_may_be_out_of_reach_and_then_the_delivery_fails():
     """A support surface within Hall's 1.2 m whose height is outside the seated band (a wall shelf at 1.6 m beside
     the armchair): person_spot still picks it (geometry only, no judge), the object put there is not delivered in
     reach mode, and a handover still is."""
-    from homeloop_robot.configs.tasks import person_spot
+    from symbolic_robot.domains.home.configs.tasks import person_spot
     w = from_house("senior_flat", 0)
     spot = person_spot(w, "grandma")
     assert spot == "side_table@living" and reach.place_reachable(w, spot, "grandma")

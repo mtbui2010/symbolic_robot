@@ -1,6 +1,6 @@
-from homeloop_robot import realism
-from homeloop_robot.catalog import CLASSES, REALISM, RECEPTACLES, is_typical, size_fits
-from homeloop_robot.houses import list_houses, load_house
+from symbolic_robot.domains.home import realism
+from symbolic_robot.domains.home.catalog import CLASSES, REALISM, RECEPTACLES, is_typical, size_fits
+from symbolic_robot.domains.home.houses import list_houses, load_house
 
 
 def test_catalog_complete():

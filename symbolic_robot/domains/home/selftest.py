@@ -1,4 +1,4 @@
-"""``python -m homeloop_robot.selftest --seed N --episodes K --profile P --out FILE`` (docs/testing.md).
+"""``python -m symbolic_robot.domains.home.selftest --seed N --episodes K --profile P --out FILE`` (docs/testing.md).
 
 Writes a JSONL trace of skill calls on random houses: per episode, 25 calls, each with p 0.6 the next
 oracle call toward a random reachable goal, else a random skill with random valid arguments. One line
@@ -163,7 +163,7 @@ def run(seed: int, episodes: int, profile: str, out_path: str) -> int:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog="python -m homeloop_robot.selftest", description=__doc__.split("\n")[0])
+    ap = argparse.ArgumentParser(prog="python -m symbolic_robot.domains.home.selftest", description=__doc__.split("\n")[0])
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--episodes", type=int, default=10)
     ap.add_argument("--profile", default="real", choices=["ideal", "real", "stress"])

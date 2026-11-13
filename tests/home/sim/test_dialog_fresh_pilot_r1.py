@@ -8,7 +8,7 @@ hl-dev-000057 / 000016 / 000060:
 - a quote of misheard words ("'언경'은 무슨 뜻이에요?") gets the request again; "which things and where?" gets both."""
 import pytest
 
-from homeloop_robot.episode import make_episode
+from symbolic_robot.domains.home.episode import make_episode
 
 BOOK_GOAL = {"all": [{"pred": "on", "args": ["book_2", "coffee_table@living"]},
                      {"pred": "said_to", "args": ["child", "bedtime"]}]}

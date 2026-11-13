@@ -4,9 +4,9 @@ yes when something the part is about does not hold, no when all of it holds, not
 user asked; the text the user hears (EN, and the robot's KO phrase) must read as the same question (heard-text check)."""
 import pytest
 
-from homeloop_robot import intent
-from homeloop_robot.configs.ra_dialog import derive
-from homeloop_robot.episode import make_episode
+from symbolic_robot.domains.home import intent
+from symbolic_robot.domains.home.configs.ra_dialog import derive
+from symbolic_robot.domains.home.episode import make_episode
 from test_dialog_structured import FETCH_GOAL, FETCH_REQ, HOUSE, _ask
 
 PART = {"en": "put the remote on the TV stand", "ko": "리모컨을 TV대 위에 놓아 주세요"}

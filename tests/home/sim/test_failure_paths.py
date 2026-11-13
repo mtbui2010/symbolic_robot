@@ -4,10 +4,10 @@ about the active fault; stale path faults; safety monitor on whole arm motions, 
 the oracle asks for help only when the user can hear it."""
 
 from helpers import episode, patched
-from homeloop_robot import make_episode
-from homeloop_robot import oracle
-from homeloop_robot.types import FailureCode as F
-from homeloop_robot.types import FaultState
+from symbolic_robot.domains.home import make_episode
+from symbolic_robot.domains.home import oracle
+from symbolic_robot.domains.home.types import FailureCode as F
+from symbolic_robot.domains.home.types import FaultState
 
 ALL1 = {"low": 1.0, "medium": 1.0, "high": 1.0}
 
@@ -109,7 +109,7 @@ def test_arm_motion_is_monitored_for_its_whole_duration():
     ep = make_episode("senior_flat", 0, "real", 0, key="t")
     ep.world.robot.pose = (0.9, 0.5, 0.0)       # 0.4 m from grandma's chair
     ep.world.robot.at = None
-    from homeloop_robot.skills import Robot
+    from symbolic_robot.domains.home.skills import Robot
     calls = []
     orig = ep.safety.traverse
 

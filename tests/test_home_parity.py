@@ -1,11 +1,11 @@
-"""Home wrapper parity: through the domain protocol, a scripted skill-call sequence gives results identical to calling the frozen
-package's make_episode directly (same houses, profiles and seeds). Skipped when the package is not installed."""
+"""Home domain parity: through the domain protocol, a scripted skill-call sequence gives results identical to calling the
+package's make_episode directly (same houses, profiles and seeds)."""
 import pytest
 
 from symbolic_robot import registry
 from symbolic_robot.backend import LiveBackend
 
-homeloop = pytest.importorskip("homeloop_robot")
+import symbolic_robot.domains.home as homeloop
 HOUSES = ["senior_flat", "studio_flat", "couple_flat", "family_house", "korean_apt_59"]
 PROFILES = ["ideal", "real", "stress"]
 
@@ -70,4 +70,4 @@ def test_wrapper_ops():
     sp = c.handle({"cmd": "spawn", "cls": "banana", "place": target})
     assert sp["ok"] and sp["id"] in lv.world_view()["objects"]
     assert not c.handle({"cmd": "spawn", "cls": "banana", "place": "nowhere"})["ok"]
-    assert dom.env(lv.episode) and dom.pack == "homeloop_robot"
+    assert dom.env(lv.episode) and dom.pack == "symbolic_robot.domains.home"

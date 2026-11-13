@@ -3,7 +3,7 @@
 # Check against the manifest:
 #     python -m robot_agent.contract.check_manifest homeloop_robot/homeloop_robot --strict
 
-_PKG = 'homeloop_robot.configs.ra_skills'
+_PKG = 'symbolic_robot.domains.home.configs.ra_skills'
 
 SKILL_CONFIGS: dict = {
     'move': (f'{_PKG}', 'move'),

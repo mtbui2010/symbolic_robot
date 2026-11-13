@@ -2,7 +2,7 @@
 import pytest
 
 from _hs_helpers import FakeWorld
-from homeloop_robot.dialog import TEXT, classify, compose, mentioned_objects, mentions, normalize
+from symbolic_robot.domains.home.dialog import TEXT, classify, compose, mentioned_objects, mentions, normalize
 
 SPEC = {
     "persona": "adult", "slot": "object", "intended": "mug_2",
@@ -105,7 +105,7 @@ def test_not_understood_and_generic():
 
 
 def test_where_are_you_gives_the_users_place():
-    from homeloop_robot.dialog import asks_user_position
+    from symbolic_robot.domains.home.dialog import asks_user_position
     w = FakeWorld()
     for q in ("Where are you? Which place should I bring it to?", "Where are you now?"):
         assert asks_user_position(q)
@@ -126,7 +126,7 @@ def test_where_are_you_gives_the_users_place():
 
 
 def test_korean_directional_particle():
-    from homeloop_robot.dialog import _ro
+    from symbolic_robot.domains.home.dialog import _ro
     assert _ro("소파") == "로" and _ro("거실") == "로" and _ro("부엌") == "으로" and _ro("") == "로"
 
 
@@ -145,7 +145,7 @@ WANTS = {"all": [{"pred": "on", "args": ["mug_2", "sink@kitchen"]},
 
 
 def _gv(w, wants=WANTS):
-    from homeloop_robot.dialog import GoalView
+    from symbolic_robot.domains.home.dialog import GoalView
     return GoalView(w, wants, "grandma", lambda pid: {"grandma": "armchair@living", "child": "bed@bedroom"}[pid])
 
 

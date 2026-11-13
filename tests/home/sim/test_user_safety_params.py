@@ -4,14 +4,14 @@ import re
 import pytest
 import yaml
 
-from _hs_helpers import FRAGMENTS, NOISE_ROLES, ROOT, load_entries, load_params
-from homeloop_robot import asr, safety, user
+from _hs_helpers import FRAGMENTS, NOISE_ROLES, PKG, ROOT, load_entries, load_params
+from symbolic_robot.domains.home import asr, safety, user
 
 SOURCE_RE = re.compile(r"^(https?://\S+|doi:10\.\S+|arXiv:\d{4}\.\d{4,5})$")
 KINDS = {"prob", "prob_map", "split", "range_s", "range", "duration_s", "speed_mps", "accel_mps2", "distance_m",
          "mass_kg", "rate_per_h", "count", "lognormal", "normal", "categorical", "flag", "words_per_s", "value", "map"}
 ROLES = {"failure", "recovery", "nominal", "user_noise", "safety_noise"}
-CAL = ROOT / "docs" / "calibration.md"
+CAL = ROOT / "calibration.md"
 
 
 def block(text: str) -> str:
@@ -102,7 +102,7 @@ def test_ideal_derivation_zeroes_noise():
 
 
 def test_stress_block_when_present():
-    f = ROOT / "homeloop_robot" / "profiles" / "stress" / "profile.yaml"
+    f = PKG / "profiles" / "stress" / "profile.yaml"
     if not f.exists():
         pytest.skip("stress profile (robot core) not present")
     text = f.read_text()

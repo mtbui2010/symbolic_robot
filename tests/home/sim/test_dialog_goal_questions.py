@@ -3,8 +3,8 @@
 should I wait at?" when the request named only the room."""
 import pytest
 
-from homeloop_robot.dialog import GoalView, compose
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home.dialog import GoalView, compose
+from symbolic_robot.domains.home.world import from_house
 
 TWO = {"all": [{"pred": "in", "args": ["apple_1", "fridge@kitchen"]},
                {"pred": "delivered", "args": ["mug_1", "user"], "mode": "reach", "mode_reason": None}]}

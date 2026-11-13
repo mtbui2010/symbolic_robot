@@ -1,7 +1,7 @@
 """Gate pilot round 1 (hl-dev-000019 / 000017 / 000027): Find with a name several objects fit ("mug" with a red and
 a blue mug in the house) looks for that name where the robot is, as a detector does. It used to fail "mug not found:
 which one?" wherever the robot looked, even in front of both mugs, so the planner searched elsewhere."""
-from homeloop_robot.types import FailureCode as F
+from symbolic_robot.domains.home.types import FailureCode as F
 
 from helpers import episode
 

@@ -4,7 +4,7 @@ robot_agent writes every question of the AssistLoop in English from fixed templa
 user's language just before its Ask skill runs (``AssistLoop._ask_io`` -> ``_in_lang``). The bench adapter
 (homeloop_bench ``planners/robot_agent_adapter.py``) wraps ``_ask_io`` on the loop instance, so it sees the
 English question before translation, and :func:`derive` maps it onto a template id, a qtype of
-``homeloop_robot.intent.QTYPES`` and its slots. robot_agent itself is not changed.
+``symbolic_robot.domains.home.intent.QTYPES`` and its slots. robot_agent itself is not changed.
 
 The templates below are copied from robot_agent (file and function named per entry); a test
 (tests/test_dialog_structured_ra.py) builds the questions with robot_agent's own functions and checks that
@@ -65,7 +65,7 @@ TEMPLATES = [
     # assist_loop._ground_goals / understand.issue_question ("unsaid")
     ("where_put", r"Where should I put the (?P<obj>[^?]+?)\?", "which_place", lambda m: {"obj": m["obj"]}),
     # understand.issue_question ("place"): an open question about a place the person named
-    # (an open "what should I do?": the person says the task again, homeloop_robot.intent convention 3)
+    # (an open "what should I do?": the person says the task again, symbolic_robot.domains.home.intent convention 3)
     ("mentioned_place", r"You mentioned the (?P<what>[^?]+?)\. What should I do there\?", "repeat",
      lambda m: {"about": "request"}),
     # understand.issue_question ("object")

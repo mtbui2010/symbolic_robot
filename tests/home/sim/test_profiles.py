@@ -2,8 +2,8 @@ import io
 
 import pytest
 
-from homeloop_robot.profiles import PARAM_REGISTRY, list_profiles, load_profile
-from homeloop_robot.profiles.validate import norm_source, run
+from symbolic_robot.domains.home.profiles import PARAM_REGISTRY, list_profiles, load_profile
+from symbolic_robot.domains.home.profiles.validate import norm_source, run
 
 
 def test_three_profiles_same_keys():
@@ -41,7 +41,7 @@ def test_norm_source():
 
 
 def test_profile_overrides_for_sensitivity_runs():
-    from homeloop_robot.profiles import ProfileError, load_profile
+    from symbolic_robot.domains.home.profiles import ProfileError, load_profile
     p = load_profile("real+asr.ko.app_cer=0.01,asr.en.app_wer=0")
     assert p.get("asr.ko.app_cer") == 0.01 and p.get("asr.en.app_wer") == 0.0
     assert p.sha != load_profile("real").sha and load_profile("real").get("asr.ko.app_cer") == 0.0521

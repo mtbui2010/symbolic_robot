@@ -22,6 +22,7 @@ include = ["symbolic_robot*", "bench*"]
 
 [tool.setuptools.package-data]
 "symbolic_robot.domains.factory" = ["floors/*.yaml", "profiles/*.yaml", "configs/*.yaml", "configs/safety/*.yaml"]
+"symbolic_robot.domains.home" = ["houses/*.yaml", "profiles/*/*.yaml", "configs/*.yaml", "configs/safety/*.yaml", "planner/*.jsonl"]
 bench = ["suites/*/*.md"]
 
 [tool.pytest.ini_options]

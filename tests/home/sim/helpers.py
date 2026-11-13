@@ -2,8 +2,8 @@
 
 import importlib.util
 
-from homeloop_robot.episode import make_episode
-from homeloop_robot.profiles import Profile, load_profile
+from symbolic_robot.domains.home.episode import make_episode
+from symbolic_robot.domains.home.profiles import Profile, load_profile
 
 HAS_RA = importlib.util.find_spec("robot_agent") is not None
 

@@ -5,8 +5,8 @@
 * off: no position, seat or spot: the planner has to ask where the person is;
 * places carry ``surface`` (things can be put down on them): never a seat, a bed or the floor.
 """
-from homeloop_robot.configs.tasks import env_for, refresh_person_spot
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home.configs.tasks import env_for, refresh_person_spot
+from symbolic_robot.domains.home.world import from_house
 
 
 def _world():

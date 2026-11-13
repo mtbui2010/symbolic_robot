@@ -3,7 +3,7 @@ forms ('나가' in '나간다고'), the wordings people use for the messages are
 text still matches only its own key."""
 import pytest
 
-from homeloop_robot.catalog import MESSAGE_TEXT, MESSAGES, _has_keyword, message_matches
+from symbolic_robot.domains.home.catalog import MESSAGE_TEXT, MESSAGES, _has_keyword, message_matches
 
 
 @pytest.mark.parametrize("key,text,lang", [
@@ -79,8 +79,8 @@ def test_english_wordings_match_the_korean_verbs(key, text, lang):
 
 
 def test_come_kitchen_go_satisfies_said_to_and_the_readback_check():
-    from homeloop_robot.dialog import GoalView
-    from homeloop_robot.world import from_house
+    from symbolic_robot.domains.home.dialog import GoalView
+    from symbolic_robot.domains.home.world import from_house
     w = from_house("korean_apt_59")
     q = "I will tell Grandpa: please go to the kitchen for a sec. Is that right?"
     gv = GoalView(w, {"all": [{"pred": "said_to", "args": ["grandpa", "come_kitchen"]}]}, "user")

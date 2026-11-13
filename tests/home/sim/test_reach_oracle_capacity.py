@@ -2,8 +2,8 @@
 hl-dev-000967): a reach delivery leaves room for the goal's own on / in atoms, and an object is taken off a full
 place before another one is put there."""
 
-from homeloop_robot import oracle, reach
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home import oracle, reach
+from symbolic_robot.domains.home.world import from_house
 
 
 def test_reach_delivery_leaves_room_for_an_on_atom():

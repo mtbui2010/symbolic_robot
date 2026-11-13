@@ -15,7 +15,7 @@ states (house, seed_state, persona), goals as in the tasks.
   names get the message; a second "Where are you?" in the same turn is answered too."""
 import pytest
 
-from homeloop_robot.episode import make_episode
+from symbolic_robot.domains.home.episode import make_episode
 
 
 def _user(house, seed_state, persona, L, goal, request):

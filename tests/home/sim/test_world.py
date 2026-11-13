@@ -1,7 +1,7 @@
 import pytest
 
-from homeloop_robot.houses import list_houses
-from homeloop_robot.world import from_house, norm
+from symbolic_robot.domains.home.houses import list_houses
+from symbolic_robot.domains.home.world import from_house, norm
 
 
 @pytest.mark.parametrize("name", list_houses())

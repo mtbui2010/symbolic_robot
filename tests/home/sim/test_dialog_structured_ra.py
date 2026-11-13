@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from homeloop_robot.configs.ra_dialog import TEMPLATES, derive
+from symbolic_robot.domains.home.configs.ra_dialog import TEMPLATES, derive
 
 ra = pytest.importorskip("robot_agent")
 from robot_agent.core.planning import assist_loop as AL  # noqa: E402

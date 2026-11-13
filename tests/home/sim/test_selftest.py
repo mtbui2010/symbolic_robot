@@ -1,6 +1,6 @@
 import json
 
-from homeloop_robot.selftest import run
+from symbolic_robot.domains.home.selftest import run
 
 
 def test_selftest_deterministic_and_profiles_differ(tmp_path):

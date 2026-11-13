@@ -4,7 +4,7 @@ import math
 import pytest
 
 from _hs_helpers import FakeWorld, Streams, core_profile, load_params, world_available
-from homeloop_robot.user import SimUser
+from symbolic_robot.domains.home.user import SimUser
 from test_dialog import SPEC
 
 NEAR = (1.5, 3.6)  # 0.67 m from grandma, living room
@@ -196,9 +196,9 @@ def test_bad_lang():
 
 @pytest.mark.skipif(not world_available(), reason="robot core world not present")
 def test_simuser_on_core_houses():
-    from homeloop_robot.houses import list_houses
-    from homeloop_robot.rng import Streams as S
-    from homeloop_robot.world import from_house
+    from symbolic_robot.domains.home.houses import list_houses
+    from symbolic_robot.domains.home.rng import Streams as S
+    from symbolic_robot.domains.home.world import from_house
     prof = core_profile("real")
     for h in list_houses():
         for lang in ("en", "ko"):
@@ -214,12 +214,12 @@ def test_simuser_on_core_houses():
             near = tuple(w.people[uid].pos)
             oid = sorted(w.objects)[0]
             r, _ = u.answer({"en": "Where is the {n}?", "ko": "{n} 어디 있어요?"}[lang].format(
-                n=__import__("homeloop_robot.dialog", fromlist=["x"]).object_names(w, oid, lang)[0]), lang, near, 0.0)
+                n=__import__("symbolic_robot.domains.home.dialog", fromlist=["x"]).object_names(w, oid, lang)[0]), lang, near, 0.0)
             assert r.kind in ("correct", "not_sure", "no_answer", "wrong")
 
 
 def test_consistency_rows_pass():
-    from homeloop_robot.user import consistency
+    from symbolic_robot.domains.home.user import consistency
     rows = consistency(FakeWorld(), load_params("real"), n=4000, seed=1)
     assert {r["param"] for r in rows} == {"user.p_no_answer", "user.answer.p_wrong", "user.answer.p_not_sure"}
     assert all(r["ok"] for r in rows), rows
@@ -228,7 +228,7 @@ def test_consistency_rows_pass():
 
 
 def test_consistency_detects_a_wrong_rate():
-    from homeloop_robot._hs_compat import binomial_row
+    from symbolic_robot.domains.home._hs_compat import binomial_row
     assert not binomial_row("x", 0.1, 300, 2000)["ok"]
     assert binomial_row("x", 0.1, 200, 2000)["ok"]
 
@@ -237,7 +237,7 @@ def test_where_are_you_through_user():
     u = user("ideal", spec=None)
     r, _ = u.answer("Where are you?", "en", NEAR, 0.0)
     seat = u.world.people[u.user_id].seat
-    from homeloop_robot.dialog import place_name
+    from symbolic_robot.domains.home.dialog import place_name
     assert r.kind == "correct" and r.text == f"I'm at the {place_name(u.world, seat, 'en')}." and u.log[-1]["why"] == "self_position"
     w = user("real", seed=3, **{"user.motion.rate_per_h": 20.0})
     pid = "grandma"

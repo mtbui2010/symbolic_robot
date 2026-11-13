@@ -4,9 +4,9 @@ import collections
 
 import pytest
 
-from homeloop_robot.dialog import GoalView, compose
-from homeloop_robot.episode import make_episode
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home.dialog import GoalView, compose
+from symbolic_robot.domains.home.episode import make_episode
+from symbolic_robot.domains.home.world import from_house
 
 HOUSE = "korean_apt_59"
 REQ = {"en": "Could you put the apple in the fridge, and while you're in the kitchen, bring me the white mug? "

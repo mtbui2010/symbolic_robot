@@ -2,8 +2,8 @@
 audit, docs/user_model.md "Free text" conventions 1-4 and "Korean: the meaning must match the heard text")."""
 import pytest
 
-from homeloop_robot import intent
-from homeloop_robot.episode import make_episode
+from symbolic_robot.domains.home import intent
+from symbolic_robot.domains.home.episode import make_episode
 
 HOUSE = "korean_apt_59"
 FETCH_GOAL = {"all": [{"pred": "on", "args": ["remote_1", "tv_stand@living"]},

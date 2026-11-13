@@ -1,8 +1,8 @@
 import pytest
 
 from helpers import HAS_RA, episode, patched
-from homeloop_robot.skills import SKILL_SPECS
-from homeloop_robot.types import FailureCode as F, UserEvent
+from symbolic_robot.domains.home.skills import SKILL_SPECS
+from symbolic_robot.domains.home.types import FailureCode as F, UserEvent
 
 
 def go(ep, skill, **a):
@@ -190,9 +190,9 @@ def test_false_arrival_detected_by_pose():
 @pytest.mark.skipif(not HAS_RA, reason="robot_agent not importable")
 def test_messages_classify_to_their_codes():
     from robot_agent.contract import classify_legacy_failure
-    from homeloop_robot.houses import list_houses
-    from homeloop_robot.rng import rng_for
-    from homeloop_robot.selftest import random_call
+    from symbolic_robot.domains.home.houses import list_houses
+    from symbolic_robot.domains.home.rng import rng_for
+    from symbolic_robot.domains.home.selftest import random_call
     seen = 0
     for prof in ("real", "stress"):
         for h in list_houses():

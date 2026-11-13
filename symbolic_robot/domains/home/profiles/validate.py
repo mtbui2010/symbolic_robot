@@ -1,4 +1,4 @@
-"""Profile validator: ``python -m homeloop_robot.profiles validate [--strict]`` (docs/profiles.md).
+"""Profile validator: ``python -m symbolic_robot.domains.home.profiles validate [--strict]`` (docs/profiles.md).
 
 Numbered rules, each printed with PASS / FAIL. Exit 0 only if every rule passes; ``--strict`` also
 fails on warnings. The output ends with the count and the list of assumed parameters (never an error).
@@ -13,7 +13,7 @@ from pathlib import Path
 from ..types import FailureCode
 from . import (KINDS, PARAM_REGISTRY, PROB_KINDS, ROLES, load_real_fragments, load_spec)
 
-DOCS_DIR = Path(__file__).resolve().parents[2] / "docs"
+DOCS_DIR = Path(__file__).resolve().parents[4] / "docs" / "home" / "sim"      # (the repository's docs/ before the merge)
 CALIBRATION_MD = DOCS_DIR / "calibration.md"
 
 SOURCE_RE = re.compile(r"^(https?://\S+|doi:10\.\S+|arXiv:\d{4}\.\d{4,5})$")

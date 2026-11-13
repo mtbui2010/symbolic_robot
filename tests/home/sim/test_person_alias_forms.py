@@ -4,9 +4,9 @@ dative forms, because robot_agent matches a non-ASCII place phrase as a plain su
 import pytest
 
 from helpers import HAS_RA
-from homeloop_robot.configs.tasks import env_alias_forms, env_for
-from homeloop_robot.houses import list_houses
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home.configs.tasks import env_alias_forms, env_for
+from symbolic_robot.domains.home.houses import list_houses
+from symbolic_robot.domains.home.world import from_house
 
 
 def test_alias_forms():

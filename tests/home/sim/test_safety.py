@@ -3,7 +3,7 @@ import math
 
 import pytest
 
-from homeloop_robot.safety import (
+from symbolic_robot.domains.home.safety import (
     handover_pose,
     human_speed,
     max_robot_speed,

@@ -27,9 +27,9 @@ class Unsolvable(Exception):
 
 def _hazards():
     try:
-        return importlib.import_module("homeloop_robot.hazards")
+        return importlib.import_module("symbolic_robot.domains.home.hazards")
     except ModuleNotFoundError as e:
-        if e.name == "homeloop_robot.hazards":
+        if e.name == "symbolic_robot.domains.home.hazards":
             return None
         raise
 

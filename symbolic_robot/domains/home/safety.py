@@ -18,7 +18,7 @@ from __future__ import annotations
 import math
 from typing import Any, Callable
 
-from homeloop_robot._hs_compat import (
+from symbolic_robot.domains.home._hs_compat import (
     Traverse,
     Violation,
     dist,

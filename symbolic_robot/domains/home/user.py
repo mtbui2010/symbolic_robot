@@ -17,10 +17,10 @@ import math
 import re
 from typing import Any
 
-from homeloop_robot import asr as _asr
-from homeloop_robot import dialog
-from homeloop_robot import intent as _intent
-from homeloop_robot._hs_compat import (
+from symbolic_robot.domains.home import asr as _asr
+from symbolic_robot.domains.home import dialog
+from symbolic_robot.domains.home import intent as _intent
+from symbolic_robot.domains.home._hs_compat import (
     Heard,
     PersonState,
     UserEvent,
@@ -617,7 +617,7 @@ class SimUser:
 def consistency(world: Any, profile: Any, n: int = 20000, seed: int = 0, lang: str = "en") -> list[dict]:
     """Empirical answer-kind rates of SimUser vs the profile (DESIGN 13.3), on a clarification question
     between two objects of ``world`` asked from next to the user. One row per parameter."""
-    from homeloop_robot._hs_compat import Streams, binomial_row
+    from symbolic_robot.domains.home._hs_compat import Streams, binomial_row
 
     oids = sorted(world.objects)[:2]
     if len(oids) < 2:

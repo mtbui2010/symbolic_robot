@@ -6,7 +6,7 @@ from pathlib import Path
 
 import yaml
 
-import homeloop_robot.configs as cfg
+import symbolic_robot.domains.home.configs as cfg
 
 MANIFEST_PATH = Path(cfg.__file__).with_name("manifest.yaml")       # (the adapter imports robot_agent)
 

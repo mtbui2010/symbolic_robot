@@ -5,7 +5,7 @@ import math
 import pytest
 
 from _hs_helpers import FakeWorld, Streams, core_profile, load_params, static_people, walker, world_available
-from homeloop_robot.safety import SafetyMonitor, protective_separation
+from symbolic_robot.domains.home.safety import SafetyMonitor, protective_separation
 
 
 def mon(name="real", world=None, seed=0, **ov):
@@ -172,10 +172,10 @@ def test_ideal_fake_house_no_protective_stop():
 @pytest.mark.skipif(not world_available(), reason="robot core world not present")
 def test_ideal_houses_no_protective_stop():
     """DESIGN 6.3 on every core house: static people never stop the robot between approach poses."""
-    from homeloop_robot.houses import list_houses
-    from homeloop_robot.rng import Streams as S
-    from homeloop_robot.user import SimUser
-    from homeloop_robot.world import from_house
+    from symbolic_robot.domains.home.houses import list_houses
+    from symbolic_robot.domains.home.rng import Streams as S
+    from symbolic_robot.domains.home.user import SimUser
+    from symbolic_robot.domains.home.world import from_house
     prof = core_profile("ideal")
     assert list_houses()
     for h in list_houses():

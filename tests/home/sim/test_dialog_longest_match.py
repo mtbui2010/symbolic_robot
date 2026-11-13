@@ -4,8 +4,8 @@ and does not trigger the clarification answer (sage run hl-dev-000041, KO). A mo
 called by ("cup" in "red cup") still counts."""
 import pytest
 
-from homeloop_robot.dialog import GoalView, compose, mentions
-from homeloop_robot.world import from_house
+from symbolic_robot.domains.home.dialog import GoalView, compose, mentions
+from symbolic_robot.domains.home.world import from_house
 
 MILK_SPEC = {"persona": "adult", "slot": "destination", "intended": "kimchi_fridge@kitchen",
              "candidates": [{"id": "fridge@kitchen", "mentions": {"en": ["fridge", "refrigerator"], "ko": ["냉장고"]}},
@@ -65,7 +65,7 @@ def test_mentions_longest_match():
     assert mentions("the kimchi fridge", "kimchi fridge", "en", w)
     # a colour + class name of an object is still that class ("cup" in "red cup")
     cup = next(o for o in sorted(w.objects) if w.objects[o].cls in ("cup", "mug"))
-    from homeloop_robot.dialog import object_names
+    from symbolic_robot.domains.home.dialog import object_names
     longest = object_names(w, cup, "en")[0]
     short = object_names(w, cup, "en")[-1]
     assert longest != short and mentions(f"the {longest}", short, "en", w)

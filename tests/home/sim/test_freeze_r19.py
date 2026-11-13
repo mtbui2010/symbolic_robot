@@ -15,6 +15,6 @@ PINS = {"real": "4a071034b4166c52f10d624eabfa722928cbe2823865f73b5cc2a61820f4153
 @pytest.mark.parametrize("profile", sorted(PINS))
 def test_selftest_trace_is_the_r13_trace(profile, tmp_path):
     out = tmp_path / "t.jsonl"
-    subprocess.run([sys.executable, "-m", "homeloop_robot.selftest", "--seed", "7", "--episodes", "30", "--profile", profile,
+    subprocess.run([sys.executable, "-m", "symbolic_robot.domains.home.selftest", "--seed", "7", "--episodes", "30", "--profile", profile,
                     "--out", str(out)], check=True, capture_output=True)
     assert hashlib.sha256(out.read_bytes()).hexdigest() == PINS[profile]

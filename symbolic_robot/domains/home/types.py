@@ -126,7 +126,7 @@ class Utterance:
     heard_by: tuple                  # person ids
 
 
-# ── user model (implemented by homeloop_robot.user.SimUser; NullUser in episode.py) ─────────────────────
+# ── user model (implemented by symbolic_robot.domains.home.user.SimUser; NullUser in episode.py) ─────────────────────
 
 @dataclass(frozen=True)
 class UserReply:
@@ -180,7 +180,7 @@ class UserModel(Protocol):
     def help_request(self, question: str, t: float) -> None: ...
 
 
-# ── safety monitor (implemented by homeloop_robot.safety.SafetyMonitor; NullSafety in episode.py) ───────
+# ── safety monitor (implemented by symbolic_robot.domains.home.safety.SafetyMonitor; NullSafety in episode.py) ───────
 
 @dataclass(frozen=True)
 class Violation:
