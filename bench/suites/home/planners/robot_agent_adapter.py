@@ -32,6 +32,7 @@ from pathlib import Path
 from .. import retry as skill_retry
 from ..env import MOTION, STOP_TEXT
 from ..llm import BudgetExceeded, CountingLLM, FakeLLM
+from .d1_options import D1_CLASSES, D1_CONFIRM as _D1_CONFIRM, D1_SEARCH as _D1_SEARCH, d1_overlay
 
 MAX_EVENTS = 2000
 FAKE_GENERATOR = "bench.suites.home.planners.robot_agent_fake:GoalPlanner"
@@ -1236,10 +1237,6 @@ class SageS8nFtPlanner(SagePlanner):
     options_off = ("relook",)
 
 
-_D1_SEARCH = {"search_legs": 1, "search_total": 6, "detector_miss_rate": 0}
-# false-success class: the goal check believed one sighting that followed a miss (the camera sees what is not there). With robot_agent's
-# option ``confirm_look`` (default off) a third look decides: believed only when the object is seen again (two sightings in a row).
-_D1_CONFIRM = {"confirm_look": "1"}
 
 
 class SageS8nD1Planner(SageS8nPlanner):
@@ -1249,8 +1246,8 @@ class SageS8nD1Planner(SageS8nPlanner):
     Every other option stays as in ``sage_s8n``."""
     name = "robot_agent:sage_s8n_d1"
     # translator = the reader itself (the pack's 30B translator is not on this machine's Ollama; the user's decision)
-    manifest_overlay = {**S8_OVERLAY, "planner": {**S8_OVERLAY["planner"], "translate_model": "qwen3-vl:8b-instruct"}}
-    loop_options = {**SageS8nPlanner.loop_options, **_D1_SEARCH, **_D1_CONFIRM}
+    manifest_overlay = d1_overlay(S8_OVERLAY, "qwen3-vl:8b-instruct")
+    loop_options = {**SageS8nPlanner.loop_options, **_D1_SEARCH, **_D1_CONFIRM, **D1_CLASSES}
     skill_attempts = 2
 
 
@@ -1258,8 +1255,8 @@ class SageS8nFtD1Planner(SageS8nFtPlanner):
     """D (pre-registered): ``sage_s8n_ft`` with the same new setup as ``sage_s8n_d1``."""
     name = "robot_agent:sage_s8n_ft_d1"
     # translator = the fine-tuned reader (same reason and decision as sage_s8n_d1)
-    manifest_overlay = {**S8_OVERLAY, "planner": {**S8_OVERLAY["planner"], "translate_model": SageS8nFtPlanner.loop_options["understand_model"]}}
-    loop_options = {**SageS8nFtPlanner.loop_options, **_D1_SEARCH, **_D1_CONFIRM}
+    manifest_overlay = d1_overlay(S8_OVERLAY, SageS8nFtPlanner.loop_options["understand_model"])
+    loop_options = {**SageS8nFtPlanner.loop_options, **_D1_SEARCH, **_D1_CONFIRM, **D1_CLASSES}
     skill_attempts = 2
 
 
