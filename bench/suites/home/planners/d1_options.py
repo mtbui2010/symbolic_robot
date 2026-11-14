@@ -46,6 +46,8 @@ LAYERS = {
     "goal_words": ({"goal_words": "1"}, {}),
     # no pack data: the world is the robot's object memory and limits; the phrases of "I don't know" are the language packs' own
     "ask_focus": ({"ask_focus": "1"}, {}),
+    # no pack data: the names are the robot's object catalogue (object memory, limits.objects), read against the request's words
+    "entity_cover": ({"entity_cover": "1"}, {}),
 }
 
 

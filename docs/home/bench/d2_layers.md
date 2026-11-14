@@ -55,3 +55,17 @@ Pilot rounds and measured results are written here by the coordinator.
 - Limits: rule 2 reads names only (a goal object that is a description of the world's objects by words); two objects that differ only in place are not
   told apart. Rule 3 keeps the reading when the person says "I don't know" to a read-back: a misheard reading is then not caught by that answer.
   Rounds of other questions (where is it, which part) keep their own limits.
+
+## L4 `entity_cover`: every object noun of the request is a goal or a stated reason for dropping
+
+- What: a name of the object catalogue (object memory and `limits.objects`) that the request says (whole words, the last may be a plural), that no goal's
+  object holds (either way round; a say goal's message counts) and that is not a place the robot knows adds an `object` issue, so the read-back asks about it once.
+  A note of the dropped goal (`run.filtered`) rides along as the reason; key `ask_reasoned` (default on). For a non-English request the language layer's trusted
+  English reading is used (service `request_english`); no reading, nothing is added.
+- Why: in multi-object requests the understanding kept one clause and the run ended "done"; the engine's own noun check only sees a noun after a determiner in
+  object position, so a bare noun in a list went unasked.
+- Data: none. D1 turns the option on and declares no pack data (empty layer data).
+- Tests: `robot_agent/tests/test_option_entity_cover.py` (made-up kettle / lamp / mugs / ladle: all covered, one dropped, dropped with a reason, unknown noun,
+  places, message goals, foreign language through the service, off, empty, a loop run on and off) and `tests/home/bench/test_d1_classes.py` (the layer in the switch).
+- Limits: a drop the person meant (a negation: "not the lamp") is also asked about while `ask_reasoned` is on; the pilots decide whether the key stays on. Names the
+  catalogue lacks are not seen; a catalogue name that is a part of a longer description is matched as whole words only.

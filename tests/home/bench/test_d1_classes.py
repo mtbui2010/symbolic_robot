@@ -99,3 +99,10 @@ def test_ask_focus_layer_adds_its_option_and_no_pack_data():
     assert D.d1_overlay(BASE_OV, "m", env("ask_focus"))["planner"] == D.d1_overlay(BASE_OV, "m", env("none"))["planner"]      # no data
     assert D.layer_options(env("none")) == {} and "ask_focus" in D.layer_options(env("all"))
     assert "ask_focus" in D.d1_overlay(BASE_OV, "m", env("ask_focus"))["note"]
+
+
+def test_entity_cover_layer_adds_its_option_and_no_pack_data():
+    assert D.layer_options(env("entity_cover")) == {"entity_cover": "1"}
+    assert D.d1_overlay(BASE_OV, "m", env("entity_cover"))["planner"] == D.d1_overlay(BASE_OV, "m", env("none"))["planner"]      # no data
+    assert D.layer_options(env("none")) == {} and "entity_cover" in D.layer_options(env("all"))
+    assert "entity_cover" in D.d1_overlay(BASE_OV, "m", env("entity_cover"))["note"]
