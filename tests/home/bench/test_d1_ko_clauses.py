@@ -31,3 +31,14 @@ def test_a_real_condition_and_a_real_negation_are_taken_out():
 def test_the_condition_words_and_negation_words_have_no_label_dependency_empty():
     for t in ("", "컵을 놓아 줘", "put the cup on the table"):
         assert active(t) == t
+
+
+def test_a_condition_does_not_take_the_words_of_the_clause_before_its_comma():
+    """Class: up to three words before a conditional were taken out even when a comma ended their clause, so the request before the comma
+    ("put it in the cabinet,") vanished with the condition after it ("... if not, leave it")."""
+    t = "탁자에 모자가 나와 있으면 선반에 넣어 주고, 없으면 그냥 두세요"
+    got = active(t)
+    assert "선반에 넣어 주고" in got and "없으면" not in got and "나와 있으면" not in got
+    n = active("선반에 넣어 주고, 건드리지 마세요")
+    assert "선반에 넣어 주고" in n and "건드리지" not in n
+    assert active("탁자에 모자가 있으면 그냥 두세요") == "그냥 두세요"          # no comma: the words of the condition's own clause go
