@@ -134,23 +134,25 @@ LAYERS = {
     # replan_block: a replan repairs the right block (embodiplan SAGE key replan_block_fix, passed through the option), a goal change replans for sub-goals rebuilt
     # from the new goals, a replan suffix with a critical rule finding goes through the one refine; a finding the run-time check refuses itself only steers that
     # refine (the suffix then runs, the guard replans at the step), an empty-hand repeat of the last release is dropped. ASSUMED data: the action-model codes counted
-    # critical in a suffix (a release with an empty hand, a release away from its place); not a simulator rule. SOURCED data: the two releases need the robot at
-    # their place (the mock robot manifest's skills[].pre arrived(?inputs) of place / put_in), so precond_repair (a D2 layer, it runs on a replan's suffix too)
-    # puts the missing MoveTo before them; it applies with precond_repair on, to every plan.
+    # critical in a suffix (a release with an empty hand, a release away from its place); not a simulator rule.
     "replan_block": ({"replan_guard": "1"},
                      {"planner": {"options": {"replan_guard": {"critical": {
-                         "codes": ["place_without_holding", "place_wrong_location"], "assumed": True}},
-                                              "precond_repair": {"needs": {
-                                                  "rules": {"Place": {"near": True}, "PutIn": {"near": True}},
-                                                  "source": PRECOND_SOURCE + "; near of Place / PutIn: skills[].pre arrived(?inputs) (layer replan_block)"}}}}}),
+                         "codes": ["place_without_holding", "place_wrong_location"], "assumed": True}}}}}),
+    # release_near: SOURCED data only: the two releases need the robot at their place (the mock robot manifest's skills[].pre arrived(?inputs) of place / put_in),
+    # so precond_repair (a D2 layer, it runs on a replan's suffix too) puts the missing MoveTo before them. It applies with precond_repair on, to EVERY plan (first
+    # plans too), so it is its own layer (part of replan_block until 2026-11-15): an arm can tell its effect from replan_block's.
+    "release_near": ({}, {"planner": {"options": {"precond_repair": {"needs": {
+        "rules": {"Place": {"near": True}, "PutIn": {"near": True}},
+        "source": PRECOND_SOURCE + "; near of Place / PutIn: skills[].pre arrived(?inputs) (layer release_near)"}}}}}),
     # hw_tries: with hw_wait on, an unhealthy robot after a wait does not stop the run while the tries declared by the hw_wait layer are left (hw_wait key more_tries).
     # The hw_wait layer alone behaves as in D2.
     "hw_tries": ({"hw_more_tries": "1"}, {}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``all``: the D2 layers, then every D3 layer in this order. Until 2026-11-15 ``all`` held only cond_extract, recipient_keep, name_recover, replan_block (an
-# interface criterion written before L13 / L14 existed), so a D3 arm measured before that date never ran plan_complete, ask_agree or hw_tries.
-ALL_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "hw_tries")
+# interface criterion written before L13 / L14 existed), so a D3 arm measured before that date never ran plan_complete, ask_agree or hw_tries. release_near
+# (the near data that came with replan_block until that date) follows replan_block.
+ALL_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
 
 
 def selected_layers(environ=None) -> tuple:

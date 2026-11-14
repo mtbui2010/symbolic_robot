@@ -216,7 +216,7 @@ In all 9 the finding was a real defect of the suffix (a release `Place X` withou
 (the model returned the same block; the repeated release is not in the model's reply, it comes from the appended future blocks or the engine's repair). Change (robot_agent `replan_guard`, two parts on with
 the option, commit `61c4dca`): `guarded_run`: a finding that the run-time check refuses itself only steers the one refine (added when a refine follows, service `replan_round`); a refined suffix with only such
 findings RUNS (lab `part: guarded`), and the uncertified end stays for findings that check cannot catch. `release_dedupe` (hook `on_plan`): an empty-hand release that the action model refuses and that repeats
-the plan's last release at the same place is dropped (no action name in the code). Data (this layer): `precond_repair`'s `near` need of `Place` / `PutIn`, SOURCED from the mock robot manifest
+the plan's last release at the same place is dropped (no action name in the code). Data (this layer until 2026-11-15, now the layer `release_near`): `precond_repair`'s `near` need of `Place` / `PutIn`, SOURCED from the mock robot manifest
 (`skills[].pre` `arrived(?inputs)` of `place` / `put_in`), so the D2 layer `precond_repair` (its `on_plan` runs on a replan's suffix too) inserts the missing MoveTo before the refine is needed; with
 `replan_block` on it also applies to first plans. The `d2` alias is unchanged (test `test_replan_block_declares_the_near_need_of_the_releases_with_a_source_and_leaves_d2_data_as_it_was`).
 Tests: robot_agent `tests/test_option_replan_guard.py` (24: the wrong-place release after a Find of an absent object runs and a normal replan follows; the same release reached sends no release to the robot and one
@@ -228,3 +228,13 @@ Limits: a guarded finding that is never refused at run time because the belief t
 **What.** Commit 7e3c476 of robot_agent had changed the D2 layer `hw_wait` itself (an unhealthy robot after a wait no longer stopped the run while declared tries were left), so `base_d2` did not behave as D2. The behaviour is now the
 `hw_wait` key `more_tries` (default False), and the layer `hw_tries` (loop option `hw_more_tries`) switches it on. `hw_wait` alone is as in D2.
 **D1.** In `all` since 2026-11-15 (the last layer; before, a comma list only). Test: `test_hw_tries_alone_on_top_of_d2...` in `tests/home/bench/test_d3_layers.py`; robot_agent `tests/test_option_hw_wait.py`.
+
+## Layer release_near: a release needs the robot at its place (split out of replan_block)
+
+**What.** The `near` need of `Place` / `PutIn` for `precond_repair` (SOURCED: the mock robot manifest's `skills[].pre` `arrived(?inputs)` of `place` / `put_in`), so the D2 layer `precond_repair`
+puts a missing MoveTo before a release. Data only (no loop option); it acts with `precond_repair` on.
+**Why its own layer.** Until 2026-11-15 this data came with `replan_block`, but `precond_repair` reads it for EVERY plan, first plans included, not only for a replan's suffix. A `d2+replan_block` arm
+therefore mixed two changes (a confound of the pilot): the replan guard and a new first-plan repair. Every arm with `replan_block` measured before that date had the near data too.
+**D1.** In `all` right after `replan_block`; `d2` unchanged (hash `64b278b5...`). Tests: `test_release_near_declares_the_near_need_of_the_releases_with_a_source_and_leaves_d2_data_as_it_was`,
+`test_replan_block_alone_brings_no_near_data_and_all_has_it_through_release_near` in `tests/home/bench/test_d3_layers.py`.
+**Limits.** Its effect alone was never measured; the `all` overlay is the same as before the split except the source label text.

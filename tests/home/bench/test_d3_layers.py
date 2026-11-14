@@ -5,7 +5,7 @@ import json
 from bench.suites.home.planners import d1_options as D
 
 D2 = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
-D3 = ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "hw_tries")   # ``all`` after the D2 ten, in this order
+D3 = ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")   # ``all`` after the D2 ten, in this order
 D2_HASH = "64b278b5beef2493d675eac77ebd6d10b799e2ce2e307014e56b3f207e356942"      # the ten D2 layers: on, loop options, overlay without its note
 MODEL = "hl-understand-p3-s700"
 
@@ -97,13 +97,23 @@ def test_replan_block_alone_on_top_of_d2_adds_the_option_and_its_assumed_codes_o
     assert "replan_block" in D.selected_layers(env("all")) and "plan_complete" in D.selected_layers(env("all")) and digest(env("d2")) == D2_HASH
 
 
-def test_replan_block_declares_the_near_need_of_the_releases_with_a_source_and_leaves_d2_data_as_it_was():
-    on = ",".join(D2 + ("replan_block",))
+def test_release_near_declares_the_near_need_of_the_releases_with_a_source_and_leaves_d2_data_as_it_was():
+    on = ",".join(D2 + ("release_near",))
     need, need2 = (D.d1_overlay({}, MODEL, env(e))["planner"]["options"]["precond_repair"]["needs"] for e in (on, "d2"))
     assert need["rules"]["Place"]["near"] is True and need["rules"]["PutIn"]["near"] is True and "arrived" in need["source"]
     assert need["source"].startswith(need2["source"]) and {a: {k: v for k, v in r.items() if k != "near"} for a, r in need["rules"].items()} == need2["rules"]
     assert not any(r.get("near") for r in need2["rules"].values()) and digest(env("d2")) == D2_HASH
+    assert D.layer_options(env(on)) == D.layer_options(env("d2"))            # data only: no loop option of its own
     assert "precond_repair" not in D.d1_overlay({}, MODEL, env("none"))["planner"].get("options", {})
+
+
+def test_replan_block_alone_brings_no_near_data_and_all_has_it_through_release_near():
+    rb = D.d1_overlay({}, MODEL, env(",".join(D2 + ("replan_block",))))["planner"]["options"]
+    assert rb["precond_repair"] == D.d1_overlay({}, MODEL, env("d2"))["planner"]["options"]["precond_repair"]     # the confound of first plans is gone
+    allv = D.selected_layers(env("all"))
+    assert allv.index("release_near") == allv.index("replan_block") + 1
+    need = D.d1_overlay({}, MODEL, env("all"))["planner"]["options"]["precond_repair"]["needs"]
+    assert need["rules"]["Place"]["near"] is True and "release_near" in need["source"]
 
 
 def test_name_recover_alone_on_top_of_d2_turns_on_the_two_asr_options_and_no_pack_data():
