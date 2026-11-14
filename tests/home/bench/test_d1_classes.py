@@ -174,3 +174,10 @@ def test_gate_prune_layer_adds_its_option_and_the_open_close_roles_only_when_on(
     assert on["planner"]["action_roles"]["open"] == "Open" and on["planner"]["action_roles"]["close"] == "Close"
     off = D.d1_overlay(BASE_OV, "m", env("none"))
     assert "open" not in off["planner"]["action_roles"] and "gate_prune" in on["note"]
+
+
+def test_dedupe_keep_end_layer_adds_its_option_and_no_pack_data():
+    assert D.layer_options(env("dedupe_keep_end")) == {"dedupe_keep_end": "1"} and "dedupe_keep_end" in D.layer_options(env("all"))
+    assert D.layer_options(env("none")) == {}
+    assert D.d1_overlay(BASE_OV, "m", env("dedupe_keep_end"))["planner"] == D.d1_overlay(BASE_OV, "m", env("none"))["planner"]
+    assert "dedupe_keep_end" in D.d1_overlay(BASE_OV, "m", env("dedupe_keep_end"))["note"]

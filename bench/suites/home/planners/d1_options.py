@@ -57,6 +57,8 @@ LAYERS = {
     # gate_prune: an Open / Close of a place the ENV declares not openable (explicit openable false) is dropped. Data: the roles of the mock robot's own
     # open / close actions, ASSUMED (names of its skills); without them the option does nothing.
     "gate_prune": ({"gate_prune": "1"}, {"planner": {"action_roles": {"open": "Open", "close": "Close"}}}),
+    # dedupe_keep_end: the gate's removal of a repeated fetch keeps the way home after it. No pack data.
+    "dedupe_keep_end": ({"dedupe_keep_end": "1"}, {}),
     # no pack data: it reads the robot's own object memory and limits (whole words, catalogue first)
     "goal_words": ({"goal_words": "1"}, {}),
     # no pack data: the world is the robot's object memory and limits; the phrases of "I don't know" are the language packs' own

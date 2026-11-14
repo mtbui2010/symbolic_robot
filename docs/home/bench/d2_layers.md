@@ -159,9 +159,11 @@ One class per commit. Numbers are test counts, not rates: the coordinator measur
   explicit `openable` field that is false and no goal names the place. No field, no `open` / `close` action role, an unknown name: kept (fail open). D1 data: the roles
   `open: Open`, `close: Close` of the mock robot's skills (`assumed: true`), present only when the layer is on. Tests: `tests/test_option_gate_prune.py` (5, among them
   `*_off_*` through the loop and `*_empty_*`), `test_d1_classes.py::test_gate_prune_layer_...`.
-- B. `plan_repair.op_dedupe` bug fix (engine, no option). A repeated Find / Pick of an object that was already placed, with no release after it, was cut up to the LAST step of the
-  plan, which removed the final MoveTo (home / dock). It now ends at the repeated run's own Find / Pick. With a release after, the cut is as before. This changes the default path only
-  in the wrong-cut case; golden and all gate tests stay green. Test: `test_sage_v2_step3_gate.py::test_op_dedupe_ends_the_cut_...`.
+- B. `dedupe_keep_end` (new robot_agent option, default off, service `keep_after_dedupe`; D1 layer `dedupe_keep_end`). Class: a repeated Find / Pick of an object already placed, with no release
+  after it, was cut by `plan_repair.op_dedupe` up to the LAST step of the plan, which removed the final MoveTo (home / dock). With the option the cut ends at the repeated run's own
+  Find / Pick; with a release after, the cut is as before. It is an option (not a plain fix) so that the default path, and the `base` arm (`HOMELOOP_D1_LAYERS=none`) measured on
+  dev 700..849, stay as they were. No pack data. Tests: `tests/test_option_dedupe_keep_end.py` (4: `*_off_*`, `*_empty_*`, release-after same on and off),
+  `test_d1_classes.py::test_dedupe_keep_end_layer_...`.
 - F. `entity_cover` false positives (option stays default off). (1) A mention a self-correction takes back ("the blue mug, wait, no, the red one"): the last catalogue name
   within 40 characters before the language pack's correction marker is not an object to ask about (the marker is pack data, no English in the code). (2) A short name that only
   occurs inside a longer catalogue name the request says ("mug" in "red mug"). (3) Another name of a goal's object: a shared word, the request never says the goal's own name, no
