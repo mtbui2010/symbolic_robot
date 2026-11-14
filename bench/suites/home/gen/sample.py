@@ -36,6 +36,8 @@ ALL_HOUSES = ("care_home_suite", "couple_flat", "family_house", "korean_apt_59",
               "shared_flat", "studio_flat")
 SPLIT_HOUSES = {"train": tuple(h for h in ALL_HOUSES if h not in HELD_OUT),
                 "dev": tuple(h for h in ALL_HOUSES if h not in HELD_OUT), "test": ALL_HOUSES}
+# the training pools (gen/pool.py) use the train houses only, never the two houses kept for the test split
+SPLIT_HOUSES.update({name: SPLIT_HOUSES["train"] for name in ("pool_train", "pool_eval")})
 SIZES = {"train": 6000, "dev": 1000, "test": 3000}
 MOTION = {"move", "pick", "place", "put_in", "open", "close", "handover", "dock"}
 
@@ -129,8 +131,9 @@ def split_quota(total: int, sizes: dict) -> dict:
 
 
 class Gen:
-    def __init__(self, gen_seed: int = 2026, sizes: dict | None = None, plan_scale: float = 1.0):
+    def __init__(self, gen_seed: int = 2026, sizes: dict | None = None, plan_scale: float = 1.0, seed_base=0):
         self.seed = gen_seed
+        self.seed_base = seed_base          # added to every world's seed_state: an int, or {split: int}; 0 = the shipped data
         self.sizes = dict(sizes or SIZES)
         self.scale = sum(self.sizes.values()) / sum(t for *_, t in PLAN) * plan_scale
         self.seen = {"en": set(), "ko": set()}
@@ -143,7 +146,13 @@ class Gen:
         self.stats["rejected"][why] = self.stats["rejected"].get(why, 0) + 1
 
     # ── one split, one family ────────────────────────────────────────────────────────────────────────
-    def fill(self, split: str, key: str, typ: str, gen: str, filt, n: int, max_tries: int | None = None) -> int:
+    def _base(self, split: str) -> int:
+        b = self.seed_base
+        return int(b.get(split, 0) if isinstance(b, dict) else b)
+
+    def fill(self, split: str, key: str, typ: str, gen: str, filt, n: int, max_tries: int | None = None,
+             op_filter=None) -> int:
+        """``op_filter(world, op)``: keep only the options it accepts (None: all; the shipped data never sets it)."""
         houses = SPLIT_HOUSES[split]
         got = 0
         tries = 0
@@ -155,13 +164,15 @@ class Gen:
             if house in dead:
                 continue
             rng = rng_for(self.seed, "gen", split, key, tries)
-            seed_state = rng.randrange(10000)
+            seed_state = self._base(split) + rng.randrange(10000)
             w = from_house(house, seed_state)
             lex = Lex(w)
             if typ == "single":
                 ops = [o for o in F.FAMILIES[gen](lex) if filt is None or o["fam"] == filt]
             else:
                 ops = CP.FAMILIES[gen](CP.Pools(lex), rng)
+            if op_filter is not None:
+                ops = [o for o in ops if op_filter(w, o)]
             if not ops:
                 if tries > len(houses) * 6 and not self._any_ok.get((house, key)):
                     dead.add(house)
