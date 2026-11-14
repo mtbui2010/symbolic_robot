@@ -44,6 +44,17 @@ LAYERS_ENV = "HOMELOOP_D1_LAYERS"
 KO_CONDITION = (r"(?:(?:만약|혹시)\s+)?(?:[^\s,;.!?]+\s+){0,3}\S*(?:(?:있|없|하|되|열려|닫혀|켜져|꺼져)(?:으)?면|[가-힣]다면)"
                 r"(?![가-힣])(?!\s*(?:돼|되|좋겠|괜찮|충분))(?=\s|[,;.!?]|$)")
 KO_NEGATION = (r"(?:[^\s,;.!?]+\s+)?\S*(?:지\s*(?:마(?:세요|시오|라|요)?|말(?:고|아\S*|라)|않\S*)|말고|빼고|제외하고)(?=\s|[,;.!?]|$)")
+# Korean condition words the D2 clause above does not read (a sighting or a negation as the condition: "...-boi-myeon", "...-ani-myeon / -ani-ramyeon"), ASSUMED, read only by the
+# D3 layer cond_extract (its own declared clauses, never the lang_words ones: the D2 data is unchanged).
+KO_COND_MORE = r"(?:(?:만약|혹시)\s+)?(?:[^\s,;.!?]+\s+){0,3}\S*(?:보이|아니|아니라)면(?![가-힣])(?=\s|[,;.!?]|$)"
+# the extraction call of cond_extract (prompt language, ASSUMED text): the request, the reader's numbered goals, one JSON of the option's fixed schema
+COND_PROMPT = ("A household robot request may hold a condition: something is to be done only if an object is (or is not) at a place, and perhaps something else otherwise.\n"
+               "Request: {request}\nThe goals already read from it, numbered:\n{goals}\n"
+               "Answer in JSON. conditional: true only when the request really makes a goal depend on whether an object is at a place, else false with empty lists. "
+               "object and at: the object and the place the condition looks at, in the words of the request. present: true when the condition holds if the object IS at that "
+               "place, false when it holds if the object is NOT there. if_goals: the numbers of the goals to do when the condition holds. else_goals: the numbers of the goals to "
+               "do when it does not hold (the 'otherwise' part). drop: the numbers of goals that only restate the condition and are no request. A number is in at most one list; "
+               "leave a goal out of all lists when it is to be done in every case. unsure: true when you cannot tell.")
 
 
 LAYERS = {
@@ -88,6 +99,14 @@ LAYERS = {
                        "negation": KO_NEGATION,
                        "assumed": True}}}}}}),
     # --- D3 layers (on top of the ten D2 layers above, in the order cond_extract, recipient_keep, name_recover, replan_block; the ones that exist) ---
+    # cond_extract (L9): a request with a condition word gets ONE extra model call that splits it into condition / goals-if / goals-else; cond_goal (without its
+    # ``prompt`` key: the reader's schema and prompt stay) goes to the place, looks and keeps the branch that matches. ASSUMED data: the extraction prompt, the Korean words
+    # above (the English ones are the language pack's), the two questions (where to look, is it there), the move role of the mock robot's own skill. No sentence is said.
+    "cond_extract": ({"cond_extract": "1", "cond_goal": "1"},
+                     {"planner": {"action_roles": {"move": "MoveTo"},
+                                  "options": {"cond_extract": {"prompt": COND_PROMPT, "q_unclear": "Where should I look for the {object}?",
+                                                               "clauses": {"ko": {"condition": [KO_CONDITION, KO_COND_MORE], "assumed": True}}},
+                                              "cond_goal": {"q_where": "Where should I look for the {object}?", "q_unsure": "Is the {object} at the {place}?"}}}}),
     # recipient_keep: a delivery's recipient moves to the speaker only on first-person evidence of the language packs. No pack data of its own.
     "recipient_keep": ({"recipient_keep": "1"}, {}),
     # plan_complete: a plan that stops short of the step its goal needs. ASSUMED data (names of the mock robot's own skills and what they end / need, not

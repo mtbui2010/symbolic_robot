@@ -72,6 +72,28 @@ PYTHONHASHSEED=0 python -m bench.suites.home.gen.d3 --out bench/suites/home/data
 
 Written by the loop, one section per layer (what, why, data, tests, limits), then the pilot results.
 
+## L9 cond_extract: a conditional request is read as plain goals
+
+**What.** 6 independent tasks in 13 rows of the D2 analysis carry a condition ("if X is at P, do A, otherwise B"; the shapes are the generator's templates). The reader (`hl-understand-p3-s700`) has no `when` field
+and turns the request into plain goals: both branches, or the condition's object as a goal. None of the 8 conditional tasks was understood; the passes were luck (the object was already at the destination, was picked up and put back).
+`cond_goal` (D2 era) can decide a condition by looking, but only if the reader writes `when`, which this reader cannot.
+
+**Fix.** Option `cond_extract` (default off, `robot_agent/options/cond_extract.py`, hook `on_goals` at order 15, before `cond_goal` at 20; new general service `ask_model`: one JSON call to the planner's model, no repair, stoppable, in the run's budget).
+When the request (as said, and its English reading when there is one) holds a condition word of its language (language pack `patterns.condition` plus the robot pack's `planner.options.cond_extract.clauses`, labelled `source` or `assumed: true`),
+ONE extra call is made with the pack's prompt: the request and the reader's numbered goals. The answer (fixed JSON schema: conditional, object, at, present, if_goals, else_goals, drop, unsure) is turned into the `when` field of
+`cond_goal` on the goals of each branch (the else branch gets the opposite `present`); goals that only state the condition are dropped (listed in `run.filtered`); other goals stay unconditional. `cond_goal` then goes to the place,
+looks, keeps the matching branch and asks once when unsure. Without a keyword, a prompt, goals, or when a goal already has `when`: zero extra calls. Non-JSON, `conditional` false, bad or clashing indexes, no object or no branch goal: goals unchanged.
+Real but unclear (the model says unsure, or the place is missing or unknown to the robot): one question (pack text `q_unclear`); a place the robot knows in the answer completes the condition, any other answer leaves the reader's goals. No guess.
+Once per run: a re-read after a clarification does not call again.
+
+**D1.** `HOMELOOP_D1_LAYERS`: layer `cond_extract` (the first D3 layer of `all`) = loop options `cond_extract` and `cond_goal`, WITHOUT `cond_goal.prompt` (the reader's schema and prompt are unchanged). ASSUMED pack data in the overlay: the extraction
+prompt, the two questions of `cond_goal` (where to look, is it there; nothing is said), and the Korean condition words the D2 clause misses (a sighting, a negation: `KO_COND_MORE`; the English words are the language pack's). The `d2` alias is unchanged
+(hash `64b278b5...`, test `test_d2_alias_is_exactly_the_ten_d2_layers_and_equals_the_d2_overlay`).
+**Tests.** robot_agent `tests/test_option_cond_extract.py` (made-up objects, two made-up languages with declared words, `*_off`, `*_empty`, `*one_call*`, `*unsure*`, `*no_keyword*`, invalid output, a run through the loop with `cond_goal` in which an object already at
+the goal place stays unmoved and one elsewhere is moved); bench `tests/home/bench/test_d3_layers.py` (the layer alone on top of d2, the Korean words).
+**Limits.** The extraction is read by the planner's model, not the fine-tuned reader: its quality on the Korean requests is for the pilot. A branch the reader did not read as a goal is not recovered (that branch then does nothing: the safe side).
+"The condition's object is a goal" is repaired only when the model lists it in `drop`. A clash or a missing field is not asked about (a place cannot complete it). The simulated person's answer to `q_unclear` / `q_unsure` is not known here.
+
 ## L10 recipient_keep: the recipient of a hand-over is lost after grounding
 
 **What.** The engine rule `goal_fix.shared_listener` (robot_agent `core/planning/goal_fix.py`, called from `assist_loop.py` after grounding) moved the recipient of a delivery
