@@ -122,11 +122,12 @@ Pilot rounds and measured results are written here by the coordinator.
   (`understand._COND`, `_NEG`). With the option on, robot_agent reads `patterns.condition` and `patterns.negation` of the run's language pack (and of the prompt
   language's) through `core/planning/clauses.py`; the object coverage, the destination repair and the negation filter use them. The recipient words and the
   correction markers were pack data already.
-- Why: the KO gap. A reading that is not English took no clause out of the request, so the object of a condition could become a goal. The Korean pack now
-  declares a clause shape of its own (assumed: written from general grammar, not measured); the shipped English pack holds the former regexes, so English reads the same.
-- Data: the packs (`lang/en.json`, `lang/ko.json`), not the bench overlay. The D1 layer only switches the option on. Layer off (`none`): no option, the engine's own reading.
-- Tests: `robot_agent/tests/test_option_lang_words.py` (a language invented in the test, one kind only, empty data, the shipped English pack equal to the old
-  reading, off, through AssistLoop) and `tests/home/bench/test_d1_classes.py` (the switch, `none` equals D).
+- Why: the KO gap. A reading that is not English took no clause out of the request, so the object of a condition could become a goal. The shipped English pack holds the former
+  regexes, so English reads the same. Korean has no clause data in the shipped pack (a Hangul literal in robot_agent's engine tree is barred by the checker),
+  so the D1 layer declares it in the robot pack overlay (`planner.options.lang_words.clauses.ko`, assumed: general grammar, not measured).
+- Data: `lang/en.json` (patterns) and the Korean overlay above, `assumed: true`; only when the layer is on. Layer off (`none`): no option, no data, the engine's own reading.
+- Tests: `robot_agent/tests/test_option_lang_words.py` (a language invented in the test, one kind only, empty data, robot-pack words, the shipped English pack equal to the old
+  reading, off, through AssistLoop) and `tests/home/bench/test_d1_classes.py` (the switch, `none` equals D, the Korean data on a Korean request).
 - Limits: most clause checks read the ENGLISH reading of a translated request (`Heard.english`), where the English pack already worked; the Korean data matters
   for an untranslated Korean text only. Whether it helps is for the pilots to measure. The two KO data errors found on the way (tasks 629 and 643) are in
   `data_issues_ko.md`; they are not changed.

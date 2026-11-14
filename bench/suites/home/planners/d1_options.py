@@ -63,8 +63,13 @@ LAYERS = {
     "search_budget": ({"search_budget": "1", "reopen_on_miss": "0"},
                       {"planner": {"options": {"search_budget": {"budget": {
                           "looks_per_object": 8, "stop_probability": 0.1, "ask": "once", "assumed": True}}}}}),
-    # lang_words: the condition and negation words are the language packs' own data (robot_agent core/planning/lang/<code>.json, patterns): no overlay data
-    "lang_words": ({"lang_words": "1"}, {}),
+    # lang_words: condition and negation words per language. English is the pack's own (robot_agent lang/en.json); Korean has no clause data in the pack, so
+    # the layer declares it here, ASSUMED (general grammar: a conditional ending on the last words of a clause, a "not / except" ending), not measured.
+    "lang_words": ({"lang_words": "1"},
+                   {"planner": {"options": {"lang_words": {"clauses": {"ko": {
+                       "condition": r"(?:(?:만약|혹시)\s+)?(?:\S+\s+){0,2}\S*(?:으면|이면|라면|다면|면)(?=\s|[,;.!?]|$)",
+                       "negation": r"(?:\S+\s+){0,1}\S*(?:지\s*(?:마|말)\S*|말고|빼고|제외하고|않)(?=\s|[,;.!?]|$)",
+                       "assumed": True}}}}}}),
 }
 
 

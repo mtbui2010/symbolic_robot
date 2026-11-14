@@ -1,6 +1,8 @@
 """D1 turns on the failure-class options of robot_agent (all default off there) through ``loop_options`` and declares the pack data they read as a manifest
 overlay (``planners/d1_options.py``); the base planners are unchanged, the existing D1 overlay parts (translator, recovery, action roles) survive the merge,
 and the options exist in the installed robot_agent."""
+import pytest
+
 from bench.suites.home.planners import d1_options as D
 from bench.suites.home.planners.robot_agent_adapter import (SageS8nD1Planner, SageS8nFtD1Planner, SageS8nFtPlanner, SageS8nPlanner)
 
@@ -144,9 +146,23 @@ def test_search_budget_layer_adds_its_option_and_assumed_data_and_turns_reopen_o
     assert "search_budget" in D.d1_overlay(BASE_OV, "m", env("search_budget"))["note"]
 
 
-def test_lang_words_layer_switches_its_option_on_with_no_overlay_data_and_none_equals_d():
+def test_lang_words_layer_switches_its_option_on_with_assumed_korean_clause_data_only_when_on_and_none_equals_d():
     assert D.layer_options(env("lang_words")) == {"lang_words": "1"} and D.layer_options(env("all"))["lang_words"] == "1"
     assert "lang_words" not in D.layer_options(env("none")) and "lang_words" not in D.layer_options(env("goal_words"))
-    on, off = D.d1_overlay(BASE_OV, "m", env("lang_words")), D.d1_overlay(BASE_OV, "m", env("none"))
-    assert on["planner"] == D.d1_overlay(BASE_OV, "m", env("goal_words"))["planner"] == off["planner"]      # the data is the pack's, not the overlay's
-    assert "lang_words" in on["note"] and "lang_words" not in off["note"]
+    ko = D.d1_overlay(BASE_OV, "m", env("lang_words"))["planner"]["options"]["lang_words"]["clauses"]["ko"]
+    assert ko["assumed"] is True and ko["condition"] and ko["negation"]
+    for other in ("none", "goal_words"):
+        assert "lang_words" not in (D.d1_overlay(BASE_OV, "m", env(other))["planner"].get("options") or {})
+    assert "lang_words" in D.d1_overlay(BASE_OV, "m", env("lang_words"))["note"]
+    assert "lang_words" not in D.d1_overlay(BASE_OV, "m", env("none"))["note"]
+
+
+def test_the_korean_clause_data_of_the_lang_words_layer_takes_a_condition_clause_out_of_a_korean_request():
+    clauses = pytest.importorskip("robot_agent.core.planning.clauses")
+    understand = pytest.importorskip("robot_agent.core.planning.understand")
+    from types import SimpleNamespace as NS
+    ko = D.d1_overlay(BASE_OV, "m", env("lang_words"))["planner"]["options"]["lang_words"]["clauses"]
+    places = NS(clauses=clauses.build("ko", ko))
+    text = "컵을 책상에 놓고 서랍이 열려 있으면 닫아줘"
+    assert "서랍" not in understand._active(text, places=places) and "컵" in understand._active(text, places=places)
+    assert "서랍" in understand._active(text)                                        # off: the engine's English words take nothing out
