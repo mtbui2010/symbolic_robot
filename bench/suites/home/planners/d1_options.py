@@ -50,6 +50,13 @@ LAYERS = {
     "entity_cover": ({"entity_cover": "1"}, {}),
     # the receiver rules (hazard.receivers) are the mock robot's own safety profile (manifest safety.profile, household.yaml): no overlay data
     "hazard": ({"hazard_receiver": "1"}, {}),
+    # hw_wait: the wait schedule and tries per failure kind. ASSUMED numbers (the mock robot's spec sheet declares none): a camera that is down and a
+    # device fault get the same doubling backoff as the base wait, with tries; a kind not named here keeps the policy table. Not a simulator rule.
+    "hw_wait": ({"hw_wait": "1"},
+                {"planner": {"options": {"hw_wait": {"kinds": {
+                    "perception_unavailable": {"schedule_s": [2, 4, 8], "tries": 3, "action": "wait_health"},
+                    "hw_fault": {"schedule_s": [2, 4, 8], "tries": 2, "action": "wait_health"},
+                    "assumed": True}}}}}),
 }
 
 

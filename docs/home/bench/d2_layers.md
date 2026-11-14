@@ -82,3 +82,18 @@ Pilot rounds and measured results are written here by the coordinator.
   foreign words) and `tests/home/bench/test_d1_classes.py` (the layer in the switch).
 - Limits: it refuses by words, so a receiver whose entry has no matching name is not classed. A refusal on a task the judge expects done would cost a success: the pilots
   (false-success and success counts, paired) decide whether the layer stays on.
+
+## L6 `hw_wait`: the wait after a hardware fault is the pack's, per failure kind
+
+- What: robot_agent's wait after a failure was one schedule (`planner.recovery.wait`, 2+4+8 s) for every kind, with the policy table's retry counts
+  (a hardware fault: one health check, then stop). With the option on, the pack declares per failure code the schedule, the number of tries and the
+  first answer (`planner.options.hw_wait.kinds`). An empty schedule sends no wait command (the pack says waiting does not help that kind), which is how the
+  redundant commands go. A kind with no entry keeps the engine's schedule and the policy table.
+- Why: 34 of the 140 failures in D were hardware stops, ended by the single health check or by the fixed wait running out.
+- Data: D1 declares two kinds, `perception_unavailable` and `hw_fault`: `schedule_s [2, 4, 8]`, tries 3 and 2, action `wait_health`, `assumed: true`
+  (the mock robot's spec sheet declares none; the numbers are the base wait's backoff, not a simulator rule and not tuned). Layer off (`none`): no data, the overlay of D.
+- Tests: `robot_agent/tests/test_option_hw_wait.py` (own schedule used, empty and foreign data keep 2+4+8, a kind without data, an empty schedule sends no
+  wait, tries decide when the run stops, bad entries, off; run through AssistLoop) and `tests/home/bench/test_d1_classes.py` (the switch, `none` equals D).
+- Limits: the schedule is read where `wait_on_robot` runs the wait, so it needs that option and a declared `recovery.wait` action (both in the D1 base). A
+  fault that is not cleared by waiting still ends the run after the tries. Whether the tries and schedule help is for the pilots to measure (paired, dev 700..849).
+

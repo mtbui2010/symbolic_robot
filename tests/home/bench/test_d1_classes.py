@@ -117,3 +117,15 @@ def test_hazard_layer_adds_the_receivers_key_and_no_pack_data():
     assert D.d1_overlay(BASE_OV, "m", env("hazard"))["planner"] == D.d1_overlay(BASE_OV, "m", env("none"))["planner"]      # the pack's profile
     assert D.layer_options(env("none")) == {} and "hazard_receiver" in D.layer_options(env("all"))
     assert "hazard" in D.d1_overlay(BASE_OV, "m", env("hazard"))["note"]
+
+
+def test_hw_wait_layer_adds_its_option_and_assumed_per_kind_data_only_when_on():
+    assert D.layer_options(env("hw_wait")) == {"hw_wait": "1"} and "hw_wait" in D.layer_options(env("all"))
+    on = D.d1_overlay(BASE_OV, "m", env("hw_wait"))["planner"]
+    kinds = on["options"]["hw_wait"]["kinds"]
+    assert kinds["assumed"] is True and set(kinds) == {"perception_unavailable", "hw_fault", "assumed"}
+    assert all(v["schedule_s"] and v["tries"] >= 1 for k, v in kinds.items() if k != "assumed")
+    off = D.d1_overlay(BASE_OV, "m", env("none"))["planner"]
+    assert "hw_wait" not in (off.get("options") or {}) and D.layer_options(env("none")) == {}      # none = experiment D's overlay and options
+    assert "hw_wait" not in (D.d1_overlay(BASE_OV, "m", env("goal_words"))["planner"].get("options") or {})
+    assert "hw_wait" in D.d1_overlay(BASE_OV, "m", env("hw_wait"))["note"]
