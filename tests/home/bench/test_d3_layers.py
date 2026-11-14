@@ -5,7 +5,7 @@ import json
 from bench.suites.home.planners import d1_options as D
 
 D2 = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
-D3 = ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block")
+D3 = ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "hw_tries")   # ``all`` after the D2 ten, in this order
 D2_HASH = "64b278b5beef2493d675eac77ebd6d10b799e2ce2e307014e56b3f207e356942"      # the ten D2 layers: on, loop options, overlay without its note
 MODEL = "hl-understand-p3-s700"
 
@@ -26,11 +26,23 @@ def test_d2_alias_is_exactly_the_ten_d2_layers_and_equals_the_d2_overlay():
     assert digest(env("d2")) == D2_HASH                                       # the loop options, the overlay and the on tuple as in D2
 
 
-def test_all_is_the_d2_layers_then_the_d3_layers_that_exist():
+def test_all_is_the_d2_layers_then_every_d3_layer_in_order():
     got = D.selected_layers(env("all"))
-    assert got[:10] == D2 and got[10:] and set(got[10:]) <= set(D3)
-    assert got[10:] == ("cond_extract", "recipient_keep", "name_recover", "replan_block")   # the frozen interface, in the order of the brief
-    assert D.selected_layers({}) == got                                        # the default is all
+    assert got == D2 + D3 and set(got) == set(D.LAYERS)                       # every known layer; until 2026-11-15 plan_complete, ask_agree, hw_tries were left out
+    assert D.selected_layers({}) == got == D.ALL_LAYERS                        # the default is all
+    assert D.layer_options(env("all")) == {k: v for n in D2 + D3 for k, v in D.LAYERS[n][0].items()}
+    for n in ("plan_complete", "ask_agree", "hw_tries"):
+        assert n in got and {k: v for k, v in D.layer_options(env("all")).items() if k in D.LAYERS[n][0]} == D.LAYERS[n][0]
+    assert "plan_complete" in D.d1_overlay({}, MODEL, env("all"))["planner"]["options"]
+
+
+def test_none_d2_and_each_single_layer_select_as_before():
+    assert D.selected_layers(env("none")) == () and D.layer_options(env("none")) == {} and digest(env("d2")) == D2_HASH
+    ov_none = D.d1_overlay({}, MODEL, env("none"))
+    assert "options" not in ov_none["planner"] and "D2 layers on" not in ov_none["note"]       # none: D1 of D2 (the D1 data only)
+    for n in D.LAYERS:
+        assert D.selected_layers(env(n)) == (n,) and D.layer_options(env(n)) == D.LAYERS[n][0], n
+        assert D.selected_layers(env(",".join(D2 + (n,)))) == (D2 if n in D2 else D2 + (n,)), n
 
 
 def test_none_selects_nothing():
@@ -71,7 +83,7 @@ def test_ask_agree_alone_on_top_of_d2_adds_its_option_and_no_pack_data():
     ov, ov2 = D.d1_overlay({}, MODEL, env(on)), D.d1_overlay({}, MODEL, env("d2"))
     ov.pop("note", None), ov2.pop("note", None)
     assert ov == ov2                                                          # no overlay data: the D2 data only
-    assert "ask_agree" not in D.selected_layers(env("all")) and "ask_agree" in D.LAYERS     # reachable only through a comma list
+    assert "ask_agree" in D.selected_layers(env("all")) and "ask_agree" in D.LAYERS
     assert digest(env("d2")) == D2_HASH
 
 
@@ -82,7 +94,7 @@ def test_replan_block_alone_on_top_of_d2_adds_the_option_and_its_assumed_codes_o
     ov, ov2 = D.d1_overlay({}, MODEL, env(on)), D.d1_overlay({}, MODEL, env("d2"))
     crit = ov["planner"]["options"]["replan_guard"]["critical"]
     assert crit["assumed"] is True and crit["codes"] and "replan_guard" not in ov2["planner"].get("options", {})
-    assert D.selected_layers(env("all"))[-1] == "replan_block" and "plan_complete" not in D.selected_layers(env("all")) and digest(env("d2")) == D2_HASH
+    assert "replan_block" in D.selected_layers(env("all")) and "plan_complete" in D.selected_layers(env("all")) and digest(env("d2")) == D2_HASH
 
 
 def test_replan_block_declares_the_near_need_of_the_releases_with_a_source_and_leaves_d2_data_as_it_was():
@@ -132,9 +144,9 @@ def test_cond_extract_korean_words_add_the_sighting_and_the_negation_that_the_d2
     assert not more.search("컵을 식탁에 놓아줘") and not more.search("서랍을 열어줘")
 
 
-def test_hw_tries_alone_on_top_of_d2_adds_only_the_more_tries_key_and_is_not_in_all():
+def test_hw_tries_alone_on_top_of_d2_adds_only_the_more_tries_key_and_is_last_in_all():
     on = ",".join(D2 + ("hw_tries",))
-    assert D.selected_layers(env(on)) == D2 + ("hw_tries",) and "hw_tries" not in D.selected_layers(env("all"))
+    assert D.selected_layers(env(on)) == D2 + ("hw_tries",) and D.selected_layers(env("all"))[-1] == "hw_tries"
     assert D.layer_options(env(on)) == {**D.layer_options(env("d2")), "hw_more_tries": "1"} and "hw_more_tries" not in D.layer_options(env("d2"))
     ov, ov2 = D.d1_overlay({}, MODEL, env(on)), D.d1_overlay({}, MODEL, env("d2"))
     ov.pop("note", None), ov2.pop("note", None)

@@ -72,6 +72,12 @@ PYTHONHASHSEED=0 python -m bench.suites.home.gen.d3 --out bench/suites/home/data
 
 Written by the loop, one section per layer (what, why, data, tests, limits), then the pilot results.
 
+**`all` corrected (2026-11-15).** `HOMELOOP_D1_LAYERS=all` is the ten D2 layers, then `cond_extract`, `recipient_keep`, `plan_complete`, `ask_agree`, `name_recover`, `replan_block`, `hw_tries`
+(`d1_options.ALL_LAYERS`). Before that date it held only `cond_extract`, `recipient_keep`, `name_recover`, `replan_block`: the `check.sh` `iface` criterion had been written before L13, L14 and `hw_tries`
+existed and those layers were kept out of `all` to pass it. So every `d3` arm measured before 2026-11-15 (the DEV pair included) ran WITHOUT `plan_complete`, `ask_agree` and `hw_tries`; its numbers
+are not the numbers of the full D3 layer set. The criterion was corrected (it now asks for the full order exactly). `none` is still D1 as in D2 and `d2` still has the D2 hash `64b278b5...`
+(tests `test_all_is_the_d2_layers_then_every_d3_layer_in_order`, `test_none_d2_and_each_single_layer_select_as_before`).
+
 ## L9 cond_extract: a conditional request is read as plain goals
 
 **What.** 6 independent tasks in 13 rows of the D2 analysis carry a condition ("if X is at P, do A, otherwise B"; the shapes are the generator's templates). The reader (`hl-understand-p3-s700`) has no `when` field
@@ -149,7 +155,7 @@ reported to the coordinator (a bounded pattern behind an option key is the next 
 a release is spliced before the Close (after the Open) of the held object's `in` goal place, after a move there; steps after the final go-home block (the pack's `planner.end_state`) go in front of it, a hand-over of a hand goal gets the move to
 the person first; a speech with `near` gets the move to the say goal's listener, and a step that names the listener says the goal's message. `precond_repair` is not changed (the D2 layer behaves as in D2).
 
-**D1.** `HOMELOOP_D1_LAYERS`: not in `all` (frozen interface; reach it with a comma list on top of d2); the data (the put-in ends an `in` goal, the hand-over a hand goal and needs the person near, the speech needs its listener near, the roles
+**D1.** `HOMELOOP_D1_LAYERS`: in `all` since 2026-11-15 (after `recipient_keep`; before, a comma list only); the data (the put-in ends an `in` goal, the hand-over a hand goal and needs the person near, the speech needs its listener near, the roles
 open / close / say / pick) is declared in the D1 overlay with `assumed: true` (the mock robot's skill names; not a simulator rule). The `d2` alias is unchanged (hash `64b278b5...`).
 **Tests.** robot_agent `tests/test_option_plan_complete.py` (made-up skills, `*_off`, `*_empty`, a run through the loop); bench `tests/home/bench/test_d3_layers.py`.
 **Limits.** An `in` goal whose plan has no Close / Open of its place and ends holding the object is not completed (no step shows where the release belongs); a closed container is not opened for the put-in;
@@ -174,11 +180,11 @@ agreement, as `dialog_agree` says). Silence or another no stops as before. Not a
 3. (c) when the reading changed exactly one value of one goal and the person had said the earlier value, the "I don't know" asks once, naming both readings (a declared choice); the named one decides, the earlier one
 is read back again (`run.patched` and `allow_repeat`); a plain yes or no picks nothing.
 
-**D1.** `HOMELOOP_D1_LAYERS`: not in `all` (the frozen interface allows only cond_extract, recipient_keep, name_recover, replan_block after the D2 ten): switch it on with a comma list (`<the ten D2 layers>,ask_agree`); the layer has no pack data of its own. The `d2` alias is unchanged (hash `64b278b5...`, test `test_d2_alias_is_exactly_the_ten_d2_layers_and_equals_the_d2_overlay`).
+**D1.** `HOMELOOP_D1_LAYERS`: in `all` since 2026-11-15 (after `plan_complete`; before, only a comma list `<the ten D2 layers>,ask_agree` reached it); the layer has no pack data of its own. The `d2` alias is unchanged (hash `64b278b5...`, test `test_d2_alias_is_exactly_the_ten_d2_layers_and_equals_the_d2_overlay`).
 **Tests.** robot_agent `tests/test_option_ask_agree.py` (a made-up agglutinative language `zq`, a refusal followed by a restatement, the either-or case, `*_off`, `*_empty`, two runs through the loop); bench `tests/home/bench/test_d3_layers.py`.
 **Limits.** The upside on d3dev is small (a few tasks that need a fresh yes, a few false successes removed); the pilot gate's false-success count is the criterion. A garbled phrase that no pack phrase matches ("not sure" spelled in a dialect form)
-stays a refusal; the either-or needs the earlier value named in the person's words and declared options (a free-text question has none). The simulated person's answer to the added yes / no question is not known here. `check.sh` `iface`
-lists the layers allowed after the D2 ones (cond_extract, recipient_keep, name_recover, replan_block); `plan_complete` and `ask_agree` are therefore kept out of `all` (comma list only) until the coordinator extends that list.
+stays a refusal; the either-or needs the earlier value named in the person's words and declared options (a free-text question has none). The simulated person's answer to the added yes / no question is not known here. Until
+2026-11-15 `check.sh` `iface` allowed only cond_extract, recipient_keep, name_recover, replan_block after the D2 ones, so `plan_complete` and `ask_agree` were out of `all`; the criterion was corrected (see "`all` corrected").
 
 ## L12 replan_block: the replan repairs the wrong block, or runs a suffix the rules reject
 
@@ -196,7 +202,7 @@ suffix simulated from the belief now join the engine's findings: the one existin
 The red team's remarks were applied: no count-only fix (it cannot know which steps were added), no rebuild through `generate_plan` (it would bring the index fault back), the findings come from declared action-model codes, not from
 the English text of the checker.
 
-**D1.** `HOMELOOP_D1_LAYERS`: layer `replan_block` (the last of `all`) = loop option `replan_guard` plus the overlay data `planner.options.replan_guard.critical` (`assumed: true`: two action-model codes). The `d2` alias is unchanged
+**D1.** `HOMELOOP_D1_LAYERS`: layer `replan_block` (in `all`, after `name_recover`) = loop option `replan_guard` plus the overlay data `planner.options.replan_guard.critical` (`assumed: true`: two action-model codes). The `d2` alias is unchanged
 (hash `64b278b5...`, test `test_d2_alias_is_exactly_the_ten_d2_layers_and_equals_the_d2_overlay`). To ablate the three parts, set `replan_guard.block_fix`, `replan_guard.goal_rebuild` or `replan_guard.critical_refine` to 0 as run options.
 **Tests.** embodiplan `tests/test_sage_failed_block.py` (12 tests: `*_off`, `*_empty`, forward and backward drift, grounded names, stale owners, no repeat); robot_agent `tests/test_option_replan_guard.py` (13 tests: `*_off`, `*_empty`, the key reaches the
 planner, a goal change mid-run, a critical suffix through the one refine); bench `tests/home/bench/test_d3_layers.py`.
@@ -221,4 +227,4 @@ Limits: a guarded finding that is never refused at run time because the belief t
 
 **What.** Commit 7e3c476 of robot_agent had changed the D2 layer `hw_wait` itself (an unhealthy robot after a wait no longer stopped the run while declared tries were left), so `base_d2` did not behave as D2. The behaviour is now the
 `hw_wait` key `more_tries` (default False), and the layer `hw_tries` (loop option `hw_more_tries`) switches it on. `hw_wait` alone is as in D2.
-**D1.** Not in `all` (the frozen interface lists four layers); reach it with a comma list on top of d2. The coordinator decides whether the interface grows. Test: `test_hw_tries_alone_on_top_of_d2...` in `tests/home/bench/test_d3_layers.py`; robot_agent `tests/test_option_hw_wait.py`.
+**D1.** In `all` since 2026-11-15 (the last layer; before, a comma list only). Test: `test_hw_tries_alone_on_top_of_d2...` in `tests/home/bench/test_d3_layers.py`; robot_agent `tests/test_option_hw_wait.py`.

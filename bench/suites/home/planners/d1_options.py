@@ -144,13 +144,13 @@ LAYERS = {
                                                   "rules": {"Place": {"near": True}, "PutIn": {"near": True}},
                                                   "source": PRECOND_SOURCE + "; near of Place / PutIn: skills[].pre arrived(?inputs) (layer replan_block)"}}}}}),
     # hw_tries: with hw_wait on, an unhealthy robot after a wait does not stop the run while the tries declared by the hw_wait layer are left (hw_wait key more_tries).
-    # Not in ``all`` (the frozen interface); on top of d2 through a comma list. The hw_wait layer alone behaves as in D2.
+    # The hw_wait layer alone behaves as in D2.
     "hw_tries": ({"hw_more_tries": "1"}, {}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
-# ``all``: the D2 layers, then the D3 layers of the frozen interface in this order. plan_complete and ask_agree (L13, L14) are known layers but are reached only
-# through a comma list until the interface criterion allows them in ``all``.
-ALL_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "name_recover", "replan_block")
+# ``all``: the D2 layers, then every D3 layer in this order. Until 2026-11-15 ``all`` held only cond_extract, recipient_keep, name_recover, replan_block (an
+# interface criterion written before L13 / L14 existed), so a D3 arm measured before that date never ran plan_complete, ask_agree or hw_tries.
+ALL_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "hw_tries")
 
 
 def selected_layers(environ=None) -> tuple:
