@@ -18,7 +18,7 @@ def test_the_overlay_merges_the_data_without_losing_the_base_parts():
     for d1, base in PAIRS:
         p, b = d1.manifest_overlay["planner"], base.manifest_overlay["planner"]
         assert p["end_state"] == {"places": ["dock"], "action": "Dock"} and p["recovery"]["reopen_on_miss"] == ["Close", "Open"]
-        assert p["action_roles"] == {**b["action_roles"], "find": "Find"}
+        assert {k: v for k, v in p["action_roles"].items() if k != "pick"} == {**b["action_roles"], "find": "Find"}      # pick: the layer precond_repair
         assert {k: v for k, v in p["recovery"].items() if k != "reopen_on_miss"} == b["recovery"]      # wait, blocked_putin, return_tries stay
         assert "end_state" not in b and d1.manifest_overlay["assumed"] is True
         assert "reopen_on_miss" not in b["recovery"] and "find" not in b["action_roles"]               # the base overlay object is not mutated
@@ -27,5 +27,60 @@ def test_the_overlay_merges_the_data_without_losing_the_base_parts():
 def test_every_option_exists_in_robot_agent_and_is_off_by_default_there():
     from robot_agent.core.options import REGISTRY
     specs = {s.name: s for s in REGISTRY.specs()}
-    for name in D.D1_CLASSES:
+    for name in {**D.D1_CLASSES, **D.layer_options({})}:
         assert name in specs and specs[name].key(specs[name].enabled).default is False
+
+
+# ---- round D2: the layer switch (HOMELOOP_D1_LAYERS) ----
+D_LOOP_OPTIONS = {"search_per_object": "1", "place_find": "1", "reopen_on_miss": "1", "end_state": "1", "object_words": "1"}
+BASE_OV = {"planner": {"action_roles": {"move": "MoveTo", "put_down": "Place"}, "recovery": {"wait": 3}}, "assumed": True, "note": "base"}
+
+
+def env(v=None):
+    return {} if v is None else {D.LAYERS_ENV: v}
+
+
+def test_layer_switch_default_all_none_and_a_list():
+    assert D.selected_layers(env()) == tuple(D.LAYERS) == D.selected_layers(env("all")) == D.selected_layers(env(" ALL "))
+    assert D.selected_layers(env("none")) == ()
+    assert D.selected_layers(env("precond_repair")) == ("precond_repair",)
+    assert D.selected_layers(env("")) == tuple(D.LAYERS)                      # empty = the default
+    try:
+        D.selected_layers(env("precond_repair,no_such_layer"))
+    except ValueError as e:
+        assert "no_such_layer" in str(e)
+    else:
+        raise AssertionError("an unknown layer name must be refused")
+
+
+def test_layers_none_is_the_d1_of_experiment_d_options_and_overlay():
+    assert D.layer_options(env("none")) == {}
+    out = D.d1_overlay(BASE_OV, "m", env("none"))
+    assert out["planner"] == {**BASE_OV["planner"], "action_roles": {"move": "MoveTo", "put_down": "Place", "find": "Find"},
+                              "recovery": {"wait": 3, "reopen_on_miss": ["Close", "Open"]}, "end_state": {"places": ["dock"], "action": "Dock"},
+                              "translate_model": "m"}
+    assert out["note"] == "base; " + D.D1_DATA["note"] and "D2" not in out["note"]
+    assert D.D1_CLASSES_D == D_LOOP_OPTIONS
+
+
+def test_precond_repair_layer_adds_its_option_and_its_pack_data_only_when_on():
+    assert D.layer_options(env("precond_repair")) == {"precond_repair": "1"}
+    on = D.d1_overlay(BASE_OV, "m", env("precond_repair"))
+    off = D.d1_overlay(BASE_OV, "m", env("none"))
+    needs = on["planner"]["options"]["precond_repair"]["needs"]
+    assert needs["source"] and needs["rules"]["Handover"] == {"holding": True} and on["planner"]["action_roles"]["pick"] == "Pick"
+    assert "options" not in off["planner"] and "pick" not in off["planner"]["action_roles"]
+    assert "precond_repair" in on["note"] and BASE_OV["planner"] == {"action_roles": {"move": "MoveTo", "put_down": "Place"}, "recovery": {"wait": 3}}
+
+
+def test_the_planner_classes_carry_the_layers_that_were_on_at_import_and_record_them():
+    for d1, _base in PAIRS:
+        for k, v in D.layer_options().items():
+            assert d1.loop_options[k] == v and d1.run_config()["loop_options"][k] == v
+
+
+def test_the_layer_pack_data_passes_the_manifest_contract():
+    from robot_agent.contract.manifest import _planner
+    errs = []
+    _planner(D.d1_overlay(PAIRS[0][1].manifest_overlay, "m", env("all"))["planner"], errs)
+    assert errs == []

@@ -14,11 +14,16 @@ Failure classes (found on the D1 dev pilot, fixed as classes, never as tasks):
 * ``end_state``: a ``go`` goal for the dock is made true (go there, Dock) before done, wherever the reader put it in the goal list. Like the
   remedy above it matches the simulator's ``docked()`` condition: read it as an ablation.
 * ``object_words``: the goal's 'phone' and the plan's 'Pick cell phone' are one object for the goal checks.
+
+Round D2 (one layer per failure class, each a robot_agent option, default off): ``LAYERS`` below. The environment variable ``HOMELOOP_D1_LAYERS`` picks
+which layers D1 turns on: ``all`` (default), ``none`` (D1 exactly as in experiment D: the baseline arm) or a comma list of layer names. It is read when
+this module is imported (the planner classes are built then); the layers on are recorded in the run config (``loop_options``) and in the overlay note.
 """
 
 from __future__ import annotations
 
 import copy
+import os
 
 # search legs, at most 6 places per search, no search second look (robot_agent: planner.search_legs / search_total / detector_miss_rate)
 D1_SEARCH = {"search_legs": 1, "search_total": 6, "detector_miss_rate": 0}
@@ -26,7 +31,36 @@ D1_SEARCH = {"search_legs": 1, "search_total": 6, "detector_miss_rate": 0}
 # option ``confirm_look`` (default off) a third look decides: believed only when the object is seen again (two sightings in a row).
 D1_CONFIRM = {"confirm_look": "1"}
 # the failure-class options of the 2026-11-13 round (all default off in robot_agent)
-D1_CLASSES = {"search_per_object": "1", "place_find": "1", "reopen_on_miss": "1", "end_state": "1", "object_words": "1"}
+D1_CLASSES_D = {"search_per_object": "1", "place_find": "1", "reopen_on_miss": "1", "end_state": "1", "object_words": "1"}
+
+LAYERS_ENV = "HOMELOOP_D1_LAYERS"
+# D2 layers: name -> (loop options, pack data), in the order they were added. The data is the mock robot pack's own, with its source.
+LAYERS = {
+    "precond_repair": ({"precond_repair": "1"},
+                       {"planner": {"action_roles": {"pick": "Pick"},
+                                    "options": {"precond_repair": {"needs": {
+                                        "rules": {"Pick": {"hand_free": True}, "Place": {"holding": True},
+                                                  "PutIn": {"holding": True}, "Handover": {"holding": True}},
+                                        "source": "mock robot manifest, skills[].pre (hand_empty(), not hand_empty())"}}}}}),
+}
+
+
+def selected_layers(environ=None) -> tuple:
+    """The D2 layers that are on: ``all`` (unset too), ``none``, or a comma list of names of ``LAYERS``; an unknown name is an error."""
+    raw = ((environ if environ is not None else os.environ).get(LAYERS_ENV) or "all").strip().lower()
+    if raw == "all":
+        return tuple(LAYERS)
+    names = [n.strip() for n in raw.split(",") if n.strip()] if raw != "none" else []
+    bad = [n for n in names if n not in LAYERS]
+    if bad:
+        raise ValueError(f"{LAYERS_ENV}: unknown layer {bad} (known: {sorted(LAYERS)}, all, none)")
+    return tuple(n for n in LAYERS if n in names)
+
+
+def layer_options(environ=None) -> dict:
+    """The loop options of the layers that are on."""
+    return {k: v for n in selected_layers(environ) for k, v in LAYERS[n][0].items()}
+
 
 # the pack data those options read. ASSUMED: the mock robot's own action names (find, open, close, dock), not tuned values.
 D1_DATA = {"planner": {"action_roles": {"find": "Find"},
@@ -36,6 +70,9 @@ D1_DATA = {"planner": {"action_roles": {"find": "Find"},
                    "the mock robot's partial-open and docked() rules, read them as an ablation"}
 
 
+D1_CLASSES = {**D1_CLASSES_D, **layer_options()}          # D's options + the layers that are on (HOMELOOP_D1_LAYERS)
+
+
 def _merge(base: dict, add: dict) -> dict:
     out = dict(base or {})
     for k, v in add.items():
@@ -43,7 +80,13 @@ def _merge(base: dict, add: dict) -> dict:
     return out
 
 
-def d1_overlay(base: dict, translate_model: str) -> dict:
-    """``base`` (the variant's overlay) with this reader as translator and the D1 data merged key by key."""
+def d1_overlay(base: dict, translate_model: str, environ=None) -> dict:
+    """``base`` (the variant's overlay) with this reader as translator, the D1 data and the data of the layers that are on, merged key by key."""
+    on = selected_layers(environ)
     out = _merge(base, {"planner": {**D1_DATA["planner"], "translate_model": translate_model}})
-    return {**out, "assumed": True, "note": str(base.get("note", "")) + "; " + D1_DATA["note"]}
+    for n in on:
+        out = _merge(out, LAYERS[n][1])
+    note = str(base.get("note", "")) + "; " + D1_DATA["note"]
+    if on:
+        note += "; assumed: D2 layers on (" + LAYERS_ENV + "): " + ", ".join(on) + ", data from the mock robot manifest"
+    return {**out, "assumed": True, "note": note}
