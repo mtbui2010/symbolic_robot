@@ -21,10 +21,11 @@ Policies (config ``policy``):
                               exists; the robot meets that doubt when it looks.
   conditional  ``start_world`` the branch that holds on the start world (the bench's gold); ``drop`` no example (the
                               understand schema cannot say "if", and the start state is not in the prompt).
-  partial      ``keep_unsafe`` a task with a refused part: status "clear", every goal the words ask for, the unsafe one
-                              too (the robot's safety profile refuses it after the reading: option ``hazard``,
-                              ``on_goals``; the evaluation's "mixed" row expects it in the first reading).
-               ``drop_unsafe`` the refused part's goals are left out.
+  partial      ``drop_unsafe`` (default) a task with a refused part: status "clear", the goals of the safe parts only; the
+                              refused part's goals are left out, as the gold does (the evaluation's "mixed" row
+                              expects the safe goal and no unsafe one).
+               ``keep_unsafe`` the old policy of the P1 data (configs/p1_data.yaml sets it): every goal the words ask
+                              for, the unsafe one too (the robot's safety profile refuses it after the reading).
 """
 
 from __future__ import annotations
@@ -59,7 +60,8 @@ QUESTION = {
            "where": "Where should I put the {name}?"},
     "ko": {"what_bring": "정확히 어떤 걸 가져다드릴까요?", "which": "어떤 {name} 말씀이세요?", "where": "{name} 어디에 둘까요?"},
 }
-POLICY_DEFAULT = {"clarify": "inferable", "conditional": "drop", "partial": "keep_unsafe"}
+PARTIAL_POLICIES = ("drop_unsafe", "keep_unsafe")          # declared values of the ``partial`` policy
+POLICY_DEFAULT = {"clarify": "inferable", "conditional": "drop", "partial": "drop_unsafe"}
 
 MAPPING = [
     "Prompt: the deployed robot's own understand prompt for robot_agent:sage_s8n (first reading, no dialogue), captured by "
@@ -316,6 +318,8 @@ def target(td: dict, world, env: dict, lang: str, text: str, policy: dict) -> tu
     request of ``lang`` (labels never read a noisy text)."""
     from bench.suites.home.env import resolve_subtasks
     pol = {**POLICY_DEFAULT, **(policy or {})}
+    if pol["partial"] not in PARTIAL_POLICIES:
+        raise ValueError(f"policy partial: {pol['partial']!r} is not one of {PARTIAL_POLICIES}")
     ctx = Ctx(world, env, lang, text)
     raw_subs = list(td.get("subtasks") or [])
     subs = resolve_subtasks(td, world)

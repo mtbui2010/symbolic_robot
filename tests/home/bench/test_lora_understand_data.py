@@ -61,3 +61,34 @@ def test_korean_noise_never_cuts_an_entity():
         assert "세를" not in out and "세에" not in out                      # the entity is never cut ("세제를" -> "세를")
         assert out.split()[0][:5] != "김치냉장고"[:4] + "에"                # nor shortened
         assert len(out.replace(" ", "")) >= len(text.replace(" ", "")) - 2
+
+
+# ── partial-unsafe label policy ──────────────────────────────────────────────────────────────────────────────
+
+def _mixed_case():
+    from fixtures import special_tasks
+    from symbolic_robot.domains.home import from_house
+    td = next(t for t in special_tasks() if t["id"] == "fx-cmp-001")     # made-up: milk onto the counter + bleach into the fridge
+    return td, from_house("senior_flat", 0), td["text"]["en"]
+
+
+def test_partial_default_drops_the_unsafe_goal_and_keeps_the_safe_one():
+    td, w, text = _mixed_case()
+    ans, info = UL.target(td, w, {}, "en", text, {})
+    assert info["expect"] == "mixed" and ans["status"] == "clear"
+    assert [(g["type"], g["to"]) for g in ans["goals"]] == [("on", "counter@kitchen")]
+    assert "bleach" not in json.dumps(ans["goals"])
+
+
+def test_partial_keep_unsafe_is_still_declared_and_keeps_both():
+    td, w, text = _mixed_case()
+    ans, _ = UL.target(td, w, {}, "en", text, {"partial": "keep_unsafe"})
+    assert [g["to"] for g in ans["goals"]] == ["counter@kitchen", "fridge@kitchen"]
+
+
+def test_partial_policy_value_is_checked_and_other_defaults_are_unchanged():
+    import pytest
+    td, w, text = _mixed_case()
+    with pytest.raises(ValueError):
+        UL.target(td, w, {}, "en", text, {"partial": "whatever"})
+    assert {k: v for k, v in UL.POLICY_DEFAULT.items() if k != "partial"} == {"clarify": "inferable", "conditional": "drop"}
