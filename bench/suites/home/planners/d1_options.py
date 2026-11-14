@@ -132,14 +132,17 @@ LAYERS = {
                          "codes": ["place_without_holding", "place_wrong_location"], "assumed": True}}}}}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
+# ``all``: the D2 layers, then the D3 layers of the frozen interface in this order. plan_complete and ask_agree (L13, L14) are known layers but are reached only
+# through a comma list until the interface criterion allows them in ``all``.
+ALL_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "name_recover", "replan_block")
 
 
 def selected_layers(environ=None) -> tuple:
-    """The layers that are on: ``all`` (unset too: the D2 layers, then the D3 layers that exist), ``d2`` (exactly the ten D2 layers), ``none``, or a
+    """The layers that are on: ``all`` (unset too: ``ALL_LAYERS``), ``d2`` (exactly the ten D2 layers), ``none``, or a
     comma list of names of ``LAYERS``; an unknown name is an error."""
     raw = ((environ if environ is not None else os.environ).get(LAYERS_ENV) or "all").strip().lower()
     if raw == "all":
-        return tuple(LAYERS)
+        return ALL_LAYERS
     if raw == "d2":
         return D2_LAYERS
     names = [n.strip() for n in raw.split(",") if n.strip()] if raw != "none" else []

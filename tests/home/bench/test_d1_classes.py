@@ -47,10 +47,10 @@ def env(v=None):
 
 
 def test_layer_switch_default_all_none_and_a_list():
-    assert D.selected_layers(env()) == tuple(D.LAYERS) == D.selected_layers(env("all")) == D.selected_layers(env(" ALL "))
+    assert D.selected_layers(env()) == D.ALL_LAYERS == D.selected_layers(env("all")) == D.selected_layers(env(" ALL "))
     assert D.selected_layers(env("none")) == ()
     assert D.selected_layers(env("precond_repair")) == ("precond_repair",)
-    assert D.selected_layers(env("")) == tuple(D.LAYERS)                      # empty = the default
+    assert D.selected_layers(env("")) == D.ALL_LAYERS                      # empty = the default
     try:
         D.selected_layers(env("precond_repair,no_such_layer"))
     except ValueError as e:

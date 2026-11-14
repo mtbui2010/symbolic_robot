@@ -29,7 +29,7 @@ def test_d2_alias_is_exactly_the_ten_d2_layers_and_equals_the_d2_overlay():
 def test_all_is_the_d2_layers_then_the_d3_layers_that_exist():
     got = D.selected_layers(env("all"))
     assert got[:10] == D2 and got[10:] and set(got[10:]) <= set(D3)
-    assert [n for n in D3 if n in got] == list(got[10:])                       # in the order of the brief
+    assert got[10:] == ("cond_extract", "recipient_keep", "name_recover", "replan_block")   # the frozen interface, in the order of the brief
     assert D.selected_layers({}) == got                                        # the default is all
 
 
@@ -71,7 +71,7 @@ def test_ask_agree_alone_on_top_of_d2_adds_its_option_and_no_pack_data():
     ov, ov2 = D.d1_overlay({}, MODEL, env(on)), D.d1_overlay({}, MODEL, env("d2"))
     ov.pop("note", None), ov2.pop("note", None)
     assert ov == ov2                                                          # no overlay data: the D2 data only
-    assert D.selected_layers(env("all")).index("ask_agree") > D.selected_layers(env("all")).index("plan_complete")
+    assert "ask_agree" not in D.selected_layers(env("all")) and "ask_agree" in D.LAYERS     # reachable only through a comma list
     assert digest(env("d2")) == D2_HASH
 
 
@@ -82,7 +82,7 @@ def test_replan_block_alone_on_top_of_d2_adds_the_option_and_its_assumed_codes_o
     ov, ov2 = D.d1_overlay({}, MODEL, env(on)), D.d1_overlay({}, MODEL, env("d2"))
     crit = ov["planner"]["options"]["replan_guard"]["critical"]
     assert crit["assumed"] is True and crit["codes"] and "replan_guard" not in ov2["planner"].get("options", {})
-    assert D.selected_layers(env("all"))[-1] == "replan_block" and digest(env("d2")) == D2_HASH
+    assert D.selected_layers(env("all"))[-1] == "replan_block" and "plan_complete" not in D.selected_layers(env("all")) and digest(env("d2")) == D2_HASH
 
 
 def test_name_recover_alone_on_top_of_d2_turns_on_the_two_asr_options_and_no_pack_data():
