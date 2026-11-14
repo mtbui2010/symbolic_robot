@@ -35,6 +35,16 @@ D1_CLASSES_D = {"search_per_object": "1", "place_find": "1", "reopen_on_miss": "
 
 LAYERS_ENV = "HOMELOOP_D1_LAYERS"
 # D2 layers: name -> (loop options, pack data), in the order they were added. The data is the mock robot pack's own, with its source.
+# Korean clause words, ASSUMED (general grammar, not measured). A condition is a predicate (stem: be / not be / do / become / open or closed / on or off)
+# ending in a conditional (-(eu)myeon, -damyeon), up to three words of its own clause before it, not followed by a request form ("... myeon dwae /
+# johgesseo": that is the request, not a condition). A noun that only ends in "myeon" is no ending (stems are listed; bare "-ramyeon" is not).
+# A negation is "-ji ma / -ji mal-go / -ji anh-" ("do not ...") or "malgo / ppaego / jeoehago" ("not that, except"); "ji mal-" is read only before
+# go / a / ra, so a noun ending in "ji" before a word that starts with "mal" (a verb "to dry") stays.
+KO_CONDITION = (r"(?:(?:만약|혹시)\s+)?(?:\S+\s+){0,3}\S*(?:(?:있|없|하|되|열려|닫혀|켜져|꺼져)(?:으)?면|[가-힣]다면)"
+                r"(?![가-힣])(?!\s*(?:돼|되|좋겠|괜찮|충분))(?=\s|[,;.!?]|$)")
+KO_NEGATION = (r"(?:\S+\s+)?\S*(?:지\s*(?:마(?:세요|시오|라|요)?|말(?:고|아\S*|라)|않\S*)|말고|빼고|제외하고)(?=\s|[,;.!?]|$)")
+
+
 LAYERS = {
     "precond_repair": ({"precond_repair": "1"},
                        {"planner": {"action_roles": {"pick": "Pick"},
@@ -67,8 +77,8 @@ LAYERS = {
     # the layer declares it here, ASSUMED (general grammar: a conditional ending on the last words of a clause, a "not / except" ending), not measured.
     "lang_words": ({"lang_words": "1"},
                    {"planner": {"options": {"lang_words": {"clauses": {"ko": {
-                       "condition": r"(?:(?:만약|혹시)\s+)?(?:\S+\s+){0,2}\S*(?:으면|이면|라면|다면|면)(?=\s|[,;.!?]|$)",
-                       "negation": r"(?:\S+\s+){0,1}\S*(?:지\s*(?:마|말)\S*|말고|빼고|제외하고|않)(?=\s|[,;.!?]|$)",
+                       "condition": KO_CONDITION,
+                       "negation": KO_NEGATION,
                        "assumed": True}}}}}}),
 }
 

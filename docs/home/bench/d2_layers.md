@@ -131,3 +131,12 @@ Pilot rounds and measured results are written here by the coordinator.
 - Limits: most clause checks read the ENGLISH reading of a translated request (`Heard.english`), where the English pack already worked; the Korean data matters
   for an untranslated Korean text only. Whether it helps is for the pilots to measure. The two KO data errors found on the way (tasks 629 and 643) are in
   `data_issues_ko.md`; they are not changed.
+
+## Fixes after the round-1 review (class, not item)
+
+- L8 Korean data (`d1_options.KO_CONDITION`, `KO_NEGATION`, assumed): the condition is a predicate stem (be, not be, do, become, open, closed, on, off) plus a conditional ending, up to
+  three words of its own clause, never followed by a request form ("... myeon dwae / johgesseo"); a noun that only ends like one (screen, instant noodles) stays; the negation reads
+  "ji ma / ji mal-go|a|ra / ji anh-" only, so a noun ending in "ji" before a verb that starts with "mal" (to dry) stays. Test: `tests/home/bench/test_d1_ko_clauses.py`.
+- L2 `goal_words`: an answer can drop the goal when the place is headed like the object (it is told apart by its room, alias or extra head words). L2, L3, L4: articles and plurals are the language
+  pack's (`articles`, `plural_rules`), none declared = nothing stripped. L3: an "I don't know" that carries a no or a correction is a refusal. L4: only a name the request handles counts
+  (not in a condition, a negation, or as a landmark or tool); runs before `ask_focus`. L6, L7, L8: pack data with no label is not used.
