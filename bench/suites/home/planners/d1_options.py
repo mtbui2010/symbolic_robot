@@ -57,14 +57,18 @@ COND_PROMPT = ("A household robot request may hold a condition: something is to 
                "leave a goal out of all lists when it is to be done in every case. unsure: true when you cannot tell.")
 
 
+# precond_repair's label; the replan_block layer extends it with the ``near`` need of the two releases (a second source of the same manifest)
+PRECOND_SOURCE = ("mock robot manifest, skills[].pre (hand_empty(), not hand_empty()); achieves: assumed (the manifest "
+                  "effects name no goal; a put-down ends an on goal, a hand-over a hand goal)")
+
+
 LAYERS = {
     "precond_repair": ({"precond_repair": "1"},
                        {"planner": {"action_roles": {"pick": "Pick"},
                                     "options": {"precond_repair": {"needs": {
                                         "rules": {"Pick": {"hand_free": True}, "Place": {"holding": True, "achieves": "on"},
                                                   "PutIn": {"holding": True}, "Handover": {"holding": True, "achieves": "hand"}},
-                                        "source": "mock robot manifest, skills[].pre (hand_empty(), not hand_empty()); achieves: assumed (the manifest "
-                                                  "effects name no goal; a put-down ends an on goal, a hand-over a hand goal)"}}}}}),
+                                        "source": PRECOND_SOURCE}}}}}),
     # gate_prune: an Open / Close of a place the ENV declares not openable (explicit openable false) is dropped. Data: the roles of the mock robot's own
     # open / close actions, ASSUMED (names of its skills); without them the option does nothing.
     "gate_prune": ({"gate_prune": "1"}, {"planner": {"action_roles": {"open": "Open", "close": "Close"}}}),
@@ -125,11 +129,17 @@ LAYERS = {
     # their assumed defaults, the hole and distance-unit data are in the language packs (robot_agent lang/*.json, key ``asr``, labelled assumed).
     "name_recover": ({"name_recover": "1", "asr_guard": "1"}, {}),
     # replan_block: a replan repairs the right block (embodiplan SAGE key replan_block_fix, passed through the option), a goal change replans for sub-goals rebuilt
-    # from the new goals, a replan suffix with a critical rule finding goes through the one refine. ASSUMED data: the action-model codes counted critical in a
-    # suffix (a release with an empty hand, a release away from its place); not a simulator rule.
+    # from the new goals, a replan suffix with a critical rule finding goes through the one refine; a finding the run-time check refuses itself only steers that
+    # refine (the suffix then runs, the guard replans at the step), an empty-hand repeat of the last release is dropped. ASSUMED data: the action-model codes counted
+    # critical in a suffix (a release with an empty hand, a release away from its place); not a simulator rule. SOURCED data: the two releases need the robot at
+    # their place (the mock robot manifest's skills[].pre arrived(?inputs) of place / put_in), so precond_repair (a D2 layer, it runs on a replan's suffix too)
+    # puts the missing MoveTo before them; it applies with precond_repair on, to every plan.
     "replan_block": ({"replan_guard": "1"},
                      {"planner": {"options": {"replan_guard": {"critical": {
-                         "codes": ["place_without_holding", "place_wrong_location"], "assumed": True}}}}}),
+                         "codes": ["place_without_holding", "place_wrong_location"], "assumed": True}},
+                                              "precond_repair": {"needs": {
+                                                  "rules": {"Place": {"near": True}, "PutIn": {"near": True}},
+                                                  "source": PRECOND_SOURCE + "; near of Place / PutIn: skills[].pre arrived(?inputs) (layer replan_block)"}}}}}),
     # hw_tries: with hw_wait on, an unhealthy robot after a wait does not stop the run while the tries declared by the hw_wait layer are left (hw_wait key more_tries).
     # Not in ``all`` (the frozen interface); on top of d2 through a comma list. The hw_wait layer alone behaves as in D2.
     "hw_tries": ({"hw_more_tries": "1"}, {}),

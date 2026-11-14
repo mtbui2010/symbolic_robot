@@ -203,6 +203,19 @@ planner, a goal change mid-run, a critical suffix through the one refine); bench
 call; a suffix that stays critical after it ends the run, which can end a run that would have recovered (the kill criterion is an offline replay of stored suffixes on d3dev, not done here). A rebuild after a goal change doubles the work only
 when the repair fails afterwards. Whether the layer helps is for the pilot (paired, false-success count not higher).
 
+**Fix round 2 (after the d3dev DEV pair, `d3` against `base_d2`).** Class: part (c) ended runs that D2 passed. The guard fired in 30 of the 600 D3 rows and stopped 27 (0 successes), 9 of them D2 successes.
+In all 9 the finding was a real defect of the suffix (a release `Place X` without its MoveTo, an empty-hand repeat `PutIn P` after `PutIn P`), but the engine's own run-time check (`_guard` / `_precondition`,
+`verify.symbolic_check`) refuses that step before it moves and replans, or the step was never reached (the Find before it failed and the next replan fixed it). The one refine never removed the finding
+(the model returned the same block; the repeated release is not in the model's reply, it comes from the appended future blocks or the engine's repair). Change (robot_agent `replan_guard`, two parts on with
+the option, commit `61c4dca`): `guarded_run`: a finding that the run-time check refuses itself only steers the one refine (added when a refine follows, service `replan_round`); a refined suffix with only such
+findings RUNS (lab `part: guarded`), and the uncertified end stays for findings that check cannot catch. `release_dedupe` (hook `on_plan`): an empty-hand release that the action model refuses and that repeats
+the plan's last release at the same place is dropped (no action name in the code). Data (this layer): `precond_repair`'s `near` need of `Place` / `PutIn`, SOURCED from the mock robot manifest
+(`skills[].pre` `arrived(?inputs)` of `place` / `put_in`), so the D2 layer `precond_repair` (its `on_plan` runs on a replan's suffix too) inserts the missing MoveTo before the refine is needed; with
+`replan_block` on it also applies to first plans. The `d2` alias is unchanged (test `test_replan_block_declares_the_near_need_of_the_releases_with_a_source_and_leaves_d2_data_as_it_was`).
+Tests: robot_agent `tests/test_option_replan_guard.py` (24: the wrong-place release after a Find of an absent object runs and a normal replan follows; the same release reached sends no release to the robot and one
+replan follows; `[Pick X, PutIn P, PutIn P]` loses the repeat; `guarded_run` / `release_dedupe` off give the old end). Ablate: run options `replan_guard.guarded_run=0`, `replan_guard.release_dedupe=0`.
+Limits: a guarded finding that is never refused at run time because the belief there differs from the simulation is the guard's own case (the replan follows a failure instead). Not measured: no run on d3dev after this change.
+
 ## Layer hw_tries: honour the declared hw_wait tries after an unhealthy wait
 
 **What.** Commit 7e3c476 of robot_agent had changed the D2 layer `hw_wait` itself (an unhealthy robot after a wait no longer stopped the run while declared tries were left), so `base_d2` did not behave as D2. The behaviour is now the

@@ -85,6 +85,15 @@ def test_replan_block_alone_on_top_of_d2_adds_the_option_and_its_assumed_codes_o
     assert D.selected_layers(env("all"))[-1] == "replan_block" and "plan_complete" not in D.selected_layers(env("all")) and digest(env("d2")) == D2_HASH
 
 
+def test_replan_block_declares_the_near_need_of_the_releases_with_a_source_and_leaves_d2_data_as_it_was():
+    on = ",".join(D2 + ("replan_block",))
+    need, need2 = (D.d1_overlay({}, MODEL, env(e))["planner"]["options"]["precond_repair"]["needs"] for e in (on, "d2"))
+    assert need["rules"]["Place"]["near"] is True and need["rules"]["PutIn"]["near"] is True and "arrived" in need["source"]
+    assert need["source"].startswith(need2["source"]) and {a: {k: v for k, v in r.items() if k != "near"} for a, r in need["rules"].items()} == need2["rules"]
+    assert not any(r.get("near") for r in need2["rules"].values()) and digest(env("d2")) == D2_HASH
+    assert "precond_repair" not in D.d1_overlay({}, MODEL, env("none"))["planner"].get("options", {})
+
+
 def test_name_recover_alone_on_top_of_d2_turns_on_the_two_asr_options_and_no_pack_data():
     on = ",".join(D2 + ("name_recover",))
     assert D.selected_layers(env(on)) == D2 + ("name_recover",)
