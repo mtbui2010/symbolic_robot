@@ -873,14 +873,14 @@ class _RobotAgentPlanner:
         if self.loop_kind == "assist":
             from robot_agent.core.planning.assist_loop import AssistLoop
             gen = self.generator or (FAKE_GENERATOR if fake else self.ra_planner)
-            loop = AssistLoop(agent, emit=None, generator=gen,
-                              health_wait_s=HEALTH_WAIT_S, memory_path=str(tmp / "mem.json"), **dict(self.loop_options), **common)
+            kw = dict(generator=gen, health_wait_s=HEALTH_WAIT_S, memory_path=str(tmp / "mem.json"), **dict(self.loop_options), **common)
+            loop = AssistLoop(agent, emit=None, **kw)
             overlay = effective_overlay(self.manifest_overlay)
             apply_overlay(loop, overlay)
-            if overlay and hasattr(loop, "_um_cfg"):      # the keys robot_agent reads once, at construction
-                loop.cfg.update(loop._um_cfg(dict(self.loop_options)))
-                if hasattr(loop, "_rm_cfg"):                            # lab round 8 (role models, request_coverage)
-                    loop.cfg.update(loop._rm_cfg(dict(self.loop_options)))
+            if overlay and hasattr(loop, "_um_cfg"):      # the keys robot_agent reads once, at construction: understand / role models (lab round 8), options
+                loop.cfg.update(loop._um_cfg(dict(self.loop_options)), **loop._rm_cfg(dict(self.loop_options)))
+                from robot_agent.core.planning.option_services import refresh_options
+                refresh_options(loop, kw)                 # an option's pack data in the overlay (D3 L9: cond_extract was on with no prompt)
             return loop
         from robot_agent.core.planning.loop import ClosedLoop
         planner = self.ra_planner
