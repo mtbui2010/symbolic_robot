@@ -71,3 +71,25 @@ PYTHONHASHSEED=0 python -m bench.suites.home.gen.d3 --out bench/suites/home/data
 ## Layers (D3)
 
 Written by the loop, one section per layer (what, why, data, tests, limits), then the pilot results.
+
+## L10 recipient_keep: the recipient of a hand-over is lost after grounding
+
+**What.** The engine rule `goal_fix.shared_listener` (robot_agent `core/planning/goal_fix.py`, called from `assist_loop.py` after grounding) moved the recipient of a delivery
+to the speaker whenever that person is also the listener of a message and the words name them once. The reader had the recipient right ("bring him the phone", "bring the mug over to X and tell him",
+"bring my husband the keys, and let him know": the pronoun is not a mention), the rule handed the object to the speaker, the hand-over "succeeded" and the check said done (a false success). In the D2
+analysis the rule fired in 5 of 150 Korean ideal episodes and all 5 failed; 6 independent tasks in 4 cells carry the class (EN and KO real).
+
+**Fix.** Option `recipient_keep` (default off, `robot_agent/options/recipient_keep.py`): the engine asks the service `shared_listener` first. The recipient moves to the speaker only when the words hold a
+speaker-recipient word of the language packs (`lexicon.RECIPIENT`, the robot's `recipient_words`) that is itself a first-person word (`lexicon.FIRST_PERSON`), and the person is named once. A delivery verb or
+"here" alone is not evidence (the shipped English list holds "bring", "give", "here"; they say nothing about who gets the object). A second mention keeps the named person; no evidence keeps the reader's
+recipient. Evidence with two mentions is the one case where the two readings disagree: one question with the existing "I can read that two ways" phrase, only when no answer was given yet
+(key `ask_when_unsure`). Without first-person data in the packs the recipient always stays.
+
+**D1.** `HOMELOOP_D1_LAYERS`: `d2` (the ten D2 layers; hash `64b278b5...` as in D2), `all` (default) = d2 + `recipient_keep`; the layer has no pack data of its own. Test: `tests/home/bench/test_d3_layers.py`.
+**Tests.** robot_agent `tests/test_option_recipient_keep.py` (made-up people, made-up language `zq`, `*_off`, `*_empty`, a `give` run through the loop).
+**Limits.** The Korean cases whose recipient the speech recognizer garbled ("husband" heard as another word) are not recovered here: the reader drops the recipient itself (class `asr_loss`, layer L11);
+a case where the reader gives no recipient at all is not repaired (no guess). A word like "my" before the person's name is not read as evidence.
+
+**Same round, two D2-layer bugs.** (1) `hw_wait` ignored its declared `tries`: after one wait round an unhealthy robot stopped the run (`assist_loop._apply_policy`). New service `hw_wait.more_tries`: while the declared tries
+are left the step runs again; the schedule values are untouched. Test in `tests/test_option_hw_wait.py`. (2) The accounting of `retry.py` (the `injected` flag of the last attempt only) is NOT fixed here:
+`bench/suites/home/retry.py` is in the checker's protected list and outside the brief's edit list; the coordinator decides (see the round report).

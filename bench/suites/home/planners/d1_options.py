@@ -16,7 +16,7 @@ Failure classes (found on the D1 dev pilot, fixed as classes, never as tasks):
 * ``object_words``: the goal's 'phone' and the plan's 'Pick cell phone' are one object for the goal checks.
 
 Round D2 (one layer per failure class, each a robot_agent option, default off): ``LAYERS`` below. The environment variable ``HOMELOOP_D1_LAYERS`` picks
-which layers D1 turns on: ``all`` (default), ``none`` (D1 exactly as in experiment D: the baseline arm) or a comma list of layer names. It is read when
+which layers D1 turns on: ``all`` (default; D2 layers + the D3 layers), ``d2`` (the ten D2 layers only), ``none`` (D1 exactly as in experiment D: the baseline arm) or a comma list of layer names. It is read when
 this module is imported (the planner classes are built then); the layers on are recorded in the run config (``loop_options``) and in the overlay note.
 """
 
@@ -87,18 +87,25 @@ LAYERS = {
                        "condition": KO_CONDITION,
                        "negation": KO_NEGATION,
                        "assumed": True}}}}}}),
+    # --- D3 layers (on top of the ten D2 layers above, in the order cond_extract, recipient_keep, name_recover, replan_block; the ones that exist) ---
+    # recipient_keep: a delivery's recipient moves to the speaker only on first-person evidence of the language packs. No pack data of its own.
+    "recipient_keep": ({"recipient_keep": "1"}, {}),
 }
+D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 
 
 def selected_layers(environ=None) -> tuple:
-    """The D2 layers that are on: ``all`` (unset too), ``none``, or a comma list of names of ``LAYERS``; an unknown name is an error."""
+    """The layers that are on: ``all`` (unset too: the D2 layers, then the D3 layers that exist), ``d2`` (exactly the ten D2 layers), ``none``, or a
+    comma list of names of ``LAYERS``; an unknown name is an error."""
     raw = ((environ if environ is not None else os.environ).get(LAYERS_ENV) or "all").strip().lower()
     if raw == "all":
         return tuple(LAYERS)
+    if raw == "d2":
+        return D2_LAYERS
     names = [n.strip() for n in raw.split(",") if n.strip()] if raw != "none" else []
     bad = [n for n in names if n not in LAYERS]
     if bad:
-        raise ValueError(f"{LAYERS_ENV}: unknown layer {bad} (known: {sorted(LAYERS)}, all, none)")
+        raise ValueError(f"{LAYERS_ENV}: unknown layer {bad} (known: {sorted(LAYERS)}, all, d2, none)")
     return tuple(n for n in LAYERS if n in names)
 
 
