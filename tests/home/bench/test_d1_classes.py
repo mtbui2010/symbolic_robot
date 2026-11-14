@@ -74,7 +74,7 @@ def test_precond_repair_layer_adds_its_option_and_its_pack_data_only_when_on():
     on = D.d1_overlay(BASE_OV, "m", env("precond_repair"))
     off = D.d1_overlay(BASE_OV, "m", env("none"))
     needs = on["planner"]["options"]["precond_repair"]["needs"]
-    assert needs["source"] and needs["rules"]["Handover"] == {"holding": True} and on["planner"]["action_roles"]["pick"] == "Pick"
+    assert needs["source"] and needs["rules"]["Handover"] == {"holding": True, "achieves": "hand"} and needs["rules"]["Place"]["achieves"] == "on" and on["planner"]["action_roles"]["pick"] == "Pick"
     assert "options" not in off["planner"] and "pick" not in off["planner"]["action_roles"]
     assert "precond_repair" in on["note"] and BASE_OV["planner"] == {"action_roles": {"move": "MoveTo", "put_down": "Place"}, "recovery": {"wait": 3}}
 
