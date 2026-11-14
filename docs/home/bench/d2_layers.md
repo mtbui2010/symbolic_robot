@@ -194,5 +194,26 @@ with a spoken reason when not, with `entity_cover` told the dropped one is reaso
 mark the goal. Decision for the coordinator: accept a reader change, or leave the class.
 
 ## Held-out measure: design, written before the run (coordinator)
-Development result (dev 700..849, 150 tasks per cell, paired): base 358 of 600, all 458 of 600; in every cell the layers won (only-base 0 / 0 / 1 / 1, only-all 11 / 10 / 14 / 15). These ids were used to build and to trace the layers, so they are an optimistic measure.
+Development result (dev 700..849, 150 tasks per cell, paired): base 410 of 600, all 458 of 600; in every cell the layers won (only-base 0 / 0 / 1 / 1, only-all 11 / 10 / 14 / 15). These ids were used to build and to trace the layers, so they are an optimistic measure.
 Held-out measure: dev 850..999 (150 tasks, never used to build, trace or fix: only aggregate numbers of the whole 700..999 reader comparison were printed earlier). One run per arm and cell: arm base (HOMELOOP_D1_LAYERS=none, the D1 of experiment D) and arm all (every layer), EN and KO, profile real and ideal, seed 0, model hl-understand-p3-s700; oracle on the same ids. Code: robot_agent 9f82d04, symbolic_robot 392600a (trees clean). Reported as measured: success, false success, paired McNemar, with no change after the first episode and no look at single failures to fix anything.
+
+## Held-out result (dev 850..999, one run per arm and cell, as designed above)
+Planner `robot_agent:sage_s8n_ft_d1`, one model `hl-understand-p3-s700`, seed 0; arm base = `HOMELOOP_D1_LAYERS=none` (the D1 of experiment D), arm all = every layer (round 2 code). Paired by task. Raw files: `results/home_D2_heldout/` (not committed).
+
+| cell | base | all | oracle | only base right | only all right | McNemar p | false success base / all |
+|---|---|---|---|---|---|---|---|
+| EN real | 81 / 150 | 91 | 130 | 0 | 10 | 0.002 | 7 / 9 |
+| KO real | 65 / 150 | 72 | 130 | 1 | 8 | 0.039 | 12 / 7 |
+| EN ideal | 117 / 150 | 129 | 150 | 1 | 13 | 0.002 | 9 / 4 |
+| KO ideal | 111 / 150 | 123 | 150 | 2 | 14 | 0.004 | 12 / 6 |
+| total | 374 / 600 | 415 | 560 | 4 | 45 | 8e-10 | 40 / 26 |
+
+Understanding step only (understand-eval, 600 paired records, EN and KO, clean and asr text): exact base 0.645, all 0.670; 0 records only base right, 15 only all right (p = 0.0001).
+
+Reading:
+* The layers help on ids nobody used to build or trace them. Gain: +41 of 600 (+6.8 points) against +48 of 600 (+8.0 points) on the development set. The effect is smaller on held-out ids, about the same size, so most of it carries over; part of the development gain was fit to those ids.
+* In every cell all is above base. The KO real cell is weaker (p = 0.039). One cell, EN real, has more false successes with all (9 against 7); in the three other cells it has fewer (total 26 against 40).
+* The planner is still far from the oracle: 415 of 600 against 560. Ideal cells (no injected fault): EN 129 of 150 (0.86), KO 123 of 150 (0.82). The oracle is 150 of 150 there.
+* The classes not fixed stay: conditional requests (needs a reader change), hardware wait, search and ask-again groups, and the embodiplan wrong-block replan.
+* Correction: an earlier line in this file gave the base development total as 358; the correct total is 410 of 600 (84 + 75 + 128 + 123).
+* Single episodes of dev 850..999 were not looked at; nothing was fixed from this run.
