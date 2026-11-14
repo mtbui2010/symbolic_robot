@@ -149,3 +149,44 @@ Pilot rounds and measured results are written here by the coordinator.
 - L2 `goal_words`: an answer can drop the goal when the place is headed like the object (it is told apart by its room, alias or extra head words). L2, L3, L4: articles and plurals are the language
   pack's (`articles`, `plural_rules`), none declared = nothing stripped. L3: an "I don't know" that carries a no or a correction is a refusal. L4: only a name the request handles counts
   (not in a condition, a negation, or as a landmark or tool); runs before `ask_focus`. L6, L7, L8: pack data with no label is not used.
+
+## Round 2 (after the P50 pilot of round 1; dev 700..849 only, no GPU, no run)
+
+One class per commit. Numbers are test counts, not rates: the coordinator measures the rates.
+
+- A. `gate_prune` (new robot_agent option, hook `on_plan`, default off; D1 layer `gate_prune`). Class: an Open / Close of a place that cannot be opened (a shelf, a table)
+  stayed in the plan, because the repair operator `unopenable` runs only with `person_goals`, which D1 does not use. The option drops such a step when the ENV entry has an
+  explicit `openable` field that is false and no goal names the place. No field, no `open` / `close` action role, an unknown name: kept (fail open). D1 data: the roles
+  `open: Open`, `close: Close` of the mock robot's skills (`assumed: true`), present only when the layer is on. Tests: `tests/test_option_gate_prune.py` (5, among them
+  `*_off_*` through the loop and `*_empty_*`), `test_d1_classes.py::test_gate_prune_layer_...`.
+- B. `plan_repair.op_dedupe` bug fix (engine, no option). A repeated Find / Pick of an object that was already placed, with no release after it, was cut up to the LAST step of the
+  plan, which removed the final MoveTo (home / dock). It now ends at the repeated run's own Find / Pick. With a release after, the cut is as before. This changes the default path only
+  in the wrong-cut case; golden and all gate tests stay green. Test: `test_sage_v2_step3_gate.py::test_op_dedupe_ends_the_cut_...`.
+- F. `entity_cover` false positives (option stays default off). (1) A mention a self-correction takes back ("the blue mug, wait, no, the red one"): the last catalogue name
+  within 40 characters before the language pack's correction marker is not an object to ask about (the marker is pack data, no English in the code). (2) A short name that only
+  occurs inside a longer catalogue name the request says ("mug" in "red mug"). (3) Another name of a goal's object: a shared word, the request never says the goal's own name, no
+  third catalogue entry carries the word. Still asked: a name after the marker, two objects both named, a third entry with the word. Tests in `test_option_entity_cover.py` (3 new, made-up objects).
+  Limit: (3) is a heuristic from the catalogue only; two objects that share one word and are never both named could be merged (a missed question, never an extra one).
+- E. Conditional requests (`if the spoon is on the table, put it away; if not, leave it`): NOT built. Reason and proposal below.
+- L8 Korean read-back (task 748 KO ideal, checked on the pilot's trace, not rerun): the D1 Korean condition regex took up to three words before "-myeon" even across a comma. In "... if the wallet
+  is out on the nightstand, put it in the shoe cabinet, if not leave it" the clause "put it in the shoe cabinet," was taken out together with the condition after the comma, so the shoe
+  cabinet was missing from the active text and the read-back did not ask about it; the base arm asked and corrected the reading. This is a class bug of the assumed regex (a clause boundary
+  was not respected), fixed in `d1_options.KO_CONDITION` / `KO_NEGATION` (leading words may not end a clause with a comma), test `test_d1_ko_clauses.py::test_a_condition_does_not_take_...`.
+  The reader's own reversed reading (put_on instead of put_in) is the LLM's and is not an L8 effect; whether the fix changes that episode is for the pilot to show.
+  The English pack's regex (`[^,;.]*`) already stops at a comma.
+- NOT done, by the brief: `near` for Handover / Say, longer waits for hardware (a number from the simulator), search or ask again (groups under 3 cases). embodiplan only noted:
+  `_failed_block_index` (sage.py:989-991) returns the last block, which makes the same Say repeat.
+
+### E: proposal `cond_goal` (not implemented)
+
+Class: a request with a condition ("if X is on P, do A; if not, leave it" / "see if X is on P; if yes bring X, otherwise bring Y"): the reader outputs the goals of both branches (or the
+wrong branch), so the run is a false success or fails. Three of the five cases are false successes.
+
+Why it is not small: the branch has to be decided at run time, by a look at P, and the goals of a branch must be kept or dropped after it. That needs (1) a field on the goal
+(`when: {object, place, present: bool}`) that the reader schema and the understand prompt produce, (2) a step in the engine before planning that goes to P, runs `look_for`, and
+then filters `run.goals` and says why, (3) a second kind of branch ("otherwise Y"), which makes one goal depend on the absence of another, (4) the goal check and the
+`unmoved` kind of the pack for the "leave it" branch. (1) is a change of the reader contract and of the training data of the LLM reader (the D1 reader was fine-tuned without it),
+so it is not an option of the loop alone. Minimal path if it is wanted: the pack declares the clause word (`clauses.condition`, already data), a new option `cond_goal` with a hook
+`on_goals` (decide) that, for a goal whose request clause is conditional, runs one Find at the called place (`svc.look_for`), keeps the goal when the object is there and drops it
+with a spoken reason when not, with `entity_cover` told the dropped one is reasoned (`run.filtered`). It needs the clause-to-goal mapping, which only the reader knows: the reader must
+mark the goal. Decision for the coordinator: accept a reader change, or leave the class.
