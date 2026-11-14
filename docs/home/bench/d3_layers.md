@@ -128,11 +128,14 @@ are left the step runs again; the schedule values are untouched. Test in `tests/
 **What.** Speech recognition turns an object name into other characters, drops a word, or hands over nothing. In D2 held-out analysis 44 of 74 EN real failures had a garbled instruction (class `asr_loss`, 14 independent tasks).
 Three parts, two options:
 
-* `name_recover` (hook `on_goals`): a goal object that is not in the robot's object catalogue (object memory, `limits.objects`) takes the ONE catalogue name within a strict distance (`near_distance`; keys `max_edits` 2,
-  `max_ratio` 0.34, `min_len` 4 units, all assumed). The unit is the pack's: characters, or the letters inside a syllable when the language pack declares `asr.distance_unit: "jamo"` (Korean). Two or more near names: one
-  question "Did you mean A or B?" and only an answer naming exactly one decides; none near: nothing happens. A name in the catalogue, a name that is whole words of one (or holds one), a place, a person and a `say` goal are never changed.
+* `name_recover` (hooks `on_goals` at order 17, `on_issues`): a goal object, or the object of a goal's condition (`when`), that is not in the robot's object catalogue (object memory, `limits.objects`) is compared with
+  the catalogue names within a strict distance (`near_distance`; keys `max_edits` 2, `max_ratio` 0.34, `min_len` 4 units, all assumed). The unit is the pack's: characters, or the letters inside a syllable when the language
+  pack declares `asr.distance_unit: "jamo"` (Korean). ONE near name: asked "Did you mean the X?" (core phrase `q_did_you_mean`), a yes takes it; taken without a question only when the robot declares its catalogue
+  `complete` and the language pack declares a word list (`asr.words`) without the word (none does today). Two or more: "Did you mean A or B?" (`q_which_name`; Korean from the pack's `speech` block) and only an answer
+  naming exactly one decides; none near: nothing happens; no text for the question in the language: nothing asked. A name in the catalogue, a name that is whole words of one (or holds one), a place, a person and a `say`
+  goal are never changed. A goal object taken goes through the safety gate again (`safety_gate`), and the read-back keeps the name taken (its re-samples cannot bring the garbled name back).
 * `asr_guard` (new hook `on_heard`, before the reader): an EMPTY request asks to repeat WITHOUT calling the reader (the reader had invented an either-or question about nothing); a HOLE (language-pack data `asr.hole`: an article
-  or possessive directly followed by a function word or the end of the request) asks to repeat once.
+  or possessive directly followed by a function word or the end of the request; English leaves out `her`, `his` and a bare `a`, and `and` / `or` before another possessive) asks to repeat once.
 * Korean matching: the names are compared as whole words (`names.occurrences`), so `충전` is not found inside `충전 케이블`, and `서랍` / `책` are not matched with `서랍장` / `책장`: the distance rule gives a short name no fuzzy match
   and a name that is part of a catalogue name no replacement.
 
@@ -141,8 +144,12 @@ Three parts, two options:
 reported to the coordinator (a bounded pattern behind an option key is the next step if R1 on d3dev shows the class). (3) Garbles beyond the limit and cross-word merges stay as the reader gave them.
 
 **D1.** `HOMELOOP_D1_LAYERS`: layer `name_recover` turns on `name_recover` and `asr_guard`; no overlay data (the pack data is in robot_agent's language packs, labelled assumed). `d2` alias unchanged (hash `64b278b5...`).
-**Tests.** robot_agent `tests/test_option_name_recover.py` (14: made-up catalogue, a made-up script `zq`, `*_off`, `*_empty`, `ambiguous`, a loop-level empty request); bench `tests/home/bench/test_d3_layers.py::test_name_recover_alone_on_top_of_d2_*`.
-**Limits.** Strict by design: a real new object whose name is a slip away from a catalogue name would be replaced (read back before the robot moves); the limits are assumed and are not tuned on any set.
+**Review fixes (2026-11-15, robot_agent).** (1) The safety gate (`hazard`, order 10) saw only the garbled name and a recovered forbidden name was carried out: a goal object taken is gated again. (2) With the
+default two re-samples the read-back undid the name taken (the garbled word is in the person's words); the option's `on_issues` keeps it. (3) A real word one letter from a seen object was renamed silently: one near
+name is now asked. (4) `asr.hole` flagged normal English requests (`his`, `vitamin a`, `my and your`). (5) The questions are phrases, not English f-strings. (6) The object of a condition is recovered too.
+**Tests.** robot_agent `tests/test_option_name_recover.py` (29 tests, 32 cases: made-up catalogues, a made-up script `zq`, a made-up safety profile through the loop, the final goals with 2 and 0 re-samples, `*_off`,
+`*_empty`, `ambiguous`, a loop-level empty request); bench `tests/home/bench/test_d3_layers.py::test_name_recover_alone_on_top_of_d2_*`.
+**Limits.** A near name costs one question (the simulated person's answer to it is not known here); the limits are assumed and are not tuned on any set.
 
 ## L13 plan_complete: the plan stops short of a step its goal needs
 
