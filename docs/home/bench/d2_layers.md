@@ -115,3 +115,18 @@ Pilot rounds and measured results are written here by the coordinator.
 - Limits: needs search legs (a search without them keeps `search_max`). With `ask_help` off the question is not asked. The remaining share is the belief's, so an
   uninformed belief stops only when most places are used. Whether it helps is for the pilots to measure (paired, dev 700..849); the layer stays on only if the
   paired result is not worse and false successes do not rise.
+
+## L8 `lang_words`: clause words as language-pack data
+
+- What: the words that open a condition ("if the drawer is open") or a negation ("do not touch the mug") were English regexes in the engine
+  (`understand._COND`, `_NEG`). With the option on, robot_agent reads `patterns.condition` and `patterns.negation` of the run's language pack (and of the prompt
+  language's) through `core/planning/clauses.py`; the object coverage, the destination repair and the negation filter use them. The recipient words and the
+  correction markers were pack data already.
+- Why: the KO gap. A reading that is not English took no clause out of the request, so the object of a condition could become a goal. The Korean pack now
+  declares a clause shape of its own (assumed: written from general grammar, not measured); the shipped English pack holds the former regexes, so English reads the same.
+- Data: the packs (`lang/en.json`, `lang/ko.json`), not the bench overlay. The D1 layer only switches the option on. Layer off (`none`): no option, the engine's own reading.
+- Tests: `robot_agent/tests/test_option_lang_words.py` (a language invented in the test, one kind only, empty data, the shipped English pack equal to the old
+  reading, off, through AssistLoop) and `tests/home/bench/test_d1_classes.py` (the switch, `none` equals D).
+- Limits: most clause checks read the ENGLISH reading of a translated request (`Heard.english`), where the English pack already worked; the Korean data matters
+  for an untranslated Korean text only. Whether it helps is for the pilots to measure. The two KO data errors found on the way (tasks 629 and 643) are in
+  `data_issues_ko.md`; they are not changed.

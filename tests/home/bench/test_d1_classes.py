@@ -142,3 +142,11 @@ def test_search_budget_layer_adds_its_option_and_assumed_data_and_turns_reopen_o
     assert {**D.D1_CLASSES_D, **on_opts}["reopen_on_miss"] == "0"
     assert "search_budget" not in (D.d1_overlay(BASE_OV, "m", env("goal_words"))["planner"].get("options") or {})
     assert "search_budget" in D.d1_overlay(BASE_OV, "m", env("search_budget"))["note"]
+
+
+def test_lang_words_layer_switches_its_option_on_with_no_overlay_data_and_none_equals_d():
+    assert D.layer_options(env("lang_words")) == {"lang_words": "1"} and D.layer_options(env("all"))["lang_words"] == "1"
+    assert "lang_words" not in D.layer_options(env("none")) and "lang_words" not in D.layer_options(env("goal_words"))
+    on, off = D.d1_overlay(BASE_OV, "m", env("lang_words")), D.d1_overlay(BASE_OV, "m", env("none"))
+    assert on["planner"] == D.d1_overlay(BASE_OV, "m", env("goal_words"))["planner"] == off["planner"]      # the data is the pack's, not the overlay's
+    assert "lang_words" in on["note"] and "lang_words" not in off["note"]

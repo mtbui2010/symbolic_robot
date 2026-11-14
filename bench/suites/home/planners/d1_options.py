@@ -63,6 +63,8 @@ LAYERS = {
     "search_budget": ({"search_budget": "1", "reopen_on_miss": "0"},
                       {"planner": {"options": {"search_budget": {"budget": {
                           "looks_per_object": 8, "stop_probability": 0.1, "ask": "once", "assumed": True}}}}}),
+    # lang_words: the condition and negation words are the language packs' own data (robot_agent core/planning/lang/<code>.json, patterns): no overlay data
+    "lang_words": ({"lang_words": "1"}, {}),
 }
 
 
