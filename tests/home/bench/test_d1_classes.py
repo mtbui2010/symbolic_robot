@@ -129,3 +129,16 @@ def test_hw_wait_layer_adds_its_option_and_assumed_per_kind_data_only_when_on():
     assert "hw_wait" not in (off.get("options") or {}) and D.layer_options(env("none")) == {}      # none = experiment D's overlay and options
     assert "hw_wait" not in (D.d1_overlay(BASE_OV, "m", env("goal_words"))["planner"].get("options") or {})
     assert "hw_wait" in D.d1_overlay(BASE_OV, "m", env("hw_wait"))["note"]
+
+
+def test_search_budget_layer_adds_its_option_and_assumed_data_and_turns_reopen_on_miss_off_only_when_on():
+    on_opts = D.layer_options(env("search_budget"))
+    assert on_opts == {"search_budget": "1", "reopen_on_miss": "0"} and "search_budget" in D.layer_options(env("all"))
+    b = D.d1_overlay(BASE_OV, "m", env("search_budget"))["planner"]["options"]["search_budget"]["budget"]
+    assert b["assumed"] is True and b["looks_per_object"] == 8 and 0 < b["stop_probability"] < 1 and b["ask"] == "once"
+    off = D.d1_overlay(BASE_OV, "m", env("none"))["planner"]
+    assert "search_budget" not in (off.get("options") or {}) and D.layer_options(env("none")) == {}      # none = experiment D's overlay and options
+    assert D.D1_CLASSES_D["reopen_on_miss"] == "1" == {**D.D1_CLASSES_D, **D.layer_options(env("none"))}["reopen_on_miss"]
+    assert {**D.D1_CLASSES_D, **on_opts}["reopen_on_miss"] == "0"
+    assert "search_budget" not in (D.d1_overlay(BASE_OV, "m", env("goal_words"))["planner"].get("options") or {})
+    assert "search_budget" in D.d1_overlay(BASE_OV, "m", env("search_budget"))["note"]

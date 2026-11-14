@@ -57,6 +57,12 @@ LAYERS = {
                     "perception_unavailable": {"schedule_s": [2, 4, 8], "tries": 3, "action": "wait_health"},
                     "hw_fault": {"schedule_s": [2, 4, 8], "tries": 2, "action": "wait_health"},
                     "assumed": True}}}}}),
+    # search_budget: looks per object and the stop probability, ASSUMED numbers (about 8 looks, stop under about 10%; the brief's, not tuned), ask once. The
+    # layer also turns reopen_on_miss OFF: its remedy [Close, Open] mirrors the simulator's partial-open state and cost 56-74 commands with no gain on the
+    # ideal profile; the option is already once per container and pack-declared, so there is nothing left to narrow. (Not a simulator rule.)
+    "search_budget": ({"search_budget": "1", "reopen_on_miss": "0"},
+                      {"planner": {"options": {"search_budget": {"budget": {
+                          "looks_per_object": 8, "stop_probability": 0.1, "ask": "once", "assumed": True}}}}}),
 }
 
 

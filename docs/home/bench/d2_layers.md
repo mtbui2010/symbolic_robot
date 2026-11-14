@@ -97,3 +97,21 @@ Pilot rounds and measured results are written here by the coordinator.
 - Limits: the schedule is read where `wait_on_robot` runs the wait, so it needs that option and a declared `recovery.wait` action (both in the D1 base). A
   fault that is not cleared by waiting still ends the run after the tries. Whether the tries and schedule help is for the pilots to measure (paired, dev 700..849).
 
+## L7 `search_budget`: a search budget per object, a stop by probability, ask once
+
+- What: robot_agent's search had one count (`search_total`) for the run, no stop by how likely the unvisited places still are, and an unasked or twice-asked
+  where-question. With the option on, the pack declares `looks_per_object`, `stop_probability` and `ask` (`planner.options.search_budget.budget`). The looks
+  counted for an object are the places searched for it; the search is over when its looks are used up or the belief's share on the places not yet looked at is
+  under the stop probability; then the person is asked once, the answer is looked at, and a further miss (or "I don't know") ends the run naming the places
+  looked at. An "I don't know" given earlier does not repeat the question and does not end the search while looks are left.
+- Why: exec and budget failures (20 of 140 in D) and the commands spent searching; the second object of a request started with the first one's looks used.
+- Data: D1 declares about 8 looks, stop under 10%, ask once, `assumed: true` (the brief's figures, not tuned, not a simulator rule). Layer off (`none`): no data, the overlay of D.
+- `reopen_on_miss`: left OFF when this layer is on (`reopen_on_miss: "0"`). Its remedy `[Close, Open]` mirrors the simulator's partial-open state (an ablation
+  by its own note) and cost 56-74 commands with no gain on the ideal profile. The option is already pack-declared and once per container, so there was nothing
+  to narrow further. `none` keeps it on, as in D.
+- Tests: `robot_agent/tests/test_option_search_budget.py` (per-object budget, declared looks replace `search_total` and the run reports, stop on low remaining
+  probability, ask once then stop, `ask: never`, "I don't know" goes on alone, empty and foreign data, off; through AssistLoop) and
+  `tests/home/bench/test_d1_classes.py` (the switch, `none` equals D, reopen_on_miss off only when the layer is on).
+- Limits: needs search legs (a search without them keeps `search_max`). With `ask_help` off the question is not asked. The remaining share is the belief's, so an
+  uninformed belief stops only when most places are used. Whether it helps is for the pilots to measure (paired, dev 700..849); the layer stays on only if the
+  paired result is not worse and false successes do not rise.
