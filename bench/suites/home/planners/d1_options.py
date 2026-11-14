@@ -90,6 +90,14 @@ LAYERS = {
     # --- D3 layers (on top of the ten D2 layers above, in the order cond_extract, recipient_keep, name_recover, replan_block; the ones that exist) ---
     # recipient_keep: a delivery's recipient moves to the speaker only on first-person evidence of the language packs. No pack data of its own.
     "recipient_keep": ({"recipient_keep": "1"}, {}),
+    # plan_complete: a plan that stops short of the step its goal needs. ASSUMED data (names of the mock robot's own skills and what they end / need, not
+    # simulator rules): a put-in ends an ``in`` goal, a hand-over ends a hand goal and needs the person near, a speech needs its listener near; the roles of
+    # its open / close / speech / pick actions. The way home is the ``end_state`` data above.
+    "plan_complete": ({"plan_complete": "1"},
+                      {"planner": {"action_roles": {"open": "Open", "close": "Close", "say": "Say", "pick": "Pick"},
+                                   "options": {"plan_complete": {"needs": {
+                                       "rules": {"PutIn": {"achieves": "in"}, "Handover": {"achieves": "hand", "near": True}, "Say": {"near": True}},
+                                       "assumed": True}}}}}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 

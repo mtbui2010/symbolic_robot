@@ -93,3 +93,20 @@ a case where the reader gives no recipient at all is not repaired (no guess). A 
 **Same round, two D2-layer bugs.** (1) `hw_wait` ignored its declared `tries`: after one wait round an unhealthy robot stopped the run (`assist_loop._apply_policy`). New service `hw_wait.more_tries`: while the declared tries
 are left the step runs again; the schedule values are untouched. Test in `tests/test_option_hw_wait.py`. (2) The accounting of `retry.py` (the `injected` flag of the last attempt only) is NOT fixed here:
 `bench/suites/home/retry.py` is in the checker's protected list and outside the brief's edit list; the coordinator decides (see the round report).
+
+## L13 plan_complete: the plan stops short of a step its goal needs
+
+**What.** Three classes of one family (12 independent tasks in 4 cells, from the D2 analysis of the class `plan_missing_step`, plus the sub-classes `end_goal_order`, `handover_no_approach` and `gate_unrepaired`):
+(a) the plan picks an object and then closes (opens) the place the goal puts it in, with no put-in between; no operator added the release because the pack declared no skill that ends an `in` goal.
+(b) The end-of-plan completion of `precond_repair` appends the delivery after the final go-home steps, so the home goal no longer holds, and a hand goal is handed over at the dock without moving to the person.
+(c) A speech whose listener is elsewhere: the step is said from across the room, or names the listener instead of the message.
+
+**Fix.** Option `plan_complete` (default off, `robot_agent/options/plan_complete.py`, hook `on_plan` after `precond_repair`), from declared pack data `planner.options.plan_complete.needs` (`achieves` in / hand, `near`):
+a release is spliced before the Close (after the Open) of the held object's `in` goal place, after a move there; steps after the final go-home block (the pack's `planner.end_state`) go in front of it, a hand-over of a hand goal gets the move to
+the person first; a speech with `near` gets the move to the say goal's listener, and a step that names the listener says the goal's message. `precond_repair` is not changed (the D2 layer behaves as in D2).
+
+**D1.** `HOMELOOP_D1_LAYERS`: `all` = d2 + `recipient_keep` + `plan_complete`; the data (the put-in ends an `in` goal, the hand-over a hand goal and needs the person near, the speech needs its listener near, the roles
+open / close / say / pick) is declared in the D1 overlay with `assumed: true` (the mock robot's skill names; not a simulator rule). The `d2` alias is unchanged (hash `64b278b5...`).
+**Tests.** robot_agent `tests/test_option_plan_complete.py` (made-up skills, `*_off`, `*_empty`, a run through the loop); bench `tests/home/bench/test_d3_layers.py`.
+**Limits.** An `in` goal whose plan has no Close / Open of its place and ends holding the object is not completed (no step shows where the release belongs); a closed container is not opened for the put-in;
+with no `end_state` data the order of the plan is kept (only the approach is added). Two say goals and a step that names no listener are not guessed.

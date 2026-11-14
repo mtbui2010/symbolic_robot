@@ -20,7 +20,7 @@ def test_the_overlay_merges_the_data_without_losing_the_base_parts():
     for d1, base in PAIRS:
         p, b = d1.manifest_overlay["planner"], base.manifest_overlay["planner"]
         assert p["end_state"] == {"places": ["dock"], "action": "Dock"} and p["recovery"]["reopen_on_miss"] == ["Close", "Open"]
-        assert {k: v for k, v in p["action_roles"].items() if k != "pick"} == {**b["action_roles"], "find": "Find"}      # pick: the layer precond_repair
+        assert {k: v for k, v in p["action_roles"].items() if k not in ("pick", "say")} == {**b["action_roles"], "find": "Find"}      # pick: the layer precond_repair; say: the layer plan_complete
         assert {k: v for k, v in p["recovery"].items() if k != "reopen_on_miss"} == b["recovery"]      # wait, blocked_putin, return_tries stay
         assert "end_state" not in b and d1.manifest_overlay["assumed"] is True
         assert "reopen_on_miss" not in b["recovery"] and "find" not in b["action_roles"]               # the base overlay object is not mutated
