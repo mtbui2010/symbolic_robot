@@ -44,6 +44,8 @@ LAYERS = {
                                         "source": "mock robot manifest, skills[].pre (hand_empty(), not hand_empty())"}}}}}),
     # no pack data: it reads the robot's own object memory and limits (whole words, catalogue first)
     "goal_words": ({"goal_words": "1"}, {}),
+    # no pack data: the world is the robot's object memory and limits; the phrases of "I don't know" are the language packs' own
+    "ask_focus": ({"ask_focus": "1"}, {}),
 }
 
 

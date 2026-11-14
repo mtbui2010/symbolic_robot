@@ -92,3 +92,10 @@ def test_goal_words_layer_adds_its_option_and_no_pack_data():
     both = D.layer_options(env("precond_repair,goal_words"))
     assert both == {"precond_repair": "1", "goal_words": "1"} and D.layer_options(env("none")) == {}
     assert "goal_words" in D.d1_overlay(BASE_OV, "m", env("goal_words"))["note"]
+
+
+def test_ask_focus_layer_adds_its_option_and_no_pack_data():
+    assert D.layer_options(env("ask_focus")) == {"ask_focus": "1"}
+    assert D.d1_overlay(BASE_OV, "m", env("ask_focus"))["planner"] == D.d1_overlay(BASE_OV, "m", env("none"))["planner"]      # no data
+    assert D.layer_options(env("none")) == {} and "ask_focus" in D.layer_options(env("all"))
+    assert "ask_focus" in D.d1_overlay(BASE_OV, "m", env("ask_focus"))["note"]

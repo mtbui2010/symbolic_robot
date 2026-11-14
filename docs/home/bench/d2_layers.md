@@ -38,3 +38,20 @@ Pilot rounds and measured results are written here by the coordinator.
   `tests/home/bench/test_d1_classes.py` (the layer in the switch).
 - Limits: the catalogue is what the robot has seen or declares in `limits.objects`; an object it has never seen that is also a place name is still read as
   the place. "Shared" means one object named by two or more move goals; other kinds of sharing are not covered.
+
+## L3 `ask_focus`: purposeful questions
+
+- What: four rules on the read-back. (1) No confirmation of an object noun that is a place the robot knows (head or alias, whole words) or a word of another
+  field of a goal (a tool, a surface reached by other words). (2) When a move goal's object fits two or more objects of the world (object memory and
+  `limits.objects`, none named exactly like it), the read-back asks "Which X do you mean: A or B?", whatever the reader's label said. (3) An "I don't know" to
+  "Is that right?" leaves the reading standing and does not start the correction path. (4) The read-back rounds are bounded by the key `max_confirms`
+  (default 3; the engine's own cap is 2, plus one after a correction).
+- Why: the D dialogs asked for confirmation of things the plan already had, did not ask when the world held two matching objects, treated "I don't know"
+  as "no" (then asked what to do instead, again), and could go round several times.
+- Data: none. The phrases of "I don't know" are the language packs' and the robot pack's (`answer_unsure`); no data = the answer is read as before.
+  D1 turns the option on and declares no pack data (empty layer data).
+- Tests: `robot_agent/tests/test_option_ask_focus.py` (made-up loft with a stool, a rack with the alias hanger, red / blue mugs: each rule, exact name,
+  whole words, off, empty, two loop-level runs on and off) and `tests/home/bench/test_d1_classes.py` (the layer in the switch).
+- Limits: rule 2 reads names only (a goal object that is a description of the world's objects by words); two objects that differ only in place are not
+  told apart. Rule 3 keeps the reading when the person says "I don't know" to a read-back: a misheard reading is then not caught by that answer.
+  Rounds of other questions (where is it, which part) keep their own limits.
