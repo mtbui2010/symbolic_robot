@@ -101,6 +101,10 @@ LAYERS = {
     # ask_agree: the read-back dialogue (one more yes / no after a bare no and the same request; an "I don't know" keeps only a clean reading; an either-or when a
     # value changed). No pack data of its own: the words are the language packs' (fillers, first-person words, unsure phrases and their declared endings).
     "ask_agree": ({"ask_agree": "1"}, {}),
+    # name_recover (L11): an object name the speech recogniser garbled takes the one near name of the object catalogue (two near names: asked), and asr_guard asks to repeat
+    # an empty request or one with a hole (an article directly followed by a function word) without calling the reader. No pack data here: the limits are option keys with
+    # their assumed defaults, the hole and distance-unit data are in the language packs (robot_agent lang/*.json, key ``asr``, labelled assumed).
+    "name_recover": ({"name_recover": "1", "asr_guard": "1"}, {}),
     # replan_block: a replan repairs the right block (embodiplan SAGE key replan_block_fix, passed through the option), a goal change replans for sub-goals rebuilt
     # from the new goals, a replan suffix with a critical rule finding goes through the one refine. ASSUMED data: the action-model codes counted critical in a
     # suffix (a release with an empty hand, a release away from its place); not a simulator rule.

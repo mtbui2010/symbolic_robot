@@ -94,6 +94,27 @@ a case where the reader gives no recipient at all is not repaired (no guess). A 
 are left the step runs again; the schedule values are untouched. Test in `tests/test_option_hw_wait.py`. (2) The accounting of `retry.py` (the `injected` flag of the last attempt only) is NOT fixed here:
 `bench/suites/home/retry.py` is in the checker's protected list and outside the brief's edit list; the coordinator decides (see the round report).
 
+## L11 name_recover (+ asr_guard): the speech recogniser loses or garbles part of the request
+
+**What.** Speech recognition turns an object name into other characters, drops a word, or hands over nothing. In D2 held-out analysis 44 of 74 EN real failures had a garbled instruction (class `asr_loss`, 14 independent tasks).
+Three parts, two options:
+
+* `name_recover` (hook `on_goals`): a goal object that is not in the robot's object catalogue (object memory, `limits.objects`) takes the ONE catalogue name within a strict distance (`near_distance`; keys `max_edits` 2,
+  `max_ratio` 0.34, `min_len` 4 units, all assumed). The unit is the pack's: characters, or the letters inside a syllable when the language pack declares `asr.distance_unit: "jamo"` (Korean). Two or more near names: one
+  question "Did you mean A or B?" and only an answer naming exactly one decides; none near: nothing happens. A name in the catalogue, a name that is whole words of one (or holds one), a place, a person and a `say` goal are never changed.
+* `asr_guard` (new hook `on_heard`, before the reader): an EMPTY request asks to repeat WITHOUT calling the reader (the reader had invented an either-or question about nothing); a HOLE (language-pack data `asr.hole`: an article
+  or possessive directly followed by a function word or the end of the request) asks to repeat once.
+* Korean matching: the names are compared as whole words (`names.occurrences`), so `충전` is not found inside `충전 케이블`, and `서랍` / `책` are not matched with `서랍장` / `책장`: the distance rule gives a short name no fuzzy match
+  and a name that is part of a catalogue name no replacement.
+
+**Not fixed, said plainly.** (1) A word that SOUNDS like the object but is spelled in another script or language cannot be recovered by character distance, and is not claimed. (2) The pack's `object_and` pattern
+(`lang/ko.json`, `patterns.object_and`) still splits a noun that begins with `과` (과자) in the engine's own `ko_object_issues`; changing the shipped pattern changes the default path for Korean, so it is left as it is and
+reported to the coordinator (a bounded pattern behind an option key is the next step if R1 on d3dev shows the class). (3) Garbles beyond the limit and cross-word merges stay as the reader gave them.
+
+**D1.** `HOMELOOP_D1_LAYERS`: layer `name_recover` turns on `name_recover` and `asr_guard`; no overlay data (the pack data is in robot_agent's language packs, labelled assumed). `d2` alias unchanged (hash `64b278b5...`).
+**Tests.** robot_agent `tests/test_option_name_recover.py` (14: made-up catalogue, a made-up script `zq`, `*_off`, `*_empty`, `ambiguous`, a loop-level empty request); bench `tests/home/bench/test_d3_layers.py::test_name_recover_alone_on_top_of_d2_*`.
+**Limits.** Strict by design: a real new object whose name is a slip away from a catalogue name would be replaced (read back before the robot moves); the limits are assumed and are not tuned on any set.
+
 ## L13 plan_complete: the plan stops short of a step its goal needs
 
 **What.** Three classes of one family (12 independent tasks in 4 cells, from the D2 analysis of the class `plan_missing_step`, plus the sub-classes `end_goal_order`, `handover_no_approach` and `gate_unrepaired`):

@@ -83,3 +83,11 @@ def test_replan_block_alone_on_top_of_d2_adds_the_option_and_its_assumed_codes_o
     crit = ov["planner"]["options"]["replan_guard"]["critical"]
     assert crit["assumed"] is True and crit["codes"] and "replan_guard" not in ov2["planner"].get("options", {})
     assert D.selected_layers(env("all"))[-1] == "replan_block" and digest(env("d2")) == D2_HASH
+
+
+def test_name_recover_alone_on_top_of_d2_turns_on_the_two_asr_options_and_no_pack_data():
+    on = ",".join(D2 + ("name_recover",))
+    assert D.selected_layers(env(on)) == D2 + ("name_recover",)
+    assert D.layer_options(env(on)) == {**D.layer_options(env("d2")), "name_recover": "1", "asr_guard": "1"}
+    assert "name_recover" not in D.layer_options(env("d2")) and digest(env("d2")) == D2_HASH
+    assert D.d1_overlay({}, MODEL, env(on)).get("planner") == D.d1_overlay({}, MODEL, env("d2")).get("planner")      # no data of its own in the overlay
