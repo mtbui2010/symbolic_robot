@@ -246,3 +246,22 @@ therefore mixed two changes (a confound of the pilot): the replan guard and a ne
 **D1.** In `all` right after `replan_block`; `d2` unchanged (hash `64b278b5...`). Tests: `test_release_near_declares_the_near_need_of_the_releases_with_a_source_and_leaves_d2_data_as_it_was`,
 `test_replan_block_alone_brings_no_near_data_and_all_has_it_through_release_near` in `tests/home/bench/test_d3_layers.py`.
 **Limits.** Its effect alone was never measured; the `all` overlay is the same as before the split except the source label text.
+
+## D3 development result and the design of the fresh measure (written before the fresh run, 2026-11-16)
+Development set d3dev (150 tasks per cell, seed 0, model hl-understand-p3-s700, shared prompt cache so an identical prompt gets the same reply in the paired arms; the cache was seeded with the D2 replies and the replies of the earlier D3 runs):
+
+| arm | EN real | KO real | EN ideal | KO ideal | total | false success |
+|---|---|---|---|---|---|---|
+| D2 (the ten D2 layers) | 76 | 69 | 122 | 122 | 389 / 600 | 45 |
+| D3 core4 (D2 + cond_extract, recipient_keep, name_recover, replan_block; earlier code) | 79 / 83 | 73 / 79 | 125 / 131 | 126 / 138 | 431 | 37 |
+| D3 (all 18 layers, code at the commits below) | 89 | 85 | 136 | 141 | 451 / 600 | 35 |
+
+D3 against D2: 62 tasks only D3 right, 0 only D2 right (McNemar p about 4e-19); D3 against core4: 21 against 1. These tasks were used to find and fix the classes, so this is an optimistic development number. The paired arms share replies for identical prompts, so the 0 is not a count of two independent runs. Correction of earlier notes: the core4 row was measured with a switch that left out plan_complete, ask_agree and hw_tries (an outdated interface criterion); the full arm adds them.
+
+Fresh measure (once, no change after the first episode, nothing fixed from it, no look at single failures):
+* Set: d3fresh (150 tasks, sha256 966c692083e0cf845ca90ff86735ab10cbd3aab351a9ce5ff1183810b41bff0d, kept outside the repos; made by gen/d3.py, worlds 40000..49999, no identity or text shared with train, dev, the pools or d3dev).
+* Arms: base_d2 (HOMELOOP_D1_LAYERS = the ten D2 layers, the D1 of experiment D plus D2) and d3 (HOMELOOP_D1_LAYERS=all, 18 layers). Cells: EN and KO x profile real and ideal, seed 0, one run per arm and cell; reference rows oracle and naive (no LLM).
+* Planner robot_agent:sage_s8n_ft_d1, model hl-understand-p3-s700, one model for every call.
+* Prompt cache: one NEW shared cache directory for the fresh run, empty at the start (not seeded from any earlier result), run with --cache-lock; base_d2 runs first, then d3 reuses the replies of identical prompts (common random numbers), as in the development pair.
+* Code: robot_agent 64c7e72 (branch live/no-ros), embodiplan 4bfa87a, symbolic_robot 3229265; all trees clean when the run starts.
+* Reported: success, false success, paired McNemar per cell and in total, with the aggregate only (no task ids of d3fresh are opened or listed).
