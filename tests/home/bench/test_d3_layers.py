@@ -108,9 +108,19 @@ def test_cond_extract_alone_on_top_of_d2_turns_on_it_and_cond_goal_without_the_r
     assert D.layer_options(env(on)) == {**D.layer_options(env("d2")), "cond_extract": "1", "cond_goal": "1"}      # no cond_goal.prompt: the reader's schema and prompt stay
     assert "cond_extract" not in D.layer_options(env("d2")) and "cond_goal" not in D.layer_options(env("d2"))
     ov = D.d1_overlay({}, MODEL, env(on))["planner"]["options"]
-    assert set(ov["cond_extract"]) == {"prompt", "q_unclear", "clauses"} and "prompt" not in ov["cond_goal"]
+    assert set(ov["cond_extract"]) == {"prompt", "q_unclear", "clauses", "assumed"} and "prompt" not in ov["cond_goal"]
+    assert ov["cond_extract"]["assumed"] is True and ov["cond_goal"]["assumed"] is True       # robot_agent uses an unlabelled text of these options as none
     assert ov["cond_extract"]["clauses"]["ko"]["assumed"] is True and "{request}" in ov["cond_extract"]["prompt"] and "{goals}" in ov["cond_extract"]["prompt"]
     assert D.d1_overlay({}, MODEL, env("d2"))["planner"]["options"].keys() >= {"lang_words"} and "cond_extract" not in D.d1_overlay({}, MODEL, env("d2"))["planner"]["options"]
+
+
+def test_the_overlay_note_names_each_layer_with_the_label_of_its_data_and_none_is_d1_of_d2():
+    note = D.d1_overlay({}, MODEL, env(",".join(D2 + ("cond_extract", "recipient_keep"))))["note"]
+    assert "D2 layers on" not in note and "data from the mock robot manifest" not in note       # no blanket claim for all layers
+    assert "precond_repair (sourced: mock robot manifest" in note and "hw_wait (assumed)" in note and "goal_words (no overlay data)" in note
+    assert "cond_extract (assumed)" in note and "recipient_keep (no overlay data)" in note
+    none = D.d1_overlay({}, MODEL, env("none"))
+    assert none["note"] == "; " + D.D1_DATA["note"] and "options" not in none["planner"] and digest(env("d2")) == D2_HASH
 
 
 def test_cond_extract_korean_words_add_the_sighting_and_the_negation_that_the_d2_clause_misses():

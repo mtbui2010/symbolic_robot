@@ -104,13 +104,16 @@ LAYERS = {
                        "assumed": True}}}}}}),
     # --- D3 layers (on top of the ten D2 layers above, in the order cond_extract, recipient_keep, name_recover, replan_block; the ones that exist) ---
     # cond_extract (L9): a request with a condition word gets ONE extra model call that splits it into condition / goals-if / goals-else; cond_goal (without its
-    # ``prompt`` key: the reader's schema and prompt stay) goes to the place, looks and keeps the branch that matches. ASSUMED data: the extraction prompt, the Korean words
-    # above (the English ones are the language pack's), the two questions (where to look, is it there), the move role of the mock robot's own skill. No sentence is said.
+    # ``prompt`` key: the reader's schema and prompt stay) goes to the place, looks and keeps the branch that matches. ASSUMED data (each section labelled
+    # ``assumed: true``: robot_agent uses an unlabelled text of these options as none): the extraction prompt, the Korean words above (the English ones are the
+    # language pack's), the two questions (where to look, is it there), the move role of the mock robot's own skill. No sentence is said.
     "cond_extract": ({"cond_extract": "1", "cond_goal": "1"},
                      {"planner": {"action_roles": {"move": "MoveTo"},
                                   "options": {"cond_extract": {"prompt": COND_PROMPT, "q_unclear": "Where should I look for the {object}?",
-                                                               "clauses": {"ko": {"condition": [KO_CONDITION, KO_COND_MORE], "assumed": True}}},
-                                              "cond_goal": {"q_where": "Where should I look for the {object}?", "q_unsure": "Is the {object} at the {place}?"}}}}),
+                                                               "clauses": {"ko": {"condition": [KO_CONDITION, KO_COND_MORE], "assumed": True}},
+                                                               "assumed": True},
+                                              "cond_goal": {"q_where": "Where should I look for the {object}?", "q_unsure": "Is the {object} at the {place}?",
+                                                            "assumed": True}}}}),
     # recipient_keep: a delivery's recipient moves to the speaker only on first-person evidence of the language packs. No pack data of its own.
     "recipient_keep": ({"recipient_keep": "1"}, {}),
     # plan_complete: a plan that stops short of the step its goal needs. ASSUMED data (names of the mock robot's own skills and what they end / need, not
@@ -188,6 +191,25 @@ def _merge(base: dict, add: dict) -> dict:
     return out
 
 
+def _labels(data) -> list:
+    """The labels found anywhere in a layer's pack data: ``sourced: <source>`` for a ``source`` string, ``assumed`` for ``assumed: true``."""
+    out = []
+    if isinstance(data, dict):
+        out += ["sourced: " + data["source"]] if isinstance(data.get("source"), str) and data["source"].strip() else []
+        out += ["assumed"] if data.get("assumed") is True else []
+        for v in data.values():
+            out += _labels(v)
+    return list(dict.fromkeys(out))
+
+
+def layer_note(name: str) -> str:
+    """One layer for the overlay note: its name and the label of its pack data (as declared in ``LAYERS``)."""
+    data = LAYERS[name][1]
+    if not data:
+        return f"{name} (no overlay data)"
+    return f"{name} ({'; '.join(_labels(data)) or 'assumed: unlabelled names of the mock robot pack'})"
+
+
 def d1_overlay(base: dict, translate_model: str, environ=None) -> dict:
     """``base`` (the variant's overlay) with this reader as translator, the D1 data and the data of the layers that are on, merged key by key."""
     on = selected_layers(environ)
@@ -196,5 +218,5 @@ def d1_overlay(base: dict, translate_model: str, environ=None) -> dict:
         out = _merge(out, LAYERS[n][1])
     note = str(base.get("note", "")) + "; " + D1_DATA["note"]
     if on:
-        note += "; assumed: D2 layers on (" + LAYERS_ENV + "): " + ", ".join(on) + ", data from the mock robot manifest"
+        note += "; layers on (" + LAYERS_ENV + "): " + ", ".join(layer_note(n) for n in on)
     return {**out, "assumed": True, "note": note}
