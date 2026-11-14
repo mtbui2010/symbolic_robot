@@ -145,13 +145,38 @@ def test_the_overlay_note_names_each_layer_with_the_label_of_its_data_and_none_i
     assert none["note"] == "; " + D.D1_DATA["note"] and "options" not in none["planner"] and digest(env("d2")) == D2_HASH
 
 
-def test_cond_extract_korean_words_add_the_sighting_and_the_negation_that_the_d2_clause_misses():
+# made-up Korean sentences (no task text): conditionals the D2 clause misses, request forms, plain "or" and nouns that end like a conditional
+KO_IF = ("상자 안에 공이 보이면 꺼내 줘", "문이 열리면 알려 줘", "불이 켜지면 꺼 줘", "빗이 서랍에 남았으면 버려", "손님이 오시면 차를 드려",
+         "연필을 찾으면 책상에 둬", "그게 빗이면 서랍에 넣어", "손이 더러우면 씻어", "화분 흙이 마르면 물 줘")
+KO_REQUEST = ("공을 상자에 넣어 주시면 돼요", "책을 선반에 올려 주시면 좋겠어", "창문을 닫아 주시면 감사하겠습니다", "공을 꺼내 주시면 고맙겠어")
+KO_PLAIN = ("빨간 공 가져올까요, 아니면 파란 공?", "책 아니면 공 줘", "공이 아니라면 뭐야?", "화면 켜 줘", "상자 정면에 둬", "가면 벗어 둬", "공을 상자에 넣어 줘")
+
+
+def test_cond_extract_korean_words_are_the_general_conditional_ending_not_or_nor_a_request():
     import re
     more, d2 = re.compile(D.KO_COND_MORE), re.compile(D.KO_CONDITION)
-    for text in ("서랍에 컵이 보이면 치워줘", "컵이 식탁에 아니면 가져와", "컵이 거기 아니라면 두지 마"):
+    for text in KO_IF:
         assert more.search(text), text
-    assert not d2.search("서랍에 컵이 보이면 치워줘") and not d2.search("컵이 식탁에 아니면 가져와")
-    assert not more.search("컵을 식탁에 놓아줘") and not more.search("서랍을 열어줘")
+    assert not any(d2.search(t) for t in KO_IF[:3])                                   # what the D2 clause did not read
+    for text in KO_REQUEST + KO_PLAIN:
+        assert not more.search(text) and not d2.search(text), text
+
+
+def test_cond_extract_with_the_d1_korean_data_calls_the_model_only_for_a_real_conditional_one_call():
+    import pytest
+    pytest.importorskip("robot_agent")
+    from types import SimpleNamespace as NS
+    from robot_agent.core.options.config import resolve
+    from robot_agent.options.cond_extract import SPEC, CondExtract
+    planner = D.d1_overlay({}, MODEL, env(",".join(D2 + ("cond_extract",))))["planner"]
+    for text in KO_IF + KO_REQUEST + KO_PLAIN:
+        calls = []
+        svc = NS(ask_model=lambda run, t, schema: calls.append(t) or {"conditional": False}, ask=lambda run, q: "", cancelled=lambda run: None,
+                 lab=lambda *a, **k: None, ground_place=lambda run, t: None, goal_phrase=lambda g, p: g["object"], request_english=lambda run: "")
+        run = NS(task=text, lang="ko", goals=[{"type": "on", "object": "zork", "from": "", "to": "crate"}], places=NS(), filtered=[])
+        gen = CondExtract(resolve(SPEC, {"cond_extract": "1"}, {}, planner), svc).on_goals(run)
+        list(gen) if gen is not None else None
+        assert len(calls) == (1 if text in KO_IF else 0), text
 
 
 def test_hw_tries_alone_on_top_of_d2_adds_only_the_more_tries_key_and_is_last_in_all():

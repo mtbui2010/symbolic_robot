@@ -44,9 +44,14 @@ LAYERS_ENV = "HOMELOOP_D1_LAYERS"
 KO_CONDITION = (r"(?:(?:만약|혹시)\s+)?(?:[^\s,;.!?]+\s+){0,3}\S*(?:(?:있|없|하|되|열려|닫혀|켜져|꺼져)(?:으)?면|[가-힣]다면)"
                 r"(?![가-힣])(?!\s*(?:돼|되|좋겠|괜찮|충분))(?=\s|[,;.!?]|$)")
 KO_NEGATION = (r"(?:[^\s,;.!?]+\s+)?\S*(?:지\s*(?:마(?:세요|시오|라|요)?|말(?:고|아\S*|라)|않\S*)|말고|빼고|제외하고)(?=\s|[,;.!?]|$)")
-# Korean condition words the D2 clause above does not read (a sighting or a negation as the condition: "...-boi-myeon", "...-ani-myeon / -ani-ramyeon"), ASSUMED, read only by the
-# D3 layer cond_extract (its own declared clauses, never the lang_words ones: the D2 data is unchanged).
-KO_COND_MORE = r"(?:(?:만약|혹시)\s+)?(?:[^\s,;.!?]+\s+){0,3}\S*(?:보이|아니|아니라)면(?![가-힣])(?=\s|[,;.!?]|$)"
+# The Korean conditional ending the D2 clause above does not read, read only by the D3 layer cond_extract (its own declared clauses, never the lang_words ones:
+# the D2 data is unchanged). ASSUMED, general Korean grammar (not measured, no word list of any task text): a word that ends a clause in the conditional
+# ending -(eu)myeon after a verb stem: a consonant stem or a past marker + "eu-myeon"; a stem made with a voice / causative suffix (-i, -hi, -ri, -gi), the
+# honorific -si, "become" -ji, or a b- / reu-irregular stem (-u, -reu) + "myeon". Not read: the request forms ("... myeon dwae / johgesseo / gomapgesseo /
+# gamsahagesseumnida": that is the request, not a condition), a plain vowel stem + "myeon" (its bare form is also a noun: a mask, a screen, noodles), and
+# "a-ni-myeon / a-ni-ra-myeon", the ordinary "or / otherwise" of a choice question.
+KO_COND_MORE = (r"(?:(?:만약|혹시)\s+)?(?:[^\s,;.!?]+\s+){0,3}\S*[가-힣](?:으|[이히리기시지우르])면"
+                r"(?![가-힣])(?!\s*(?:돼|되|좋겠|괜찮|충분|고맙|감사))(?=\s|[,;.!?]|$)")
 # the extraction call of cond_extract (prompt language, ASSUMED text): the request, the reader's numbered goals, one JSON of the option's fixed schema
 COND_PROMPT = ("A household robot request may hold a condition: something is to be done only if an object is (or is not) at a place, and perhaps something else otherwise.\n"
                "Request: {request}\nThe goals already read from it, numbered:\n{goals}\n"
