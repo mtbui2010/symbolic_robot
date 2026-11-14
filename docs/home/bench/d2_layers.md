@@ -192,3 +192,7 @@ so it is not an option of the loop alone. Minimal path if it is wanted: the pack
 `on_goals` (decide) that, for a goal whose request clause is conditional, runs one Find at the called place (`svc.look_for`), keeps the goal when the object is there and drops it
 with a spoken reason when not, with `entity_cover` told the dropped one is reasoned (`run.filtered`). It needs the clause-to-goal mapping, which only the reader knows: the reader must
 mark the goal. Decision for the coordinator: accept a reader change, or leave the class.
+
+## Held-out measure: design, written before the run (coordinator)
+Development result (dev 700..849, 150 tasks per cell, paired): base 358 of 600, all 458 of 600; in every cell the layers won (only-base 0 / 0 / 1 / 1, only-all 11 / 10 / 14 / 15). These ids were used to build and to trace the layers, so they are an optimistic measure.
+Held-out measure: dev 850..999 (150 tasks, never used to build, trace or fix: only aggregate numbers of the whole 700..999 reader comparison were printed earlier). One run per arm and cell: arm base (HOMELOOP_D1_LAYERS=none, the D1 of experiment D) and arm all (every layer), EN and KO, profile real and ideal, seed 0, model hl-understand-p3-s700; oracle on the same ids. Code: robot_agent 9f82d04, symbolic_robot 392600a (trees clean). Reported as measured: success, false success, paired McNemar, with no change after the first episode and no look at single failures to fix anything.
