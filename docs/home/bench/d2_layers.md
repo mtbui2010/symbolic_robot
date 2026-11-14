@@ -23,3 +23,18 @@ Pilot rounds and measured results are written here by the coordinator.
   coordinator's (no GPU here); this verdict is from synthetic plans only.
 - Limits: the option inserts steps only for the declared needs; the Find / Pick of an object is placed before the approach to the person, and the gate's
   own operators place it at the right source. It does not repair a plan whose goals are wrong (L2..L4).
+
+## L2 `goal_words`: the goal filter compares whole words
+
+- What: the filter that drops "invented" goals (a move goal whose object is an ENV place) compares whole words. A name is a place only when it equals the
+  head or an alias of exactly one ENV key. A name the robot knows as an object (its object memory, the manifest `limits.objects` names) is an object and
+  its goal is kept; when that name is also a place, the person is asked once which one they mean. An object named by two or more move goals keeps the
+  receiver of each (the receiver repairs skip it).
+- Why: the old match took "book" inside "bookshelf" and an object that is the alias of a place (a charger of a dock) for the place, dropped the goal and
+  the run asked again or did nothing; a delivery of a shared object went to another person.
+- Data: none. D1 turns the option on and declares no pack data (empty layer data).
+- Tests: `robot_agent/tests/test_option_goal_words.py` (made-up lampshelf / lamp, a pail that is the alias of a rack: substring non-match, whole-word
+  match, catalogue first, ambiguity asked once and the two answers, shared receiver, off, empty, a loop-level run on and off) and
+  `tests/home/bench/test_d1_classes.py` (the layer in the switch).
+- Limits: the catalogue is what the robot has seen or declares in `limits.objects`; an object it has never seen that is also a place name is still read as
+  the place. "Shared" means one object named by two or more move goals; other kinds of sharing are not covered.

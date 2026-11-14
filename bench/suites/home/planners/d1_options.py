@@ -42,6 +42,8 @@ LAYERS = {
                                         "rules": {"Pick": {"hand_free": True}, "Place": {"holding": True},
                                                   "PutIn": {"holding": True}, "Handover": {"holding": True}},
                                         "source": "mock robot manifest, skills[].pre (hand_empty(), not hand_empty())"}}}}}),
+    # no pack data: it reads the robot's own object memory and limits (whole words, catalogue first)
+    "goal_words": ({"goal_words": "1"}, {}),
 }
 
 

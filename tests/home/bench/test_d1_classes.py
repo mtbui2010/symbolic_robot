@@ -84,3 +84,11 @@ def test_the_layer_pack_data_passes_the_manifest_contract():
     errs = []
     _planner(D.d1_overlay(PAIRS[0][1].manifest_overlay, "m", env("all"))["planner"], errs)
     assert errs == []
+
+
+def test_goal_words_layer_adds_its_option_and_no_pack_data():
+    assert D.layer_options(env("goal_words")) == {"goal_words": "1"}
+    assert D.d1_overlay(BASE_OV, "m", env("goal_words"))["planner"] == D.d1_overlay(BASE_OV, "m", env("none"))["planner"]      # no data
+    both = D.layer_options(env("precond_repair,goal_words"))
+    assert both == {"precond_repair": "1", "goal_words": "1"} and D.layer_options(env("none")) == {}
+    assert "goal_words" in D.d1_overlay(BASE_OV, "m", env("goal_words"))["note"]
