@@ -53,6 +53,9 @@ LAYERS = {
                                                   "PutIn": {"holding": True}, "Handover": {"holding": True, "achieves": "hand"}},
                                         "source": "mock robot manifest, skills[].pre (hand_empty(), not hand_empty()); achieves: assumed (the manifest "
                                                   "effects name no goal; a put-down ends an on goal, a hand-over a hand goal)"}}}}}),
+    # gate_prune: an Open / Close of a place the ENV declares not openable (explicit openable false) is dropped. Data: the roles of the mock robot's own
+    # open / close actions, ASSUMED (names of its skills); without them the option does nothing.
+    "gate_prune": ({"gate_prune": "1"}, {"planner": {"action_roles": {"open": "Open", "close": "Close"}}}),
     # no pack data: it reads the robot's own object memory and limits (whole words, catalogue first)
     "goal_words": ({"goal_words": "1"}, {}),
     # no pack data: the world is the robot's object memory and limits; the phrases of "I don't know" are the language packs' own

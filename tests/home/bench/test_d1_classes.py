@@ -166,3 +166,11 @@ def test_the_korean_clause_data_of_the_lang_words_layer_takes_a_condition_clause
     text = "컵을 책상에 놓고 서랍이 열려 있으면 닫아줘"
     assert "서랍" not in understand._active(text, places=places) and "컵" in understand._active(text, places=places)
     assert "서랍" in understand._active(text)                                        # off: the engine's English words take nothing out
+
+
+def test_gate_prune_layer_adds_its_option_and_the_open_close_roles_only_when_on():
+    assert D.layer_options(env("gate_prune")) == {"gate_prune": "1"} and D.layer_options(env("none")) == {}
+    on = D.d1_overlay(BASE_OV, "m", env("gate_prune"))
+    assert on["planner"]["action_roles"]["open"] == "Open" and on["planner"]["action_roles"]["close"] == "Close"
+    off = D.d1_overlay(BASE_OV, "m", env("none"))
+    assert "open" not in off["planner"]["action_roles"] and "gate_prune" in on["note"]
