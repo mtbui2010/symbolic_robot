@@ -73,3 +73,13 @@ def test_ask_agree_alone_on_top_of_d2_adds_its_option_and_no_pack_data():
     assert ov == ov2                                                          # no overlay data: the D2 data only
     assert D.selected_layers(env("all")).index("ask_agree") > D.selected_layers(env("all")).index("plan_complete")
     assert digest(env("d2")) == D2_HASH
+
+
+def test_replan_block_alone_on_top_of_d2_adds_the_option_and_its_assumed_codes_only():
+    on = ",".join(D2 + ("replan_block",))
+    assert D.selected_layers(env(on)) == D2 + ("replan_block",)
+    assert D.layer_options(env(on)) == {**D.layer_options(env("d2")), "replan_guard": "1"} and "replan_guard" not in D.layer_options(env("d2"))
+    ov, ov2 = D.d1_overlay({}, MODEL, env(on)), D.d1_overlay({}, MODEL, env("d2"))
+    crit = ov["planner"]["options"]["replan_guard"]["critical"]
+    assert crit["assumed"] is True and crit["codes"] and "replan_guard" not in ov2["planner"].get("options", {})
+    assert D.selected_layers(env("all"))[-1] == "replan_block" and digest(env("d2")) == D2_HASH

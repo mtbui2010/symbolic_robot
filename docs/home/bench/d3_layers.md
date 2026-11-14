@@ -135,3 +135,27 @@ is read back again (`run.patched` and `allow_repeat`); a plain yes or no picks n
 **Limits.** The upside on d3dev is small (a few tasks that need a fresh yes, a few false successes removed); the pilot gate's false-success count is the criterion. A garbled phrase that no pack phrase matches ("not sure" spelled in a dialect form)
 stays a refusal; the either-or needs the earlier value named in the person's words and declared options (a free-text question has none). The simulated person's answer to the added yes / no question is not known here. `check.sh` `iface`
 lists the layers allowed after the D2 ones (cond_extract, recipient_keep, name_recover, replan_block); `plan_complete` and `ask_agree` are not in that list: the coordinator must extend it.
+
+## L12 replan_block: the replan repairs the wrong block, or runs a suffix the rules reject
+
+**What.** Three faults of one family (about 11 independent tasks in the D2 analysis; the effect size is small, about 2-4 points per cell, inside the noise of one 150-task run):
+(a) `embodiplan` SAGE `_failed_block_index` picks the block by the NUMBER of completed steps. The completed list holds steps the robot added (search steps, a look, repair inserts) and lacks steps it dropped,
+so the repair lands in a later or an earlier block, and with all steps done it repairs the last block again (the robot repeats a Say).
+(b) After a mid-run change of the goals the engine asked for a suffix repair with the unchanged task and the old sub-goals: the model repaired the old block and delivered the old object.
+(c) A replan suffix whose own critical findings (a release with an empty hand, a release away from its place) were recorded ran anyway; only unbindable steps stopped it.
+
+**Fix.** (a) embodiplan key `replan_block_fix` (bool, default False; embodiplan commit `ad3183a`, files `embodiplan/sage.py`, `tests/test_sage_failed_block.py`, `CHANGELOG.md`, `docs/usage.md`): with True the completed steps are lined up with the plan's
+own steps by (action, object head) and the failed step is the first plan step after them; a failed step that is no plan step, or all steps done, gives the global replan (never a repair of the last block, never an empty suffix).
+`replan(subgoals=)` plans the rest afresh for given sub-goals. (b) and (c) are one robot_agent option `replan_guard` (default off, `robot_agent/options/replan_guard.py`; hooks `on_planner_kwargs` (passes the key through
+one general channel and the backend whitelist), `on_goal_replan` (sub-goals rebuilt from the new goals via service `subgoals`, the task text from the new goals), `on_replan_findings` (declared critical action-model codes of the
+suffix simulated from the belief now join the engine's findings: the one existing refine sees them, and if they remain the run ends uncertified)). Each part has its own key (`block_fix`, `goal_rebuild`, `critical_refine`).
+The red team's remarks were applied: no count-only fix (it cannot know which steps were added), no rebuild through `generate_plan` (it would bring the index fault back), the findings come from declared action-model codes, not from
+the English text of the checker.
+
+**D1.** `HOMELOOP_D1_LAYERS`: layer `replan_block` (the last of `all`) = loop option `replan_guard` plus the overlay data `planner.options.replan_guard.critical` (`assumed: true`: two action-model codes). The `d2` alias is unchanged
+(hash `64b278b5...`, test `test_d2_alias_is_exactly_the_ten_d2_layers_and_equals_the_d2_overlay`). To ablate the three parts, set `replan_guard.block_fix`, `replan_guard.goal_rebuild` or `replan_guard.critical_refine` to 0 as run options.
+**Tests.** embodiplan `tests/test_sage_failed_block.py` (12 tests: `*_off`, `*_empty`, forward and backward drift, grounded names, stale owners, no repeat); robot_agent `tests/test_option_replan_guard.py` (13 tests: `*_off`, `*_empty`, the key reaches the
+planner, a goal change mid-run, a critical suffix through the one refine); bench `tests/home/bench/test_d3_layers.py`.
+**Limits.** The wrong-recipient finding has no action-model code and is not covered. The alignment is greedy: an added step equal to a later plan step can take its place. The refine uses one replan of the run's `max_replans` and one LLM
+call; a suffix that stays critical after it ends the run, which can end a run that would have recovered (the kill criterion is an offline replay of stored suffixes on d3dev, not done here). A rebuild after a goal change doubles the work only
+when the repair fails afterwards. Whether the layer helps is for the pilot (paired, false-success count not higher).

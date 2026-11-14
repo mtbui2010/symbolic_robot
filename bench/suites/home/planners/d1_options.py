@@ -101,6 +101,12 @@ LAYERS = {
     # ask_agree: the read-back dialogue (one more yes / no after a bare no and the same request; an "I don't know" keeps only a clean reading; an either-or when a
     # value changed). No pack data of its own: the words are the language packs' (fillers, first-person words, unsure phrases and their declared endings).
     "ask_agree": ({"ask_agree": "1"}, {}),
+    # replan_block: a replan repairs the right block (embodiplan SAGE key replan_block_fix, passed through the option), a goal change replans for sub-goals rebuilt
+    # from the new goals, a replan suffix with a critical rule finding goes through the one refine. ASSUMED data: the action-model codes counted critical in a
+    # suffix (a release with an empty hand, a release away from its place); not a simulator rule.
+    "replan_block": ({"replan_guard": "1"},
+                     {"planner": {"options": {"replan_guard": {"critical": {
+                         "codes": ["place_without_holding", "place_wrong_location"], "assumed": True}}}}}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 
