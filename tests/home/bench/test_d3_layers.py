@@ -111,3 +111,12 @@ def test_cond_extract_korean_words_add_the_sighting_and_the_negation_that_the_d2
         assert more.search(text), text
     assert not d2.search("서랍에 컵이 보이면 치워줘") and not d2.search("컵이 식탁에 아니면 가져와")
     assert not more.search("컵을 식탁에 놓아줘") and not more.search("서랍을 열어줘")
+
+
+def test_hw_tries_alone_on_top_of_d2_adds_only_the_more_tries_key_and_is_not_in_all():
+    on = ",".join(D2 + ("hw_tries",))
+    assert D.selected_layers(env(on)) == D2 + ("hw_tries",) and "hw_tries" not in D.selected_layers(env("all"))
+    assert D.layer_options(env(on)) == {**D.layer_options(env("d2")), "hw_more_tries": "1"} and "hw_more_tries" not in D.layer_options(env("d2"))
+    ov, ov2 = D.d1_overlay({}, MODEL, env(on)), D.d1_overlay({}, MODEL, env("d2"))
+    ov.pop("note", None), ov2.pop("note", None)
+    assert ov == ov2 and digest(env("d2")) == D2_HASH

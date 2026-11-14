@@ -202,3 +202,9 @@ planner, a goal change mid-run, a critical suffix through the one refine); bench
 **Limits.** The wrong-recipient finding has no action-model code and is not covered. The alignment is greedy: an added step equal to a later plan step can take its place. The refine uses one replan of the run's `max_replans` and one LLM
 call; a suffix that stays critical after it ends the run, which can end a run that would have recovered (the kill criterion is an offline replay of stored suffixes on d3dev, not done here). A rebuild after a goal change doubles the work only
 when the repair fails afterwards. Whether the layer helps is for the pilot (paired, false-success count not higher).
+
+## Layer hw_tries: honour the declared hw_wait tries after an unhealthy wait
+
+**What.** Commit 7e3c476 of robot_agent had changed the D2 layer `hw_wait` itself (an unhealthy robot after a wait no longer stopped the run while declared tries were left), so `base_d2` did not behave as D2. The behaviour is now the
+`hw_wait` key `more_tries` (default False), and the layer `hw_tries` (loop option `hw_more_tries`) switches it on. `hw_wait` alone is as in D2.
+**D1.** Not in `all` (the frozen interface lists four layers); reach it with a comma list on top of d2. The coordinator decides whether the interface grows. Test: `test_hw_tries_alone_on_top_of_d2...` in `tests/home/bench/test_d3_layers.py`; robot_agent `tests/test_option_hw_wait.py`.

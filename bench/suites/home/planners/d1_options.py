@@ -130,6 +130,9 @@ LAYERS = {
     "replan_block": ({"replan_guard": "1"},
                      {"planner": {"options": {"replan_guard": {"critical": {
                          "codes": ["place_without_holding", "place_wrong_location"], "assumed": True}}}}}),
+    # hw_tries: with hw_wait on, an unhealthy robot after a wait does not stop the run while the tries declared by the hw_wait layer are left (hw_wait key more_tries).
+    # Not in ``all`` (the frozen interface); on top of d2 through a comma list. The hw_wait layer alone behaves as in D2.
+    "hw_tries": ({"hw_more_tries": "1"}, {}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``all``: the D2 layers, then the D3 layers of the frozen interface in this order. plan_complete and ask_agree (L13, L14) are known layers but are reached only
