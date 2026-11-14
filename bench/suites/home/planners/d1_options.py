@@ -48,6 +48,8 @@ LAYERS = {
     "ask_focus": ({"ask_focus": "1"}, {}),
     # no pack data: the names are the robot's object catalogue (object memory, limits.objects), read against the request's words
     "entity_cover": ({"entity_cover": "1"}, {}),
+    # the receiver rules (hazard.receivers) are the mock robot's own safety profile (manifest safety.profile, household.yaml): no overlay data
+    "hazard": ({"hazard_receiver": "1"}, {}),
 }
 
 

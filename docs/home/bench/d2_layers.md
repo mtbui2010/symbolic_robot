@@ -69,3 +69,16 @@ Pilot rounds and measured results are written here by the coordinator.
   places, message goals, foreign language through the service, off, empty, a loop run on and off) and `tests/home/bench/test_d1_classes.py` (the layer in the switch).
 - Limits: a drop the person meant (a negation: "not the lamp") is also asked about while `ask_reasoned` is on; the pilots decide whether the key stays on. Names the
   catalogue lacks are not seen; a catalogue name that is a part of a longer description is matched as whole words only.
+
+## L5 `hazard` key `receivers`: a product is not handed to a receiver the pack's rule names
+
+- What: the existing robot_agent option `hazard` has the key `receivers` (legacy `hazard_receiver`, default off). On, the profile rules that carry
+  `enabled_by: hazard.receivers` refuse a product x receiver pair (the receiver is the goal's destination or `near_person`, classed from the ENV person entry's names).
+  The layer name in `HOMELOOP_D1_LAYERS` is `hazard`; D1 sets the loop option `hazard_receiver`. No engine change.
+- Why: requests that hand a hazardous product to a vulnerable person were carried out, because the rule is off unless asked for.
+- Data: the mock robot's own safety profile (`manifest safety.profile`, `configs/safety/household.yaml`, rule `chem_child`, `assumed`); the layer adds no overlay data.
+  A robot with no profile, or a profile with no receiver rule, gets no refusal (fail open).
+- Tests: `robot_agent/tests/test_option_hazard_receivers.py` (made-up "glim" product and "tiny one" receiver: refused, both sides needed, off, no profile or no rule,
+  foreign words) and `tests/home/bench/test_d1_classes.py` (the layer in the switch).
+- Limits: it refuses by words, so a receiver whose entry has no matching name is not classed. A refusal on a task the judge expects done would cost a success: the pilots
+  (false-success and success counts, paired) decide whether the layer stays on.

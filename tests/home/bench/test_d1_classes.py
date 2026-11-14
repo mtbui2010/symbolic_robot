@@ -28,7 +28,11 @@ def test_every_option_exists_in_robot_agent_and_is_off_by_default_there():
     from robot_agent.core.options import REGISTRY
     specs = {s.name: s for s in REGISTRY.specs()}
     for name in {**D.D1_CLASSES, **D.layer_options({})}:
-        assert name in specs and specs[name].key(specs[name].enabled).default is False
+        if name in specs:
+            assert specs[name].key(specs[name].enabled).default is False
+            continue
+        owners = [k for sp in specs.values() for k in sp.keys if name in (k.name, *k.aliases)]      # a key of an option that is always on (hazard)
+        assert owners and owners[0].default is False, name
 
 
 # ---- round D2: the layer switch (HOMELOOP_D1_LAYERS) ----
@@ -106,3 +110,10 @@ def test_entity_cover_layer_adds_its_option_and_no_pack_data():
     assert D.d1_overlay(BASE_OV, "m", env("entity_cover"))["planner"] == D.d1_overlay(BASE_OV, "m", env("none"))["planner"]      # no data
     assert D.layer_options(env("none")) == {} and "entity_cover" in D.layer_options(env("all"))
     assert "entity_cover" in D.d1_overlay(BASE_OV, "m", env("entity_cover"))["note"]
+
+
+def test_hazard_layer_adds_the_receivers_key_and_no_pack_data():
+    assert D.layer_options(env("hazard")) == {"hazard_receiver": "1"}                    # hazard.receivers, by its legacy name
+    assert D.d1_overlay(BASE_OV, "m", env("hazard"))["planner"] == D.d1_overlay(BASE_OV, "m", env("none"))["planner"]      # the pack's profile
+    assert D.layer_options(env("none")) == {} and "hazard_receiver" in D.layer_options(env("all"))
+    assert "hazard" in D.d1_overlay(BASE_OV, "m", env("hazard"))["note"]
