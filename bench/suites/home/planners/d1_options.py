@@ -98,6 +98,9 @@ LAYERS = {
                                    "options": {"plan_complete": {"needs": {
                                        "rules": {"PutIn": {"achieves": "in"}, "Handover": {"achieves": "hand", "near": True}, "Say": {"near": True}},
                                        "assumed": True}}}}}),
+    # ask_agree: the read-back dialogue (one more yes / no after a bare no and the same request; an "I don't know" keeps only a clean reading; an either-or when a
+    # value changed). No pack data of its own: the words are the language packs' (fillers, first-person words, unsure phrases and their declared endings).
+    "ask_agree": ({"ask_agree": "1"}, {}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 

@@ -5,7 +5,7 @@ import json
 from bench.suites.home.planners import d1_options as D
 
 D2 = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
-D3 = ("cond_extract", "recipient_keep", "plan_complete", "name_recover", "replan_block")
+D3 = ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block")
 D2_HASH = "64b278b5beef2493d675eac77ebd6d10b799e2ce2e307014e56b3f207e356942"      # the ten D2 layers: on, loop options, overlay without its note
 MODEL = "hl-understand-p3-s700"
 
@@ -62,3 +62,14 @@ def test_plan_complete_alone_on_top_of_d2_adds_its_option_and_its_declared_data_
     need = ov["planner"]["options"]["plan_complete"]["needs"]
     assert need["assumed"] is True and need["rules"]["PutIn"] == {"achieves": "in"} and need["rules"]["Say"]["near"] is True
     assert "plan_complete" not in ov2["planner"].get("options", {}) and ov["planner"]["options"]["precond_repair"] == ov2["planner"]["options"]["precond_repair"]
+
+
+def test_ask_agree_alone_on_top_of_d2_adds_its_option_and_no_pack_data():
+    on = ",".join(D2 + ("ask_agree",))
+    assert D.selected_layers(env(on)) == D2 + ("ask_agree",)
+    assert D.layer_options(env(on)) == {**D.layer_options(env("d2")), "ask_agree": "1"} and "ask_agree" not in D.layer_options(env("d2"))
+    ov, ov2 = D.d1_overlay({}, MODEL, env(on)), D.d1_overlay({}, MODEL, env("d2"))
+    ov.pop("note", None), ov2.pop("note", None)
+    assert ov == ov2                                                          # no overlay data: the D2 data only
+    assert D.selected_layers(env("all")).index("ask_agree") > D.selected_layers(env("all")).index("plan_complete")
+    assert digest(env("d2")) == D2_HASH

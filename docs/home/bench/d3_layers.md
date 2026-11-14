@@ -110,3 +110,28 @@ open / close / say / pick) is declared in the D1 overlay with `assumed: true` (t
 **Tests.** robot_agent `tests/test_option_plan_complete.py` (made-up skills, `*_off`, `*_empty`, a run through the loop); bench `tests/home/bench/test_d3_layers.py`.
 **Limits.** An `in` goal whose plan has no Close / Open of its place and ends holding the object is not completed (no step shows where the release belongs); a closed container is not opened for the put-in;
 with no `end_state` data the order of the plan is kept (only the approach is added). Two say goals and a step that names no listener are not guessed.
+
+## L14 ask_agree: ask loops and answers accepted although they contradict the person
+
+**What.** Three classes of the read-back dialogue (14 independent tasks in the D2 analysis, classes `ask_loop` and `wrong_answer_accepted`):
+(a) the "I don't know" check of `ask_focus` (rule 3) reads only the top-level `answer_unsure` key of the language pack and whole tokens of the answer; a language that keeps the phrases under `dialogue_ext`
+(or inflects the verb: the answer minus the phrase leaves an ending piece) never matches, so the answer is read as a refusal and the robot asks again.
+(b) A bare "no" (a slip or noise) followed by the person's restatement that reads the same goals as the refused reading: the engine asks "which part is wrong?" and stops on the second time.
+(c) An "I don't know" that keeps a reading in which an earlier value of the person was changed by a later answer (the run ends a success with the wrong value).
+
+**Why not only (a).** The red team showed that fixing (a) alone makes things worse: wherever rule 3 fires it has a bad record (it keeps readings that carried the robot's own doubt or that a later answer changed). So the
+fix is a new option in front of `ask_focus`, which vetoes those cases, and `ask_focus` itself (a D2 layer) is not edited: the `base_d2` arm behaves as in D2.
+
+**Fix.** Option `ask_agree` (default off, `robot_agent/options/ask_agree.py`; service `unrefused`, order 78 before `ask_focus`; hooks `on_goals`, `on_issues`):
+1. an "I don't know" stands only when its leftover words (after `unsure_leftover`) are fillers, first-person words, whole words of an unsure phrase (both keys), or such a word with ONE declared ending
+(`dialogue_ext.polite_endings`, `patterns.answer_tail`); a no-word or any other word is a refusal; the read-back must not have carried the robot's own doubt (`run.unsure`) and no answer may have changed the reading since its first read-back.
+2. (b) after a refusal that was a bare no, a restatement that reads the same goals sets `allow_repeat` once: the reading is read back one more time as a yes / no question and only a yes acts (a restatement alone is no
+agreement, as `dialog_agree` says). Silence or another no stops as before. Not after "no, the X"; not when the engine's two read-backs are used up.
+3. (c) when the reading changed exactly one value of one goal and the person had said the earlier value, the "I don't know" asks once, naming both readings (a declared choice); the named one decides, the earlier one
+is read back again (`run.patched` and `allow_repeat`); a plain yes or no picks nothing.
+
+**D1.** `HOMELOOP_D1_LAYERS`: `all` = d2 + `recipient_keep` + `plan_complete` + `ask_agree`; the layer has no pack data of its own. The `d2` alias is unchanged (hash `64b278b5...`, test `test_d2_alias_is_exactly_the_ten_d2_layers_and_equals_the_d2_overlay`).
+**Tests.** robot_agent `tests/test_option_ask_agree.py` (a made-up agglutinative language `zq`, a refusal followed by a restatement, the either-or case, `*_off`, `*_empty`, two runs through the loop); bench `tests/home/bench/test_d3_layers.py`.
+**Limits.** The upside on d3dev is small (a few tasks that need a fresh yes, a few false successes removed); the pilot gate's false-success count is the criterion. A garbled phrase that no pack phrase matches ("not sure" spelled in a dialect form)
+stays a refusal; the either-or needs the earlier value named in the person's words and declared options (a free-text question has none). The simulated person's answer to the added yes / no question is not known here. `check.sh` `iface`
+lists the layers allowed after the D2 ones (cond_extract, recipient_keep, name_recover, replan_block); `plan_complete` and `ask_agree` are not in that list: the coordinator must extend it.
