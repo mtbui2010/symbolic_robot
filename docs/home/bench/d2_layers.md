@@ -21,6 +21,15 @@ Pilot rounds and measured results are written here by the coordinator.
 - `gate_complete` (existing, default off, never tried): tried on and off in tests. On its own it did not rescue a plan with a missing step (the plan
   still failed), and with `precond_repair` on the outcome was the same on and off. It is not switched on for D1. A pilot measure on dev 700..849 is the
   coordinator's (no GPU here); this verdict is from synthetic plans only.
+- Pilot P5 (dev 700..849, KO ideal, one task with two goals: put a bowl in the fridge, hand over a mug), both arms failed with `give_up` ("I could not
+  make a plan that passes my checks"; `gate_strict` per_goal_repair kept False twice). Root cause (traced by replaying the cached plan): the planner's plan
+  for the hand goal ended at `Pick mug, MoveTo <spot within reach>`, with no Handover. The gate's `action` operator only renames an existing release, and
+  `insert` / `hoist` / `dedupe` do not add one; `complete` (`gate_complete`) is off; `precond_repair` only added steps that the NEXT skill needs, and the
+  plan had no next skill. The bowl goal was repaired by the gate's per-goal repair; the mug goal was left with one critical finding.
+  Class: a plan that stops before the step that achieves its goal (end-of-plan completion). Fix: the rule key `achieves` (on / in / hand) in the same data;
+  the replay ends holding the object of a goal nobody released, so the pack's skill is appended (D1 data, `assumed`: Place achieves on, Handover achieves
+  hand; the manifest effects name no goal). Tests: `test_end_of_plan_*` (made-up skills, no hl-dev id). Replay of the case: the gate now certifies the plan
+  (13 steps ending in `Handover`); the later LLM calls of the run are cache misses (a replay limit), so the final outcome is the coordinator's to rerun.
 - Limits: the option inserts steps only for the declared needs; the Find / Pick of an object is placed before the approach to the person, and the gate's
   own operators place it at the right source. It does not repair a plan whose goals are wrong (L2..L4).
 

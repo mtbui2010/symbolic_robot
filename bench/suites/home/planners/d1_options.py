@@ -49,9 +49,10 @@ LAYERS = {
     "precond_repair": ({"precond_repair": "1"},
                        {"planner": {"action_roles": {"pick": "Pick"},
                                     "options": {"precond_repair": {"needs": {
-                                        "rules": {"Pick": {"hand_free": True}, "Place": {"holding": True},
-                                                  "PutIn": {"holding": True}, "Handover": {"holding": True}},
-                                        "source": "mock robot manifest, skills[].pre (hand_empty(), not hand_empty())"}}}}}),
+                                        "rules": {"Pick": {"hand_free": True}, "Place": {"holding": True, "achieves": "on"},
+                                                  "PutIn": {"holding": True}, "Handover": {"holding": True, "achieves": "hand"}},
+                                        "source": "mock robot manifest, skills[].pre (hand_empty(), not hand_empty()); achieves: assumed (the manifest "
+                                                  "effects name no goal; a put-down ends an on goal, a hand-over a hand goal)"}}}}}),
     # no pack data: it reads the robot's own object memory and limits (whole words, catalogue first)
     "goal_words": ({"goal_words": "1"}, {}),
     # no pack data: the world is the robot's object memory and limits; the phrases of "I don't know" are the language packs' own
