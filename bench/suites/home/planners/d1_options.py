@@ -16,7 +16,7 @@ Failure classes (found on the D1 dev pilot, fixed as classes, never as tasks):
 * ``object_words``: the goal's 'phone' and the plan's 'Pick cell phone' are one object for the goal checks.
 
 Round D2 (one layer per failure class, each a robot_agent option, default off): ``LAYERS`` below. The environment variable ``HOMELOOP_D1_LAYERS`` picks
-which layers D1 turns on: ``all`` (default; D2 layers + the D3 layers), ``d2`` (the ten D2 layers only), ``none`` (D1 exactly as in experiment D: the baseline arm) or a comma list of layer names. It is read when
+which layers D1 turns on: ``all`` (default; the ``d3`` layers + the D4 layers), ``d3`` (the 18 layers of the D3 arm), ``d2`` (the ten D2 layers only), ``none`` (D1 exactly as in experiment D: the baseline arm) or a comma list of layer names. It is read when
 this module is imported (the planner classes are built then); the layers on are recorded in the run config (``loop_options``) and in the overlay note.
 """
 
@@ -152,26 +152,38 @@ LAYERS = {
     # hw_tries: with hw_wait on, an unhealthy robot after a wait does not stop the run while the tries declared by the hw_wait layer are left (hw_wait key more_tries).
     # The hw_wait layer alone behaves as in D2.
     "hw_tries": ({"hw_more_tries": "1"}, {}),
+    # --- D4 layers (on top of the 18 D3 layers, in the build order of docs/home/bench/d4_layers.md) ---
+    # plan_release (L15): the held object's own release goes before the Close of its ``in`` goal place even when the plan releases another object later, and the
+    # release that splice empties gets its fetch. ASSUMED data, as plan_complete's (names of the mock robot's own skills and the goal kind each ends; the manifest
+    # effects name no goal): a put-in ends an ``in`` goal, a put-down an ``on`` goal, a hand-over a hand goal; the roles are the mock robot's own action names.
+    "plan_release": ({"plan_release": "1"},
+                     {"planner": {"action_roles": {"move": "MoveTo", "find": "Find", "pick": "Pick", "close": "Close"},
+                                  "options": {"plan_release": {"needs": {
+                                      "rules": {"PutIn": {"achieves": "in"}, "Place": {"achieves": "on"}, "Handover": {"achieves": "hand"}},
+                                      "assumed": True}}}}}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
-# ``all``: the D2 layers, then every D3 layer in this order. Until 2026-11-15 ``all`` held only cond_extract, recipient_keep, name_recover, replan_block (an
-# interface criterion written before L13 / L14 existed), so a D3 arm measured before that date never ran plan_complete, ask_agree or hw_tries. release_near
-# (the near data that came with replan_block until that date) follows replan_block.
-ALL_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
+# ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
+# 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3
+# arm measured before that date never ran plan_complete, ask_agree or hw_tries. release_near (the near data that came with replan_block until that date)
+# follows replan_block.
+D3_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
+# ``all`` (and unset): the D3 layers, then the D4 layers in their build order. A base_d3 arm must say ``d3``.
+D4_LAYERS = ("plan_release",)
+ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
 
 def selected_layers(environ=None) -> tuple:
-    """The layers that are on: ``all`` (unset too: ``ALL_LAYERS``), ``d2`` (exactly the ten D2 layers), ``none``, or a
-    comma list of names of ``LAYERS``; an unknown name is an error."""
+    """The layers that are on: ``all`` (unset too: ``ALL_LAYERS``, d3 + D4), ``d3`` (exactly the 18 D3 layers), ``d2`` (exactly the ten D2
+    layers), ``none``, or a comma list of names of ``LAYERS``; an unknown name is an error."""
     raw = ((environ if environ is not None else os.environ).get(LAYERS_ENV) or "all").strip().lower()
-    if raw == "all":
-        return ALL_LAYERS
-    if raw == "d2":
-        return D2_LAYERS
+    aliases = {"all": ALL_LAYERS, "d3": D3_LAYERS, "d2": D2_LAYERS}
+    if raw in aliases:
+        return aliases[raw]
     names = [n.strip() for n in raw.split(",") if n.strip()] if raw != "none" else []
     bad = [n for n in names if n not in LAYERS]
     if bad:
-        raise ValueError(f"{LAYERS_ENV}: unknown layer {bad} (known: {sorted(LAYERS)}, all, d2, none)")
+        raise ValueError(f"{LAYERS_ENV}: unknown layer {bad} (known: {sorted(LAYERS)}, all, d3, d2, none)")
     return tuple(n for n in LAYERS if n in names)
 
 

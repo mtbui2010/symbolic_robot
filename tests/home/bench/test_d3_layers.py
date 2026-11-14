@@ -27,10 +27,10 @@ def test_d2_alias_is_exactly_the_ten_d2_layers_and_equals_the_d2_overlay():
 
 
 def test_all_is_the_d2_layers_then_every_d3_layer_in_order():
-    got = D.selected_layers(env("all"))
-    assert got == D2 + D3 and set(got) == set(D.LAYERS)                       # every known layer; until 2026-11-15 plan_complete, ask_agree, hw_tries were left out
-    assert D.selected_layers({}) == got == D.ALL_LAYERS                        # the default is all
-    assert D.layer_options(env("all")) == {k: v for n in D2 + D3 for k, v in D.LAYERS[n][0].items()}
+    got = D.selected_layers(env("d3"))                                         # D4: the D3 arm is the alias d3; all = d3 + D4 (test_d4_layers.py)
+    assert got == D2 + D3 and set(got) | set(D.D4_LAYERS) == set(D.LAYERS)    # every known layer; until 2026-11-15 plan_complete, ask_agree, hw_tries were left out
+    assert D.selected_layers({}) == D.ALL_LAYERS == got + D.D4_LAYERS         # the default is all
+    assert D.layer_options(env("d3")) == {k: v for n in D2 + D3 for k, v in D.LAYERS[n][0].items()}
     for n in ("plan_complete", "ask_agree", "hw_tries"):
         assert n in got and {k: v for k, v in D.layer_options(env("all")).items() if k in D.LAYERS[n][0]} == D.LAYERS[n][0]
     assert "plan_complete" in D.d1_overlay({}, MODEL, env("all"))["planner"]["options"]
@@ -181,7 +181,7 @@ def test_cond_extract_with_the_d1_korean_data_calls_the_model_only_for_a_real_co
 
 def test_hw_tries_alone_on_top_of_d2_adds_only_the_more_tries_key_and_is_last_in_all():
     on = ",".join(D2 + ("hw_tries",))
-    assert D.selected_layers(env(on)) == D2 + ("hw_tries",) and D.selected_layers(env("all"))[-1] == "hw_tries"
+    assert D.selected_layers(env(on)) == D2 + ("hw_tries",) and D.selected_layers(env("d3"))[-1] == "hw_tries"
     assert D.layer_options(env(on)) == {**D.layer_options(env("d2")), "hw_more_tries": "1"} and "hw_more_tries" not in D.layer_options(env("d2"))
     ov, ov2 = D.d1_overlay({}, MODEL, env(on)), D.d1_overlay({}, MODEL, env("d2"))
     ov.pop("note", None), ov2.pop("note", None)
