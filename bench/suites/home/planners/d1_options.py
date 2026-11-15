@@ -176,9 +176,10 @@ LAYERS = {
     # finding release_off_goal. No pack data (plan structure and the action model's replay only).
     "repair_sync": ({"repair_sync": "1"}, {}),
     # goal_ledger (L18): a go goal the engine's goal filter (F4.4) would drop is kept at the drop site when a heard word starts with a name of its place (restore,
-    # silent) or kept and named in the read-back with the robot's doubt (named). No pack data: the names are the ENV's heads and aliases; min_share is the option's
-    # own assumed default. The retraction key (retract) stays OFF here until its firing on passing episodes is measured (red team L18).
-    "goal_ledger": ({"goal_ledger": "1", "goal_ledger_named": "1"}, {}),
+    # silent). No pack data: the names are the ENV's heads and aliases; min_share is the option's own assumed default. OFF here: named (kept with no evidence, named
+    # in the read-back), which the offline replay of d3dev fired on as many passing as failing episodes (the kill ratio of the red team), and retract, until its
+    # firing on passing episodes is measured.
+    "goal_ledger": ({"goal_ledger": "1"}, {}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
