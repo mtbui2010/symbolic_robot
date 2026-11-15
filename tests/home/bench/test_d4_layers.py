@@ -10,6 +10,9 @@ D3_HASH = "f751d73417c679250af675869633f8f1278ab7fcfe9127c3c249f53e294beab3"    
 D2_HASH = "64b278b5beef2493d675eac77ebd6d10b799e2ce2e307014e56b3f207e356942"
 BUILD = ("plan_release", "effect_check", "repair_sync", "goal_ledger", "answer_align", "question_cap", "partial_end", "safety_profile", "fault_ladder",
          "close_opened", "else_ask")                                              # the D4 build order (layers not built yet are not in LAYERS)
+# retired from ``all`` by the D4 stay gate (docs/home/bench/d4_measure.md section 1): still LAYERS names, selectable alone; all = d3 + the kept ones
+RETIRED = ("effect_check", "fault_ladder", "safety_profile", "partial_end", "question_cap", "close_opened", "else_ask")
+KEPT = ("plan_release", "repair_sync", "goal_ledger", "answer_align")                # in the build order; the arm the sealed d4fresh measure ran
 MODEL = "hl-understand-p3-s700"
 
 
@@ -29,11 +32,11 @@ def test_d3_alias_is_the_18_d3_layers_and_equals_the_d3_hash_d2_keeps_its_hash()
     assert digest(env("d3")) == D3_HASH and digest(env("d2")) == D2_HASH
 
 
-def test_all_is_d3_then_the_d4_layers_in_build_order_and_the_default():
+def test_all_is_d3_then_the_kept_d4_layers_in_build_order_and_the_default():
     allv = D.selected_layers(env("all"))
-    assert allv[:18] == D3 and allv[18:] == D.D4_LAYERS and D.D4_LAYERS == tuple(n for n in BUILD if n in D.D4_LAYERS)   # build order; layers are built in parallel worktrees
-    assert set(D.D4_LAYERS) <= set(BUILD)
-    assert D.selected_layers({}) == allv == D.ALL_LAYERS and set(allv) == set(D.LAYERS)
+    assert D.D4_LAYERS == BUILD and D.RETIRED == RETIRED                                  # the D4 list keeps all eleven; the retired are named apart
+    assert allv[:18] == D3 and allv[18:] == KEPT == tuple(n for n in BUILD if n not in RETIRED)   # build order, retired left out
+    assert D.selected_layers({}) == allv == D.ALL_LAYERS and set(allv) | set(RETIRED) == set(D.LAYERS) and not set(allv) & set(RETIRED)
     assert "plan_release" in D.D4_LAYERS and D.layer_options(env("all"))["plan_release"] == "1"
     assert "plan_release" not in D.layer_options(env("d3")) and "plan_release" not in D.d1_overlay({}, MODEL, env("d3"))["planner"]["options"]
 
@@ -65,7 +68,7 @@ def test_effect_check_alone_on_top_of_d3_adds_its_option_and_its_sourced_data_on
     on = env(",".join(D3 + ("effect_check",)))
     assert D.selected_layers(on) == D3 + ("effect_check",)
     assert D.layer_options(on) == {**D.layer_options(env("d3")), "effect_check": "1"}
-    assert "effect_check" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["effect_check"] == "1"
+    assert "effect_check" not in D.layer_options(env("d3")) and "effect_check" not in D.layer_options(env("all"))     # retired from all
     ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
     data = ov["planner"]["options"].pop("effect_check")["effects"]
     assert data["source"].strip() and data["sensor"]["skill"] and data["releases"] and data["floor"]
@@ -113,7 +116,7 @@ def test_question_cap_alone_on_top_of_d3_adds_its_option_no_repeat_and_its_assum
     on = env(",".join(D3 + ("question_cap",)))
     assert D.selected_layers(on) == D3 + ("question_cap",)
     assert D.layer_options(on) == {**D.layer_options(env("d3")), "question_cap": "1", "question_cap_no_repeat": "1"}
-    assert "question_cap" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["question_cap"] == "1"
+    assert "question_cap" not in D.layer_options(env("d3")) and "question_cap" not in D.layer_options(env("all"))     # retired from all
     ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
     assert ov["planner"]["options"].pop("question_cap") == {"max_questions": 3, "assumed": True}
     assert "question_cap" not in base["planner"]["options"] and "question_cap (assumed)" in ov["note"]
@@ -125,7 +128,7 @@ def test_partial_end_alone_on_top_of_d3_adds_its_option_and_no_data():
     on = env(",".join(D3 + ("partial_end",)))
     assert D.selected_layers(on) == D3 + ("partial_end",)
     assert D.layer_options(on) == {**D.layer_options(env("d3")), "partial_end": "1"}
-    assert "partial_end" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["partial_end"] == "1"
+    assert "partial_end" not in D.layer_options(env("d3")) and "partial_end" not in D.layer_options(env("all"))     # retired from all
     ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
     assert "partial_end (no overlay data)" in ov["note"]
     ov.pop("note"), base.pop("note")
@@ -138,7 +141,7 @@ def test_safety_profile_alone_on_top_of_d3_adds_its_option_and_a_cited_profile_w
     on = env(",".join(D3 + ("safety_profile",)))
     assert D.selected_layers(on) == D3 + ("safety_profile",)
     assert D.layer_options(on) == {**D.layer_options(env("d3")), "safety_profile": "1"}
-    assert "safety_profile" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["safety_profile"] == "1"
+    assert "safety_profile" not in D.layer_options(env("d3")) and "safety_profile" not in D.layer_options(env("all"))     # retired from all
     ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
     prof, errs = load_profile(ov["planner"]["options"].pop("safety_profile")["profile"])
     assert not errs and prof.rules and all(r.provenance == "sourced" and r.within_m > 0 for r in prof.rules)
@@ -155,7 +158,7 @@ def test_close_opened_alone_on_top_of_d3_adds_its_option_no_data_and_the_roles_i
     on = env(",".join(D3 + ("close_opened",)))
     assert D.selected_layers(on) == D3 + ("close_opened",)
     assert D.layer_options(on) == {**D.layer_options(env("d3")), "close_opened": "1"}
-    assert "close_opened" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["close_opened"] == "1"
+    assert "close_opened" not in D.layer_options(env("d3")) and "close_opened" not in D.layer_options(env("all"))     # retired from all
     ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
     assert "close_opened (no overlay data)" in ov["note"]
     roles = ov["planner"]["action_roles"]
@@ -170,7 +173,7 @@ def test_fault_ladder_alone_on_top_of_d3_adds_its_option_and_labelled_devices_of
     on = env(",".join(D3 + ("fault_ladder",)))
     assert D.selected_layers(on) == D3 + ("fault_ladder",)
     assert D.layer_options(on) == {**D.layer_options(env("d3")), "fault_ladder": "1"}
-    assert "fault_ladder" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["fault_ladder"] == "1"
+    assert "fault_ladder" not in D.layer_options(env("d3")) and "fault_ladder" not in D.layer_options(env("all"))     # retired from all
     assert D.layer_options(env("all"))["hw_wait"] == "1" and D.layer_options(env("all"))["hw_more_tries"] == "1"     # the wait and tries stay hw_wait's
     ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
     data = ov["planner"]["options"].pop("fault_ladder")
@@ -186,11 +189,29 @@ def test_fault_ladder_alone_on_top_of_d3_adds_its_option_and_labelled_devices_of
 
 def test_else_ask_alone_on_top_of_d3_adds_its_option_and_no_data_cond_extract_is_on_in_d3():
     on = env(",".join(D3 + ("else_ask",)))
-    assert D.selected_layers(on) == D3 + ("else_ask",) and D.selected_layers(env("all"))[-1] == "else_ask"
+    assert D.selected_layers(on) == D3 + ("else_ask",) and D.selected_layers(env("all"))[-1] == "answer_align"
     assert D.layer_options(on) == {**D.layer_options(env("d3")), "else_ask": "1"}
-    assert "else_ask" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["else_ask"] == "1"
+    assert "else_ask" not in D.layer_options(env("d3")) and "else_ask" not in D.layer_options(env("all"))     # retired from all
     assert D.layer_options(env("d3"))["cond_extract"] == "1" == D.layer_options(env("d3"))["cond_goal"]     # the `when` it reads comes from these
     ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
     assert "else_ask (no overlay data)" in ov["note"]
     ov.pop("note"), base.pop("note")
     assert ov == base and digest(env("d3")) == D3_HASH
+
+
+def test_each_retired_layer_is_selectable_alone_on_top_of_d3_and_all_leaves_out_its_keys_and_data():
+    allopts, allsecs = D.layer_options(env("all")), D.d1_overlay({}, MODEL, env("all"))["planner"].get("options", {})
+    for n in RETIRED:
+        on = env(",".join(D3 + (n,)))
+        assert n in D.LAYERS and D.selected_layers(env(n)) == (n,) and D.selected_layers(on) == D3 + (n,), n
+        assert D.layer_options(on) == {**D.layer_options(env("d3")), **D.LAYERS[n][0]}, n          # its own loop keys on, nothing else
+        assert not set(D.LAYERS[n][0]) & set(allopts), (n, "a loop key of a retired layer is on under all")
+        assert not set(D.LAYERS[n][1].get("planner", {}).get("options", {})) & set(allsecs), (n, "its overlay data is in all")
+    assert "question_cap_no_repeat" not in allopts and digest(env("d3")) == D3_HASH and digest(env("d2")) == D2_HASH
+
+
+def test_all_is_the_arm_the_sealed_measure_ran_d3_plus_the_kept_layers_by_name():
+    # the class this guards: the default switch and the measured arm drift apart (an arm reported as `all` that is not what `all` turns on)
+    measured = env(",".join(D3 + KEPT))                                                    # measure_d4.sh d3+L15,L17,L18,L19
+    assert D.selected_layers(env("all")) == D.selected_layers(measured) and digest(env("all")) == digest(measured)
+    assert digest(env(",".join(D3 + KEPT + ("close_opened",)))) != digest(env("all"))      # a retired layer named in a list is really on

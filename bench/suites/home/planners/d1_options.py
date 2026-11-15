@@ -16,7 +16,7 @@ Failure classes (found on the D1 dev pilot, fixed as classes, never as tasks):
 * ``object_words``: the goal's 'phone' and the plan's 'Pick cell phone' are one object for the goal checks.
 
 Round D2 (one layer per failure class, each a robot_agent option, default off): ``LAYERS`` below. The environment variable ``HOMELOOP_D1_LAYERS`` picks
-which layers D1 turns on: ``all`` (default; the ``d3`` layers + the D4 layers), ``d3`` (the 18 layers of the D3 arm), ``d2`` (the ten D2 layers only), ``none`` (D1 exactly as in experiment D: the baseline arm) or a comma list of layer names. It is read when
+which layers D1 turns on: ``all`` (default; the ``d3`` layers + the D4 layers not in ``RETIRED``), ``d3`` (the 18 layers of the D3 arm), ``d2`` (the ten D2 layers only), ``none`` (D1 exactly as in experiment D: the baseline arm) or a comma list of layer names. It is read when
 this module is imported (the planner classes are built then); the layers on are recorded in the run config (``loop_options``) and in the overlay note.
 """
 
@@ -257,17 +257,20 @@ D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "a
 # arm measured before that date never ran plan_complete, ask_agree or hw_tries. release_near (the near data that came with replan_block until that date)
 # follows replan_block.
 D3_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
-# ``all`` (and unset): the D3 layers, then the D4 layers in their build order. A base_d3 arm must say ``d3``.
+# ``all`` (and unset): the D3 layers, then the D4 layers in their build order that are not RETIRED. A base_d3 arm must say ``d3``.
 D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger", "answer_align",
              "question_cap", "partial_end", "safety_profile",
              "fault_ladder",
              "close_opened")
 D4_LAYERS = D4_LAYERS + ("else_ask",)                      # L25 (a line of its own: the layers are merged from parallel worktrees)
-ALL_LAYERS = D3_LAYERS + D4_LAYERS
+# Retired from ``all`` by the D4 stay gate (docs/home/bench/d4_measure.md section 1; d4_layers.md ## Retired): no outcome changed on d3dev, or harmful
+# (close_opened). Each stays a LAYERS name (selectable alone or in a comma list, e.g. the d3+Lxx arms); its robot_agent option stays, default off.
+RETIRED = ("effect_check", "fault_ladder", "safety_profile", "partial_end", "question_cap", "close_opened", "else_ask")
+ALL_LAYERS = D3_LAYERS + tuple(n for n in D4_LAYERS if n not in RETIRED)
 
 
 def selected_layers(environ=None) -> tuple:
-    """The layers that are on: ``all`` (unset too: ``ALL_LAYERS``, d3 + D4), ``d3`` (exactly the 18 D3 layers), ``d2`` (exactly the ten D2
+    """The layers that are on: ``all`` (unset too: ``ALL_LAYERS``, d3 + the D4 layers not retired), ``d3`` (exactly the 18 D3 layers), ``d2`` (exactly the ten D2
     layers), ``none``, or a comma list of names of ``LAYERS``; an unknown name is an error."""
     raw = ((environ if environ is not None else os.environ).get(LAYERS_ENV) or "all").strip().lower()
     aliases = {"all": ALL_LAYERS, "d3": D3_LAYERS, "d2": D2_LAYERS}
