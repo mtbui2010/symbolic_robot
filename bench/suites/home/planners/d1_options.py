@@ -93,6 +93,20 @@ FIRE_CLEARANCE = {
 }
 
 
+# fault_ladder (L20): the device each skill of the mock robot uses, by the names a person would say (English, Korean).
+FAULT_DEVICES = {
+    "move": {"en": "drive base", "ko": "주행 장치"}, "dock": {"en": "drive base", "ko": "주행 장치"},
+    "find": {"en": "camera", "ko": "카메라"}, "look": {"en": "camera", "ko": "카메라"}, "vlm_check": {"en": "camera", "ko": "카메라"},
+    "pick": {"en": "arm", "ko": "로봇 팔"}, "place": {"en": "arm", "ko": "로봇 팔"}, "put_in": {"en": "arm", "ko": "로봇 팔"},
+    "open": {"en": "arm", "ko": "로봇 팔"}, "close": {"en": "arm", "ko": "로봇 팔"}, "handover": {"en": "arm", "ko": "로봇 팔"},
+    "grasp_check": {"en": "gripper sensor", "ko": "그리퍼 센서"},
+    "say": {"en": "speaker", "ko": "스피커"}, "announce": {"en": "speaker", "ko": "스피커"}, "ask": {"en": "microphone", "ko": "마이크"},
+    "source": "mock robot manifest (symbolic_robot/domains/home/configs/manifest.yaml): description 'one arm and gripper, a camera, a speaker and a "
+              "microphone', capabilities base: true, skill descriptions (look, vlm_check: the camera; grasp_check: the gripper sensor)",
+    "assumed": True,     # the pairing of each skill with one device (the manifest names the devices, not which skill uses which)
+}
+
+
 LAYERS = {
     "precond_repair": ({"precond_repair": "1"},
                        {"planner": {"action_roles": {"pick": "Pick"},
@@ -224,6 +238,10 @@ LAYERS = {
     # SOURCED rule and heat-source classes (FIRE_CLEARANCE_SOURCE, opened and quoted by the coordinator, BRIEF section 12); ASSUMED words of
     # "anything that can burn" (general vocabulary, labelled assumed in the profile). No rule for cooking appliances: no cited clearance found.
     "safety_profile": ({"safety_profile": "1"}, {"planner": {"options": {"safety_profile": {"profile": FIRE_CLEARANCE}}}}),
+    # fault_ladder (L20): once hw_wait's wait and tries (the hw_wait / hw_tries layers) are used up on a hw_fault / perception_unavailable, one help question
+    # naming the device, then a stop that names the device, the attempts and the steps done. SOURCED devices (the mock robot manifest's description and
+    # skill descriptions), the skill -> device pairing ASSUMED. No alternative skill: the mock robot declares none, so the retry part stays inert.
+    "fault_ladder": ({"fault_ladder": "1"}, {"planner": {"options": {"fault_ladder": {"devices": FAULT_DEVICES}}}}),
     # close_opened (L24): a container the plan opens is closed again once the robot is done with it (a Close the one hand cannot do while holding goes after the
     # release, a Close the plan left out is added), unless an ``open`` goal names it. No pack data of its own: it reads the open / close / move roles that the
     # variant's overlay (ACTION_ROLES_OVERLAY, assumed) and the d3 layers already declare, and the robot's hand count from its manifest capabilities.
@@ -238,6 +256,7 @@ D3_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask
 # ``all`` (and unset): the D3 layers, then the D4 layers in their build order. A base_d3 arm must say ``d3``.
 D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger", "answer_align",
              "question_cap", "partial_end", "safety_profile",
+             "fault_ladder",
              "close_opened")
 ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
