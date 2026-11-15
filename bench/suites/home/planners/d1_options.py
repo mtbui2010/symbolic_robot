@@ -16,7 +16,7 @@ Failure classes (found on the D1 dev pilot, fixed as classes, never as tasks):
 * ``object_words``: the goal's 'phone' and the plan's 'Pick cell phone' are one object for the goal checks.
 
 Round D2 (one layer per failure class, each a robot_agent option, default off): ``LAYERS`` below. The environment variable ``HOMELOOP_D1_LAYERS`` picks
-which layers D1 turns on: ``all`` (default; the ``d3`` layers + the D4 layers not in ``RETIRED``), ``d3`` (the 18 layers of the D3 arm), ``d2`` (the ten D2 layers only), ``none`` (D1 exactly as in experiment D: the baseline arm) or a comma list of layer names. It is read when
+which layers D1 turns on: ``all`` (default; the ``d3`` layers + the four D4 layers), ``d3`` (the 18 layers of the D3 arm), ``d2`` (the ten D2 layers only), ``none`` (D1 exactly as in experiment D: the baseline arm) or a comma list of layer names. It is read when
 this module is imported (the planner classes are built then); the layers on are recorded in the run config (``loop_options``) and in the overlay note.
 """
 
@@ -65,46 +65,6 @@ COND_PROMPT = ("A household robot request may hold a condition: something is to 
 # precond_repair's label; the replan_block layer extends it with the ``near`` need of the two releases (a second source of the same manifest)
 PRECOND_SOURCE = ("mock robot manifest, skills[].pre (hand_empty(), not hand_empty()); achieves: assumed (the manifest "
                   "effects name no goal; a put-down ends an on goal, a hand-over a hand goal)")
-
-
-# safety_profile (L21): the clearance of the US Fire Administration's heating page. The heat sources are the classes the page names
-# (fireplace, wood stove, radiator, space heater, candle), 3 feet = 0.91 m; what "can burn" is general vocabulary (assumed).
-FIRE_CLEARANCE_SOURCE = "US Fire Administration (FEMA), Heating Fire Safety, page reviewed 2023-05"
-FIRE_CLEARANCE = {
-    "profile": "d1_fire_clearance", "version": 1,
-    "description": "keep what can burn at least the cited distance from the heat sources the cited page names",
-    "sources": {FIRE_CLEARANCE_SOURCE: {
-        "url": "https://www.usfa.fema.gov/prevention/home-fires/prevent-fires/heating", "opened": "2026-11-15",
-        "quote": "Keep anything that can burn at least 3 feet from all heat sources including fireplaces, wood stoves, radiators, space heaters or candles."}},
-    "hazard_classes": {"can_burn": {"sources": [FIRE_CLEARANCE_SOURCE], "words": {
-        "en": {"assumed": [r"\b(?:news)?papers?\b", r"\bmagazines?\b", r"\bbooks?\b", r"\bnotebooks?\b", r"\bcardboard\b", r"\btissues?\b",
-                           r"\bnapkins?\b", r"\btowels?\b", r"\b(?:dish ?)?cloths?\b", r"\brags?\b", r"\bblankets?\b", r"\bcurtains?\b",
-                           r"\bcloth(?:es|ing)\b", r"\bpillows?\b", r"\bcushions?\b", r"\b(?:fire)?wood(?:en)?\b", r"\bmatch(?:es|box)\b",
-                           r"\blighters?\b", r"\blighter fluid\b", r"\baerosols?\b", r"\bspray cans?\b"]},
-        "ko": {"assumed": ["종이", "신문", "잡지", "책(?![상장])", "공책", "골판지", "휴지", "냅킨", "키친타월", "수건", "행주", "걸레", "담요", "이불",
-                           "커튼", "옷(?!걸이)", "베개", "쿠션", "나무", "장작", "성냥", "라이터", "스프레이"]}}}},
-    "place_classes": {"heat_source": {"provenance": {"source": FIRE_CLEARANCE_SOURCE}, "words": {
-        "en": [r"\bfireplaces?\b", r"\bwood(?:-| )?(?:burning )?stoves?\b", r"\bwood ?burners?\b", r"\bradiators?\b", r"\bspace heaters?\b",
-               r"\b(?:portable|electric) heaters?\b", r"\bcandles?\b"],
-        "ko": ["벽난로", "장작 ?난로", "라디에이터", "난로", "온풍기", "전기 ?히터", "촛불", "양초"]}}},
-    "rules": [{"id": "burnable_near_heat", "hazard": "can_burn", "places": ["heat_source"], "within_m": 0.91,
-               "say": "anything that can burn must stay at least three feet (about 0.9 m) away from a heat source",
-               "provenance": {"source": FIRE_CLEARANCE_SOURCE}}],
-}
-
-
-# fault_ladder (L20): the device each skill of the mock robot uses, by the names a person would say (English, Korean).
-FAULT_DEVICES = {
-    "move": {"en": "drive base", "ko": "주행 장치"}, "dock": {"en": "drive base", "ko": "주행 장치"},
-    "find": {"en": "camera", "ko": "카메라"}, "look": {"en": "camera", "ko": "카메라"}, "vlm_check": {"en": "camera", "ko": "카메라"},
-    "pick": {"en": "arm", "ko": "로봇 팔"}, "place": {"en": "arm", "ko": "로봇 팔"}, "put_in": {"en": "arm", "ko": "로봇 팔"},
-    "open": {"en": "arm", "ko": "로봇 팔"}, "close": {"en": "arm", "ko": "로봇 팔"}, "handover": {"en": "arm", "ko": "로봇 팔"},
-    "grasp_check": {"en": "gripper sensor", "ko": "그리퍼 센서"},
-    "say": {"en": "speaker", "ko": "스피커"}, "announce": {"en": "speaker", "ko": "스피커"}, "ask": {"en": "microphone", "ko": "마이크"},
-    "source": "mock robot manifest (symbolic_robot/domains/home/configs/manifest.yaml): description 'one arm and gripper, a camera, a speaker and a "
-              "microphone', capabilities base: true, skill descriptions (look, vlm_check: the camera; grasp_check: the gripper sensor)",
-    "assumed": True,     # the pairing of each skill with one device (the manifest names the devices, not which skill uses which)
-}
 
 
 LAYERS = {
@@ -201,16 +161,6 @@ LAYERS = {
                                   "options": {"plan_release": {"needs": {
                                       "rules": {"PutIn": {"achieves": "in"}, "Place": {"achieves": "on"}, "Handover": {"achieves": "hand"}},
                                       "assumed": True}}}}}),
-    # effect_check (L16): a release (the hand-over too) that FAILED while the belief holds an object reads the hand sensor once (empty: let go, refind on the
-    # room's floor; holding or unreadable: keep it); a fault of the sensor is no empty hand; the goal check of an object the run released looks at that room's
-    # floor first. SOURCED data: the mock robot manifest's holding sensor (grasp_check, "isdone = something is held", errors hw_fault / software = cannot read),
-    # its release skills (place / put_in / handover, each verified by grasp_check expect false); the floor head is the map's floor@<room> place names.
-    "effect_check": ({"effect_check": "1"},
-                     {"planner": {"options": {"effect_check": {"effects": {
-                         "sensor": {"skill": "grasp_check", "unknown": ["hw_fault", "software"]},
-                         "releases": ["Place", "PutIn", "Handover"], "floor": "floor",
-                         "source": "mock robot manifest skills[]: grasp_check (Verify, isdone = something is held, errors hw_fault, software), the verify "
-                                   "{sensor grasp_check, expect false} of place / put_in / handover; floor: the ENV's floor@<room> place names"}}}}}),
     # repair_sync (L17): the gate's symbolic repair edits the plan the gate scores (the planner's blocks lined up with the steps the on_plan options added or
     # dropped), the suffix operator finish passes over a goal done before the replan, a suffix whose last release of a goal's object is elsewhere gets the
     # finding release_off_goal. No pack data (plan structure and the action model's replay only).
@@ -226,30 +176,6 @@ LAYERS = {
     # key distinct (the read-back's either-or by those words), which the offline replay of d3dev fired on one passing and one failing episode of the same
     # request (the kill ratio of the red team), until a pilot measures it.
     "answer_align": ({"answer_align": "1"}, {}),
-    # question_cap (L23): at most max_questions questions per task over every option that asks through the engine's ask services (the run's counters of
-    # clarify rounds and read-backs count too), and never the same normalised question twice (no_repeat). ASSUMED data: the cap 3 per task (the user's
-    # decision for this robot, not measured, not a rule of any benchmark).
-    "question_cap": ({"question_cap": "1", "question_cap_no_repeat": "1"},
-                     {"planner": {"options": {"question_cap": {"max_questions": 3, "assumed": True}}}}),
-    # partial_end (L22): a run whose goals hold while a request item stays open (goal_ledger's go goal dropped with no evidence) ends 'partial' and names the
-    # done and the missing items (user decision). No overlay data: the words are the language packs' phrase say_partial (robot_agent lang/en.json, ko.json, assumed).
-    "partial_end": ({"partial_end": "1"}, {}),
-    # safety_profile (L21): the robot's fire-clearance rule as a safety profile (robot_agent docs/safety.md schema), refused by the hazard gate.
-    # SOURCED rule and heat-source classes (FIRE_CLEARANCE_SOURCE, opened and quoted by the coordinator, BRIEF section 12); ASSUMED words of
-    # "anything that can burn" (general vocabulary, labelled assumed in the profile). No rule for cooking appliances: no cited clearance found.
-    "safety_profile": ({"safety_profile": "1"}, {"planner": {"options": {"safety_profile": {"profile": FIRE_CLEARANCE}}}}),
-    # fault_ladder (L20): once hw_wait's wait and tries (the hw_wait / hw_tries layers) are used up on a hw_fault / perception_unavailable, one help question
-    # naming the device, then a stop that names the device, the attempts and the steps done. SOURCED devices (the mock robot manifest's description and
-    # skill descriptions), the skill -> device pairing ASSUMED. No alternative skill: the mock robot declares none, so the retry part stays inert.
-    "fault_ladder": ({"fault_ladder": "1"}, {"planner": {"options": {"fault_ladder": {"devices": FAULT_DEVICES}}}}),
-    # close_opened (L24): a container the plan opens is closed again once the robot is done with it (a Close the one hand cannot do while holding goes after the
-    # release, a Close the plan left out is added), unless an ``open`` goal names it. No pack data of its own: it reads the open / close / move roles that the
-    # variant's overlay (ACTION_ROLES_OVERLAY, assumed) and the d3 layers already declare, and the robot's hand count from its manifest capabilities.
-    "close_opened": ({"close_opened": "1"}, {}),
-    # else_ask (L25): a request with an "otherwise" clause whose else branch no goal carries (the reader read only the if branch) asks ONCE what to do
-    # otherwise; the goals the answer adds get the other branch's condition and cond_goal (the d3 layer cond_extract) keeps the branch that holds. No overlay
-    # data: the else words (patterns.otherwise) and the question (speech.q_else) are the language packs' (robot_agent lang/en.json, ko.json, assumed).
-    "else_ask": ({"else_ask": "1"}, {}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
@@ -257,20 +183,16 @@ D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "a
 # arm measured before that date never ran plan_complete, ask_agree or hw_tries. release_near (the near data that came with replan_block until that date)
 # follows replan_block.
 D3_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
-# ``all`` (and unset): the D3 layers, then the D4 layers in their build order that are not RETIRED. A base_d3 arm must say ``d3``.
-D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger", "answer_align",
-             "question_cap", "partial_end", "safety_profile",
-             "fault_ladder",
-             "close_opened")
-D4_LAYERS = D4_LAYERS + ("else_ask",)                      # L25 (a line of its own: the layers are merged from parallel worktrees)
-# Retired from ``all`` by the D4 stay gate (docs/home/bench/d4_measure.md section 1; d4_layers.md ## Retired): no outcome changed on d3dev, or harmful
-# (close_opened). Each stays a LAYERS name (selectable alone or in a comma list, e.g. the d3+Lxx arms); its robot_agent option stays, default off.
-RETIRED = ("effect_check", "fault_ladder", "safety_profile", "partial_end", "question_cap", "close_opened", "else_ask")
-ALL_LAYERS = D3_LAYERS + tuple(n for n in D4_LAYERS if n not in RETIRED)
+# ``all`` (and unset): the D3 layers, then the D4 layers in their build order. A base_d3 arm must say ``d3``.
+D4_LAYERS = ("plan_release", "repair_sync", "goal_ledger", "answer_align")
+# Deleted on 2026-11-15 after the D4 stay gate (d4_layers.md ## Removed; robot_agent commit that added each option): effect_check (91bbced),
+# question_cap (2ab4c9c), partial_end (ac322b9), safety_profile (e329a71), fault_ladder (0e4a112), close_opened (9fa2ecc), else_ask (47eeb14); their
+# D1 entries (and the overlay data FIRE_CLEARANCE, FAULT_DEVICES) are in this file's git history before the deletion (symbolic_robot efdd8d8).
+ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
 
 def selected_layers(environ=None) -> tuple:
-    """The layers that are on: ``all`` (unset too: ``ALL_LAYERS``, d3 + the D4 layers not retired), ``d3`` (exactly the 18 D3 layers), ``d2`` (exactly the ten D2
+    """The layers that are on: ``all`` (unset too: ``ALL_LAYERS``, d3 + the D4 layers), ``d3`` (exactly the 18 D3 layers), ``d2`` (exactly the ten D2
     layers), ``none``, or a comma list of names of ``LAYERS``; an unknown name is an error."""
     raw = ((environ if environ is not None else os.environ).get(LAYERS_ENV) or "all").strip().lower()
     aliases = {"all": ALL_LAYERS, "d3": D3_LAYERS, "d2": D2_LAYERS}

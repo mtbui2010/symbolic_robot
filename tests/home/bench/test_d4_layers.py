@@ -2,17 +2,18 @@
 import hashlib
 import json
 
+import pytest
+
 from bench.suites.home.planners import d1_options as D
 
 D3 = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words",
       "cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
 D3_HASH = "f751d73417c679250af675869633f8f1278ab7fcfe9127c3c249f53e294beab3"     # the 18 D3 layers: on, loop options, overlay without its note
 D2_HASH = "64b278b5beef2493d675eac77ebd6d10b799e2ce2e307014e56b3f207e356942"
-BUILD = ("plan_release", "effect_check", "repair_sync", "goal_ledger", "answer_align", "question_cap", "partial_end", "safety_profile", "fault_ladder",
-         "close_opened", "else_ask")                                              # the D4 build order (layers not built yet are not in LAYERS)
-# retired from ``all`` by the D4 stay gate (docs/home/bench/d4_measure.md section 1): still LAYERS names, selectable alone; all = d3 + the kept ones
-RETIRED = ("effect_check", "fault_ladder", "safety_profile", "partial_end", "question_cap", "close_opened", "else_ask")
+# deleted on 2026-11-15 after the D4 stay gate (docs/home/bench/d4_layers.md ## Removed): no longer LAYERS names
+DELETED = ("effect_check", "fault_ladder", "safety_profile", "partial_end", "question_cap", "close_opened", "else_ask")
 KEPT = ("plan_release", "repair_sync", "goal_ledger", "answer_align")                # in the build order; the arm the sealed d4fresh measure ran
+ALL_HASH = "78f601bfeee57accd86d4d628ce0b9385dca7327c3546944ed18d126fbe6669a"   # d3 + KEPT, as before the deletion (when the seven were LAYERS names)
 MODEL = "hl-understand-p3-s700"
 
 
@@ -34,9 +35,9 @@ def test_d3_alias_is_the_18_d3_layers_and_equals_the_d3_hash_d2_keeps_its_hash()
 
 def test_all_is_d3_then_the_kept_d4_layers_in_build_order_and_the_default():
     allv = D.selected_layers(env("all"))
-    assert D.D4_LAYERS == BUILD and D.RETIRED == RETIRED                                  # the D4 list keeps all eleven; the retired are named apart
-    assert allv[:18] == D3 and allv[18:] == KEPT == tuple(n for n in BUILD if n not in RETIRED)   # build order, retired left out
-    assert D.selected_layers({}) == allv == D.ALL_LAYERS and set(allv) | set(RETIRED) == set(D.LAYERS) and not set(allv) & set(RETIRED)
+    assert D.D4_LAYERS == KEPT and not hasattr(D, "RETIRED")
+    assert allv[:18] == D3 and allv[18:] == KEPT                                          # build order
+    assert D.selected_layers({}) == allv == D.ALL_LAYERS and set(allv) == set(D.LAYERS) and not set(D.LAYERS) & set(DELETED)
     assert "plan_release" in D.D4_LAYERS and D.layer_options(env("all"))["plan_release"] == "1"
     assert "plan_release" not in D.layer_options(env("d3")) and "plan_release" not in D.d1_overlay({}, MODEL, env("d3"))["planner"]["options"]
 
@@ -62,19 +63,6 @@ def test_every_d4_layer_overlay_data_has_a_label():
         data = D.LAYERS[n][1]
         assert not data or D._labels(data), n
         assert n in D.layer_note(n)
-
-
-def test_effect_check_alone_on_top_of_d3_adds_its_option_and_its_sourced_data_only():
-    on = env(",".join(D3 + ("effect_check",)))
-    assert D.selected_layers(on) == D3 + ("effect_check",)
-    assert D.layer_options(on) == {**D.layer_options(env("d3")), "effect_check": "1"}
-    assert "effect_check" not in D.layer_options(env("d3")) and "effect_check" not in D.layer_options(env("all"))     # retired from all
-    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
-    data = ov["planner"]["options"].pop("effect_check")["effects"]
-    assert data["source"].strip() and data["sensor"]["skill"] and data["releases"] and data["floor"]
-    assert "effect_check" not in base["planner"]["options"]
-    ov.pop("note"), base.pop("note")
-    assert ov == base and digest(env("d3")) == D3_HASH
 
 
 def test_repair_sync_alone_on_top_of_d3_adds_its_option_and_no_data():
@@ -112,106 +100,14 @@ def test_answer_align_alone_on_top_of_d3_turns_on_its_option_no_data_ask_agree_d
     assert ov == base and digest(env("d3")) == D3_HASH
 
 
-def test_question_cap_alone_on_top_of_d3_adds_its_option_no_repeat_and_its_assumed_cap_only():
-    on = env(",".join(D3 + ("question_cap",)))
-    assert D.selected_layers(on) == D3 + ("question_cap",)
-    assert D.layer_options(on) == {**D.layer_options(env("d3")), "question_cap": "1", "question_cap_no_repeat": "1"}
-    assert "question_cap" not in D.layer_options(env("d3")) and "question_cap" not in D.layer_options(env("all"))     # retired from all
-    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
-    assert ov["planner"]["options"].pop("question_cap") == {"max_questions": 3, "assumed": True}
-    assert "question_cap" not in base["planner"]["options"] and "question_cap (assumed)" in ov["note"]
-    ov.pop("note"), base.pop("note")
-    assert ov == base and digest(env("d3")) == D3_HASH
-
-
-def test_partial_end_alone_on_top_of_d3_adds_its_option_and_no_data():
-    on = env(",".join(D3 + ("partial_end",)))
-    assert D.selected_layers(on) == D3 + ("partial_end",)
-    assert D.layer_options(on) == {**D.layer_options(env("d3")), "partial_end": "1"}
-    assert "partial_end" not in D.layer_options(env("d3")) and "partial_end" not in D.layer_options(env("all"))     # retired from all
-    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
-    assert "partial_end (no overlay data)" in ov["note"]
-    ov.pop("note"), base.pop("note")
-    assert ov == base and digest(env("d3")) == D3_HASH
-
-
-def test_safety_profile_alone_on_top_of_d3_adds_its_option_and_a_cited_profile_with_no_rule_for_uncited_heat_sources():
-    import re
-    from robot_agent.core.safety import load_profile
-    on = env(",".join(D3 + ("safety_profile",)))
-    assert D.selected_layers(on) == D3 + ("safety_profile",)
-    assert D.layer_options(on) == {**D.layer_options(env("d3")), "safety_profile": "1"}
-    assert "safety_profile" not in D.layer_options(env("d3")) and "safety_profile" not in D.layer_options(env("all"))     # retired from all
-    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
-    prof, errs = load_profile(ov["planner"]["options"].pop("safety_profile")["profile"])
-    assert not errs and prof.rules and all(r.provenance == "sourced" and r.within_m > 0 for r in prof.rules)
-    assert all(re.search(r"(19|20)\d\d", sid) and s["url"].startswith("https://") and s["quote"] for sid, s in D.FIRE_CLEARANCE["sources"].items())
-    heat = [w for c, ws in prof.place_classes if c == "heat_source" for w in ws]
-    for uncited in ("stove", "gas stove", "oven", "cooktop", "hob", "toaster", "kettle", "iron", "microwave"):   # no cited clearance: no rule
-        assert not any(re.search(w, uncited) for w in heat), uncited
-    assert "safety_profile" not in base["planner"]["options"] and "sourced: " + D.FIRE_CLEARANCE_SOURCE in D.layer_note("safety_profile")
-    ov.pop("note"), base.pop("note")
-    assert ov == base and digest(env("d3")) == D3_HASH
-
-
-def test_close_opened_alone_on_top_of_d3_adds_its_option_no_data_and_the_roles_it_reads_are_declared():
-    on = env(",".join(D3 + ("close_opened",)))
-    assert D.selected_layers(on) == D3 + ("close_opened",)
-    assert D.layer_options(on) == {**D.layer_options(env("d3")), "close_opened": "1"}
-    assert "close_opened" not in D.layer_options(env("d3")) and "close_opened" not in D.layer_options(env("all"))     # retired from all
-    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
-    assert "close_opened (no overlay data)" in ov["note"]
-    roles = ov["planner"]["action_roles"]
-    assert (roles["move"], roles["open"], roles["close"]) == ("MoveTo", "Open", "Close")    # the roles it reads: the d3 layers already declare them
-    ov.pop("note"), base.pop("note")
-    assert ov == base and digest(env("d3")) == D3_HASH
-
-
-def test_fault_ladder_alone_on_top_of_d3_adds_its_option_and_labelled_devices_of_the_robots_own_skills_no_alternative():
-    import pathlib
-    import yaml
-    on = env(",".join(D3 + ("fault_ladder",)))
-    assert D.selected_layers(on) == D3 + ("fault_ladder",)
-    assert D.layer_options(on) == {**D.layer_options(env("d3")), "fault_ladder": "1"}
-    assert "fault_ladder" not in D.layer_options(env("d3")) and "fault_ladder" not in D.layer_options(env("all"))     # retired from all
-    assert D.layer_options(env("all"))["hw_wait"] == "1" and D.layer_options(env("all"))["hw_more_tries"] == "1"     # the wait and tries stay hw_wait's
-    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
-    data = ov["planner"]["options"].pop("fault_ladder")
-    assert set(data) == {"devices"} and data["devices"]["source"].strip() and data["devices"]["assumed"] is True    # no made-up alternative skill
-    root = pathlib.Path(__file__).resolve().parents[3]
-    skills = {s["name"] for s in yaml.safe_load((root / "symbolic_robot/domains/home/configs/manifest.yaml").read_text())["skills"]}
-    named = {k: v for k, v in data["devices"].items() if k not in ("source", "assumed")}
-    assert set(named) <= skills and all(v["en"] and v["ko"] for v in named.values())
-    assert "fault_ladder" not in base["planner"]["options"]
-    ov.pop("note"), base.pop("note")
-    assert ov == base and digest(env("d3")) == D3_HASH
-
-
-def test_else_ask_alone_on_top_of_d3_adds_its_option_and_no_data_cond_extract_is_on_in_d3():
-    on = env(",".join(D3 + ("else_ask",)))
-    assert D.selected_layers(on) == D3 + ("else_ask",) and D.selected_layers(env("all"))[-1] == "answer_align"
-    assert D.layer_options(on) == {**D.layer_options(env("d3")), "else_ask": "1"}
-    assert "else_ask" not in D.layer_options(env("d3")) and "else_ask" not in D.layer_options(env("all"))     # retired from all
-    assert D.layer_options(env("d3"))["cond_extract"] == "1" == D.layer_options(env("d3"))["cond_goal"]     # the `when` it reads comes from these
-    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
-    assert "else_ask (no overlay data)" in ov["note"]
-    ov.pop("note"), base.pop("note")
-    assert ov == base and digest(env("d3")) == D3_HASH
-
-
-def test_each_retired_layer_is_selectable_alone_on_top_of_d3_and_all_leaves_out_its_keys_and_data():
-    allopts, allsecs = D.layer_options(env("all")), D.d1_overlay({}, MODEL, env("all"))["planner"].get("options", {})
-    for n in RETIRED:
-        on = env(",".join(D3 + (n,)))
-        assert n in D.LAYERS and D.selected_layers(env(n)) == (n,) and D.selected_layers(on) == D3 + (n,), n
-        assert D.layer_options(on) == {**D.layer_options(env("d3")), **D.LAYERS[n][0]}, n          # its own loop keys on, nothing else
-        assert not set(D.LAYERS[n][0]) & set(allopts), (n, "a loop key of a retired layer is on under all")
-        assert not set(D.LAYERS[n][1].get("planner", {}).get("options", {})) & set(allsecs), (n, "its overlay data is in all")
-    assert "question_cap_no_repeat" not in allopts and digest(env("d3")) == D3_HASH and digest(env("d2")) == D2_HASH
-
-
 def test_all_is_the_arm_the_sealed_measure_ran_d3_plus_the_kept_layers_by_name():
     # the class this guards: the default switch and the measured arm drift apart (an arm reported as `all` that is not what `all` turns on)
     measured = env(",".join(D3 + KEPT))                                                    # measure_d4.sh d3+L15,L17,L18,L19
-    assert D.selected_layers(env("all")) == D.selected_layers(measured) and digest(env("all")) == digest(measured)
-    assert digest(env(",".join(D3 + KEPT + ("close_opened",)))) != digest(env("all"))      # a retired layer named in a list is really on
+    assert D.selected_layers(env("all")) == D.selected_layers(measured) and digest(env("all")) == digest(measured) == ALL_HASH
+
+
+def test_a_deleted_layer_name_is_refused_and_d2_d3_keep_their_hashes():
+    for n in DELETED:
+        with pytest.raises(ValueError):
+            D.selected_layers(env(",".join(D3 + (n,))))
+    assert digest(env("d3")) == D3_HASH and digest(env("d2")) == D2_HASH
