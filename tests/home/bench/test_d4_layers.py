@@ -130,3 +130,22 @@ def test_partial_end_alone_on_top_of_d3_adds_its_option_and_no_data():
     assert "partial_end (no overlay data)" in ov["note"]
     ov.pop("note"), base.pop("note")
     assert ov == base and digest(env("d3")) == D3_HASH
+
+
+def test_safety_profile_alone_on_top_of_d3_adds_its_option_and_a_cited_profile_with_no_rule_for_uncited_heat_sources():
+    import re
+    from robot_agent.core.safety import load_profile
+    on = env(",".join(D3 + ("safety_profile",)))
+    assert D.selected_layers(on) == D3 + ("safety_profile",)
+    assert D.layer_options(on) == {**D.layer_options(env("d3")), "safety_profile": "1"}
+    assert "safety_profile" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["safety_profile"] == "1"
+    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
+    prof, errs = load_profile(ov["planner"]["options"].pop("safety_profile")["profile"])
+    assert not errs and prof.rules and all(r.provenance == "sourced" and r.within_m > 0 for r in prof.rules)
+    assert all(re.search(r"(19|20)\d\d", sid) and s["url"].startswith("https://") and s["quote"] for sid, s in D.FIRE_CLEARANCE["sources"].items())
+    heat = [w for c, ws in prof.place_classes if c == "heat_source" for w in ws]
+    for uncited in ("stove", "gas stove", "oven", "cooktop", "hob", "toaster", "kettle", "iron", "microwave"):   # no cited clearance: no rule
+        assert not any(re.search(w, uncited) for w in heat), uncited
+    assert "safety_profile" not in base["planner"]["options"] and "sourced: " + D.FIRE_CLEARANCE_SOURCE in D.layer_note("safety_profile")
+    ov.pop("note"), base.pop("note")
+    assert ov == base and digest(env("d3")) == D3_HASH
