@@ -153,7 +153,7 @@ a made-up flat with rooms den / attic and a person pal): `test_sensor_reads_empt
 `test_registered_default_off_a_hand_over_with_an_empty_hand_is_retried_as_is_off`, `test_loop_final_hand_over_after_the_sensor_read_empty_the_gizmo_is_found_on_the_floor_and_handed`
 (the real AssistLoop: the gizmo fell on the way, the hand-over failed once, FINAL: handed to pal, run `success`), `test_loop_final_silent_drop_the_floor_of_the_release_room_is_the_first_look_and_the_widget_ends_on_the_shelf`
 (the put-down reported success and the widget fell; the first look after the miss is the den floor, FINAL: on the shelf, `success`), its `_off` twin, and the engine reading with the
-option on (a fault keeps the caller's default). robot_agent tests 2110 -> 2122. Bench: `tests/home/bench/test_d4_layers.py` +1 (effect_check alone on top of d3: its option, its
+option on (a fault keeps the caller's default). robot_agent tests 2110 -> 2123 (+12, and the architecture test's entry for the new option). Bench: `tests/home/bench/test_d4_layers.py` +1 (effect_check alone on top of d3: its option, its
 sourced data only, the d3 hash unchanged).
 
 Offline gate (no model): cache-only replays of all 150 d3dev tasks in the four cells with the D3 development caches, arm `d3` and arm `d3` + `effect_check`, in a scratch directory.
