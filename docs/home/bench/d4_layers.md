@@ -175,11 +175,66 @@ Limits: a sensor that stays faulty leaves the belief as it was (KO real: four ha
 failed declared release costs one more sensor read. The refind after an empty hand is the engine's (its floor head, its retry cap of one per object); the silent-drop part only
 orders a search that the replan starts, so a plan that never looks for the object again is not helped. A second robot hand is not modelled (the sensor answers for one hand).
 
+## L17 repair_sync (classes gate_repair_blind, replan_ignores_gate; PROPOSALS P2b)
+
+Status: PARTIAL - done: the option (a second try of the gate's repair from the blocks lined up with the plan the options made, kept only when it certifies the plan; the suffix operator `finish` passes over a goal that holds in the belief; the finding `release_off_goal` on a replan's suffix), its D1 layer (no data), tests (hook level, the pure repair, the real loop's final state for the gate, the suffix repair and the finding's refine), the offline gate below; missing: any measured flip of the gate targets (the target that the second try certifies, and every changed failing episode, miss the prompt cache at a later model call; it needs the GPU pilot), the outcome of the three passing episodes whose replay now misses the cache (see the table), a block replan after a kept second try tested with the real SAGE planner (the tests use a block double), the `on_plan(on_plan(x)) == on_plan(x)` check of every on_plan option under `all` (only plan_release / precond_repair / plan_complete are checked, in L15's tests), the paired P50 / DEV measure.
+Overlaps: `replan_guard` (same hook `on_replan_findings`, same question "does the suffix carry a critical finding"): its `critical_refine` counts only action-model codes the pack declares (`planner.options.replan_guard.critical`, part of the frozen d3 overlay), while `release_off_goal` is a goal-level relation no action-model rule emits; adding it there means either a new code in the D3 data (the d3 hash) or a path in replan_guard that bypasses its own data gate, so it is a key of this option instead (one responsibility per key: `off_goal`, can be ablated); `dedupe_keep_end` / `reach_delivery` (services read by the same `plan_repair.repair` call): they change one operator's rule, not the plan the operators see, so the new arguments go through one more service of the same kind (`repair_kwargs`) instead of a new hook; embodiplan's `replan_block_fix` lines completed steps up with the blocks (`_step_key`, `_common_len`, `sage.py`) to find a failed block: same idea, other package and question (the engine may not import the planner), so the alignment here is a 15-line LCS on (action, object) of steps that the same `ground` produced (no name normalisation needed); `_goals_hold` (engine, the end check): `finish_rest`'s "holds in the belief" repeats its two-line `on` / `in` rule (`placed[object] == to`, hand not holding it) because no service exposes it; a merge candidate: an engine service `goal_holds(run, goal)`. The op_finish fix itself is the red team's (`return None` at the first untouched goal, `plan_repair.py`), not a new operator.
+
+What (`robot_agent/options/repair_sync.py`, hook `on_replan_findings` at order 91, service `repair_kwargs(run)`; core `plan_repair.repair(sync=, finish_rest=)`):
+1. `gate_sync`: the gate's symbolic repair builds its plan from the planner's sub-goal blocks (`owned_plan`), but the gate scores the plan after the `on_plan` options and the tidy. When the repair
+   of the blocks leaves a critical finding, the operators run again from the same start on the blocks lined up with the scored plan (LCS on (action, object): a step of the blocks keeps its block,
+   an added step joins the block of the step before it, a step the plan dropped is gone); that result is kept, and written into the blocks, only when it certifies the plan (`synced` in the plan's
+   `repaired_by_op`), else the first result stands. The rule "second try only, certified only" comes from the offline gate: run first (the first version), the lined-up plan stopped the dedupe of a
+   plan of repeated fetches (the options, re-applied by the score, spliced their release into the repeat) and three passing episodes gave up.
+2. `finish_rest`: the suffix operator `finish` gave up at the FIRST `on` / `in` goal the suffix neither holds nor lets go of; the goal check of the suffix starts from nothing, so in a multi-goal run
+   that is usually a goal done before the replan, and the pending goal behind it kept its wrong put-down. Now a goal that holds in the belief (`run.placed[object] == to`, the hand not holding it) is
+   passed over; any other untouched goal still ends the search (a version that passed over every untouched goal changed a passing correction episode in the offline gate).
+3. `off_goal`: a replan's suffix, replayed from the belief with the action model, whose LAST release of an `on` / `in` goal's object (a step that empties the hand; a later Pick of it = a staging
+   put-down, not counted) is at another place than the goal's gets the finding `release_off_goal: step i 'A P', goal place of X: T`, so the engine's one refine is told; if it remains, the run ends
+   uncertified (the engine's rule). It runs after the suffix repair, so it is the fallback when `finish` could not fix the suffix. Two hands or more: no finding.
+
+Why: the robot's own gate traces and replan suffixes of the D3 arm on d3dev (no simulator channel): a first plan "Pick X, Close C (hand full), [an option appends: MoveTo T, Place T]" where the hoist
+found no release in the blocks and the run gave up; replan suffixes that put the held goal object down at another goal's place while `finish` gave up at a goal already done. The fix is plan structure and
+goal semantics only; no pack data, 0 extra model calls (the refine of part 3 is the engine's existing one). The FS reduction of the episode where the off-goal put-down was a liquid on a desk comes from
+the judge's violation rule, not from the class, and is not counted as evidence for it (red team).
+
+Data: none (D1 layer `repair_sync`: `{repair_sync: 1}`, no overlay; the d3 alias keeps f751d734...). Empty: a planner without blocks (nothing to line up), no goals, an empty suffix, two hands,
+all parts off: unchanged (`*_empty` tests).
+
+Tests: `robot_agent/tests/test_option_repair_sync.py`, 14 tests on made-up objects (gizmo, widget, sprocket), places of a made-up yard and the test house: `test_registered_and_off_by_default_the_gate_cannot_repair_the_option_step_off`
+(the real loop, option off: the gate gives up, nothing moves), `test_gate_loop_final_the_close_goes_after_the_option_release_and_the_gizmo_is_delivered` (the real AssistLoop with a block planner and
+`precond_repair` appending the delivery: FINAL gizmo on the table, drawer closed, one release, run `success`, no model edit), `test_gate_planner_without_blocks_is_left_to_the_old_repair_empty`,
+`test_release_off_goal_two_hands_or_no_goals_or_parts_off_do_nothing_empty`, `test_release_off_goal_suffix_off_runs_and_leaves_the_gizmo_on_the_wrong_table_off`,
+`test_release_off_goal_loop_final_finish_passes_the_done_goal_and_the_gizmo_ends_in_the_drawer` (a pick fails twice, the scripted suffix puts the gizmo on the widget's table; FINAL gizmo in the
+drawer, `success`, one replan), `test_release_off_goal_loop_final_the_finding_reaches_the_refine_and_a_wrong_suffix_never_runs` (finish off: the refine is told `release_off_goal`; a right refine
+ends `success`, a wrong one never runs), the alignment, the second-try rule (`test_gate_second_try_only_when_the_blocks_repair_leaves_a_finding_and_kept_only_when_it_certifies`, the regression
+of the offline finding), the finish rule with done / not done in the belief, the finding with staging and goal-place cases. robot_agent tests 2123 -> 2138 (+14, and the architecture test's entry
+for the new option). Bench: `tests/home/bench/test_d4_layers.py` +1 (repair_sync alone on top of d3: its option, no data, the d3 hash unchanged).
+
+Offline gate (no model): cache-only replays of all 150 d3dev tasks in the four cells with the D3 development caches, arm `d3` + `repair_sync`, in a scratch directory, compared with L16's `d3`
+replays (which reproduce the recorded D3 success and false success).
+
+| cell | success d3 / +L17 | false success d3 / +L17 | episodes where it acted (sync tried / done_goal / off_goal events) | outcome flips (determined) | passing episodes changed |
+|---|---|---|---|---|---|
+| en ideal | 136 / 137 | 6 / 5 | 22 (18 / 25 / 2 events) | the off-goal suffix one: FS -> success | none |
+| ko ideal | 141 / 141 | 5 / 4 | 23 (12 / 25 / 1) | the same task: FS -> success; a budget end -> success (second try certified) | 3: one now misses the cache after off_goal's refine (the suffix put the held mug in at the person's spot; D3 ran it, it failed physically and a replan saved it), one misses after a certified plan whose inserted Find is at the wrong place, one same outcome |
+| en real | 89 / 89 | 9 / 10 | 17 (15 / 17 / 1) | a gate give-up -> FALSE success: the second try certified the plan of a misread hand goal (the reader gave the keys to the speaker instead of the person named in a corrupted instruction); the gate's failure had hidden the reader error | none |
+| ko real | 85 / 85 | 15 / 15 | 18 (10 / 15 / 3) | a gate give-up -> success (second try certified) | 1: the same off_goal episode as ko ideal (misses the cache) |
+
+Totals over 600 cells: success 451 -> 452 determined, false success 35 -> 34; 12 episodes now end in a cache miss (3 of them passing in D3: the off_goal episode in both ko cells and the
+certified-plan one above; the other 9 failing in D3), so the real effect is unknown until the pilot. No plan's critical count rose (an edit is kept only when it lowers it, and the second try only when it certifies).
+The first-version replay (operators on the lined-up plan from the start) is the evidence for the second-try rule: 3 passing episodes gave up there, 0 now.
+
+Limits: the second try may certify a plan the LLM edit would have rebuilt better (the en real false success above: a reader error the gate's give-up had hidden); `off_goal` turns an off-goal suffix
+into one refine and, if it stays, an uncertified end (a new stop on runs that a later physical failure and replan used to save; ablate with `repair_sync.off_goal=0`); a step an option added joins the
+block before it, so a later block replan of the next goal does not see it (a block replan regenerates its own steps and the options add theirs again in the score); steps the tidy removed are gone
+from the blocks once a second try is kept. Expected gain (red team, after the offline gate): about +1 to +3 rows of 600, inside the noise of one run; judge the layer on "no harm" (P50 false success).
+
 ## Complexity budget
 
 Measured on robot_agent at base 64c7e72 (before S0), after S0, and after each D4 layer. Option lines: `robot_agent/options/*.py` without `__init__.py`.
 
-Layers on: 20 (`all` = the 18 D3 layers + L15 plan_release + L16 effect_check; the `d3` alias keeps 18; the layers' loop options grow by two keys, `plan_release`, `effect_check`)
-Option lines: 3525 in 30 modules (L16 effect_check +138; after L15 3387 in 29; after S0 3190 in 28; L15 plan_release +197; before S0 3174: hazard +2, dedupe_keep_end +6, lang_words +2, precond_repair +6, hw_wait 0). Core: plan_repair.py +9 (S0), assist_loop.py 0 (L16: one line rewritten in place), option_services.py +19 and core/options/services.py +2 (L16: services hand_holds, let_go)
-Hooks: 53 hooks and 23 services over 30 registered options (L16 +3 hooks: effect_check on_start, on_step_failed, on_goal_check, +1 service hand_reading, no new hook kind; after L15 50 and 22; after S0 48 and 22; L15 +2: plan_release on_start, on_plan)
-Retired: none yet (the retire decision needs the paired D4 measure. Candidates named: release_near and hw_tries as separate layer entries, plan_complete into precond_repair, ask_focus.unrefused, plan_complete._release once L15 is measured; the literal Place / PutIn empty-hand path of the engine and its floor head, once effect_check is measured)
+Layers on: 21 (`all` = the 18 D3 layers + L15 plan_release + L16 effect_check + L17 repair_sync; the `d3` alias keeps 18; the layers' loop options grow by three keys, `plan_release`, `effect_check`, `repair_sync`)
+Option lines: 3659 in 31 modules (L17 repair_sync +134; after L16 3525 in 30; L16 effect_check +138; after L15 3387 in 29; after S0 3190 in 28; L15 plan_release +197; before S0 3174: hazard +2, dedupe_keep_end +6, lang_words +2, precond_repair +6, hw_wait 0). Core: plan_repair.py +9 (S0), assist_loop.py 0 (L16: one line rewritten in place; L17: two lines rewritten in place), option_services.py +19 and core/options/services.py +2 (L16: services hand_holds, let_go), plan_repair.py +21 (L17: arguments sync / finish_rest, the edit loop as the helper _edits)
+Hooks: 54 hooks and 24 services over 31 registered options (L17 +1 hook: repair_sync on_replan_findings, +1 service repair_kwargs, no new hook kind; after L16 53 and 23; L16 +3 hooks: effect_check on_start, on_step_failed, on_goal_check, +1 service hand_reading, no new hook kind; after L15 50 and 22; after S0 48 and 22; L15 +2: plan_release on_start, on_plan)
+Retired: none yet (the retire decision needs the paired D4 measure. Candidates named: release_near and hw_tries as separate layer entries, plan_complete into precond_repair, ask_focus.unrefused, plan_complete._release once L15 is measured; the literal Place / PutIn empty-hand path of the engine and its floor head, once effect_check is measured; L15 plan_release's Close splice partly overlaps what repair_sync's second try now finds (a release an option added before a hand-full Close), to be judged on the paired measure)
