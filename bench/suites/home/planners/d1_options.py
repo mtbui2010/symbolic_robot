@@ -180,6 +180,11 @@ LAYERS = {
     # in the read-back), which the offline replay of d3dev fired on as many passing as failing episodes (the kill ratio of the red team), and retract, until its
     # firing on passing episodes is measured.
     "goal_ledger": ({"goal_ledger": "1"}, {}),
+    # question_cap (L23): at most max_questions questions per task over every option that asks through the engine's ask services (the run's counters of
+    # clarify rounds and read-backs count too), and never the same normalised question twice (no_repeat). ASSUMED data: the cap 3 per task (the user's
+    # decision for this robot, not measured, not a rule of any benchmark).
+    "question_cap": ({"question_cap": "1", "question_cap_no_repeat": "1"},
+                     {"planner": {"options": {"question_cap": {"max_questions": 3, "assumed": True}}}}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
@@ -188,7 +193,8 @@ D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "a
 # follows replan_block.
 D3_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
 # ``all`` (and unset): the D3 layers, then the D4 layers in their build order. A base_d3 arm must say ``d3``.
-D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger")
+D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger",
+             "question_cap")
 ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
 
