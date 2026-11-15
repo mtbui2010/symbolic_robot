@@ -37,7 +37,7 @@ def test_all_is_d3_then_the_kept_d4_layers_in_build_order_and_the_default():
     allv = D.selected_layers(env("all"))
     assert D.D4_LAYERS == KEPT and not hasattr(D, "RETIRED")
     assert allv[:18] == D3 and allv[18:] == KEPT                                          # build order
-    assert D.selected_layers({}) == allv == D.ALL_LAYERS and set(allv) == set(D.LAYERS) and not set(D.LAYERS) & set(DELETED)
+    assert D.selected_layers({}) == allv == D.ALL_LAYERS and set(allv) | set(D.SELECTABLE) == set(D.LAYERS) and not set(D.LAYERS) & set(DELETED)   # SELECTABLE: named only (2026-11-16, reach_check)
     assert "plan_release" in D.D4_LAYERS and D.layer_options(env("all"))["plan_release"] == "1"
     assert "plan_release" not in D.layer_options(env("d3")) and "plan_release" not in D.d1_overlay({}, MODEL, env("d3"))["planner"]["options"]
 

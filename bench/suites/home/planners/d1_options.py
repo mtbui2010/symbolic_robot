@@ -16,7 +16,7 @@ Failure classes (found on the D1 dev pilot, fixed as classes, never as tasks):
 * ``object_words``: the goal's 'phone' and the plan's 'Pick cell phone' are one object for the goal checks.
 
 Round D2 (one layer per failure class, each a robot_agent option, default off): ``LAYERS`` below. The environment variable ``HOMELOOP_D1_LAYERS`` picks
-which layers D1 turns on: ``all`` (default; the ``d3`` layers + the four D4 layers), ``d3`` (the 18 layers of the D3 arm), ``d2`` (the ten D2 layers only), ``none`` (D1 exactly as in experiment D: the baseline arm) or a comma list of layer names. It is read when
+which layers D1 turns on: ``all`` (default; the ``d3`` layers + the four D4 layers), ``d3`` (the 18 layers of the D3 arm), ``d2`` (the ten D2 layers only), ``none`` (D1 exactly as in experiment D: the baseline arm) or a comma list of layer names (the ``SELECTABLE`` layers only so). It is read when
 this module is imported (the planner classes are built then); the layers on are recorded in the run config (``loop_options``) and in the overlay note.
 """
 
@@ -176,7 +176,13 @@ LAYERS = {
     # key distinct (the read-back's either-or by those words), which the offline replay of d3dev fired on one passing and one failing episode of the same
     # request (the kill ratio of the red team), until a pilot measures it.
     "answer_align": ({"answer_align": "1"}, {}),
+    # --- SELECTABLE layers (named in a comma list only; not in ALL_LAYERS, so all / d3 / d2 and their hashes stay) ---
+    # reach_check (TAMP-lite, robot_agent docs/reach_check.md): a Pick of an object a Find saw beyond the declared side reach gets the pack's declared
+    # base shift first. No overlay data: the reach is the mock pack's own manifest geometry.reach_m, and the mock pack declares NO shift skill (none
+    # is invented here), so the option is on and INERT in the bench (no reach_check lab event expected).
+    "reach_check": ({"reach_check": "1"}, {}),
 }
+SELECTABLE = ("reach_check",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
 # 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3

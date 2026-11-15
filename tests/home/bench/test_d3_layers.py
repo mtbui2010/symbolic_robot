@@ -28,7 +28,7 @@ def test_d2_alias_is_exactly_the_ten_d2_layers_and_equals_the_d2_overlay():
 
 def test_all_is_the_d2_layers_then_every_d3_layer_in_order():
     got = D.selected_layers(env("d3"))                                         # D4: the D3 arm is the alias d3; all = d3 + D4 (test_d4_layers.py)
-    assert got == D2 + D3 and set(got) | set(D.D4_LAYERS) == set(D.LAYERS)    # every known layer; until 2026-11-15 plan_complete, ask_agree, hw_tries were left out
+    assert got == D2 + D3 and set(got) | set(D.D4_LAYERS) | set(D.SELECTABLE) == set(D.LAYERS)    # every known layer (SELECTABLE: named only, 2026-11-16); until 2026-11-15 plan_complete, ask_agree, hw_tries were left out
     assert D.selected_layers({}) == D.ALL_LAYERS == got + D.D4_LAYERS                 # the default is all (D4: the seven retired layers deleted)
     assert D.layer_options(env("d3")) == {k: v for n in D2 + D3 for k, v in D.LAYERS[n][0].items()}
     for n in ("plan_complete", "ask_agree", "hw_tries"):
