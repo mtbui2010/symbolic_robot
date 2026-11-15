@@ -71,3 +71,14 @@ def test_effect_check_alone_on_top_of_d3_adds_its_option_and_its_sourced_data_on
     assert "effect_check" not in base["planner"]["options"]
     ov.pop("note"), base.pop("note")
     assert ov == base and digest(env("d3")) == D3_HASH
+
+
+def test_repair_sync_alone_on_top_of_d3_adds_its_option_and_no_data():
+    on = env(",".join(D3 + ("repair_sync",)))
+    assert D.selected_layers(on) == D3 + ("repair_sync",)
+    assert D.layer_options(on) == {**D.layer_options(env("d3")), "repair_sync": "1"}
+    assert "repair_sync" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["repair_sync"] == "1"
+    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
+    assert "repair_sync (no overlay data)" in ov["note"]
+    ov.pop("note"), base.pop("note")
+    assert ov == base and digest(env("d3")) == D3_HASH

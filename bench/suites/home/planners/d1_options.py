@@ -171,6 +171,10 @@ LAYERS = {
                          "releases": ["Place", "PutIn", "Handover"], "floor": "floor",
                          "source": "mock robot manifest skills[]: grasp_check (Verify, isdone = something is held, errors hw_fault, software), the verify "
                                    "{sensor grasp_check, expect false} of place / put_in / handover; floor: the ENV's floor@<room> place names"}}}}}),
+    # repair_sync (L17): the gate's symbolic repair edits the plan the gate scores (the planner's blocks lined up with the steps the on_plan options added or
+    # dropped), the suffix operator finish passes over a goal done before the replan, a suffix whose last release of a goal's object is elsewhere gets the
+    # finding release_off_goal. No pack data (plan structure and the action model's replay only).
+    "repair_sync": ({"repair_sync": "1"}, {}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
@@ -179,7 +183,7 @@ D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "a
 # follows replan_block.
 D3_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
 # ``all`` (and unset): the D3 layers, then the D4 layers in their build order. A base_d3 arm must say ``d3``.
-D4_LAYERS = ("plan_release", "effect_check")
+D4_LAYERS = ("plan_release", "effect_check", "repair_sync")
 ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
 
