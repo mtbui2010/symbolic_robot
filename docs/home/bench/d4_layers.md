@@ -114,7 +114,7 @@ changes, a rise of critical findings) is not met.
 Limits: Close only (an Open while holding stays `plan_complete`'s and the gate's hoist). No Place -> put-in swap: the gate's `op_action` / `op_putin` do it, and `op_putin` also opens a closed
 openable container; an option-made put-in into a closed container would leave a finding no operator repairs (red team). A goal object the plan names in the plural ('keys' for the goal 'key')
 is not matched (`lookup_object` compares word sets; plural forms are language data, not added here). The plan shape "empty release before the fetch of its object, plan ends holding it" is now
-covered at plan level by (b); KO 133 is a reader error (its `in` goal read as `on`) and KO 040 a hand goal: not this class. Expected gain (red team, rechecked): about +3 to 4 rows of 600 on
+covered at plan level by (b); one KO task is a reader error (its `in` goal read as `on`) and another KO task a hand goal: not this class. Expected gain (red team, rechecked): about +3 to 4 rows of 600 on
 d3dev, about half on d4fresh, inside the noise of one run; judge the layer on "no harm" (no false-success rise), not on P50 McNemar.
 
 ## L16 effect_check (classes drop_recovery, grasp_misread, silent_drop; PROPOSALS P3a / P3b / P3c)
@@ -444,7 +444,7 @@ thing not on it is never refused and a word on it may name a thing that does not
 
 ## L24 close_opened (class container left open, e.g. a hand goal whose Close could not run while holding; user decision of BRIEF section 5)
 
-Status: PARTIAL - done: the option (a hand-full Close of a container the plan opened goes after the release, a Close the plan left out is added, before the robot's next leg; an `open` goal keeps it open), its D1 layer (no data of its own), tests (hook level, the real loop's final state with a hand-over), the offline gate below (the evidence task flips to success, no determined flip of a passing episode); missing: a container opened BEFORE the plan the hook sees (a replan's suffix after the Open ran, or one opened by an earlier part of the run) is not closed, the outcome of three passing episodes whose replay now misses the cache (en ideal 129, ko ideal 129 and 143), the paired P50 / DEV measure.
+Status: PARTIAL - done: the option (a hand-full Close of a container the plan opened goes after the release, a Close the plan left out is added, before the robot's next leg; an `open` goal keeps it open), its D1 layer (no data of its own), tests (hook level, the real loop's final state with a hand-over), the offline gate below (the evidence task flips to success, no determined flip of a passing episode); missing: a container opened BEFORE the plan the hook sees (a replan's suffix after the Open ran, or one opened by an earlier part of the run) is not closed, the outcome of three passing episodes whose replay now misses the cache (one en ideal episode, two ko ideal episodes), the paired P50 / DEV measure.
 Overlaps: `plan_repair.op_hoist` (engine, the gate's operator; same question "a Close with the hand full", same action-model code `hand_full`): it moves such a Close after the next release in the plan it edits (the planner's blocks), so it cannot see a release an option added (L17's class) and never adds a Close the plan left out; extending it would change the default path (golden), and a new behaviour must be a default-off option; a retire candidate for its Close half once this layer is measured. `plan_release` (same hook `on_plan`, a Close while holding): it puts the held object's own put-in before the Close of its `in` place, another question with other data (`achieves: in`), and its replay is its own one-hand replay of declared releases; this option replays with the engine's action model (as `repair_sync` and `replan_guard` do) and reads no `plan_release` data. `plan_complete` (`on_plan`, its `_release` Close / Open splice for an `in` goal) and `precond_repair` add missing releases, not Closes. `gate_prune` (`on_plan`, same roles data): it drops an Open / Close of what cannot be opened, the opposite question. `reopen_on_miss` (`on_step_failed`, the pack's [Close, Open] remedy after a Find miss): same pair of skills at run time, not read here. `plan_tidy.closes_only` (engine) already treats "closing what the plan opened" as the expected tail after the goals (F0.4): the option relies on it, so the gate keeps the added tail. `end_state` (`on_final`): the Close goes before the plan's own later steps, so the dock still comes last. The four-line replay (`replay`) repeats the pattern of `plan_repair._Ctx.sim` (private); a merge candidate: one engine helper "states along a plan" for `repair_sync`, `replan_guard` and this option. Retired by this layer: none.
 
 What (`robot_agent/options/close_opened.py`, hooks `on_start` and `on_plan` at order 89, after `precond_repair` 85, `plan_complete` 86, `plan_release` 87, so the release they add is
@@ -456,7 +456,7 @@ its next MoveTo, or at the plan's end), so every later step keeps its place. A p
 
 Why: the robot's own logs of the D3 arm on d3dev (gate findings, plans in the prompt cache; no simulator channel) show a hand goal's plan "MoveTo C, Open C, Find X, Pick X, Close C" with
 the hand-over added after it by `precond_repair` / `plan_complete`; the Close cannot run with the one hand full, the gate says "do it before the Pick" (impossible: X is inside) and the run
-gave up (KO real 040 in D3), or the planner drops the Close and the robot ends with C open. The user decided (BRIEF section 5): close what was opened unless the goal says otherwise. 0 extra
+gave up (one KO real task in D3), or the planner drops the Close and the robot ends with C open. The user decided (BRIEF section 5): close what was opened unless the goal says otherwise. 0 extra
 model calls.
 
 Data: none of its own. It reads the `open` / `close` / `move` roles of `planner.action_roles` (in D1: the variant's `ACTION_ROLES_OVERLAY` and the d3 layers `gate_prune`, `cond_extract`,
@@ -482,14 +482,14 @@ numbers.
 
 | cell | success d3 / +L24 | false success d3 / +L24 | episodes where it fired (passing in d3) | determined flips | now a cache miss |
 |---|---|---|---|---|---|
-| en ideal | 136 / 135 | 6 / 5 | 35 (28) | none | a pass (129), a false success (110) |
-| ko ideal | 141 / 139 | 5 / 4 | 39 (34) | none | two passes (129, 143), a false success (110) |
-| en real | 89 / 89 | 9 / 10 | 33 (14) | give-up -> false success (106: the gate had refused the plan; with the Close moved it certifies, and the plan hands the keys to the wrong person, a reader / planner error the give-up hid) | none |
-| ko real | 85 / 86 | 15 / 15 | 37 (17) | give-up -> success (040, the evidence task: the Close moved after the hand-over, the gate certifies) | none |
+| en ideal | 136 / 135 | 6 / 5 | 35 (28) | none | a pass, a false success |
+| ko ideal | 141 / 139 | 5 / 4 | 39 (34) | none | two passes, a false success (the same task as in en ideal) |
+| en real | 89 / 89 | 9 / 10 | 33 (14) | give-up -> false success (one task: the gate had refused the plan; with the Close moved it certifies, and the plan hands the keys to the wrong person, a reader / planner error the give-up hid) | none |
+| ko real | 85 / 86 | 15 / 15 | 37 (17) | give-up -> success (the evidence task: the Close moved after the hand-over, the gate certifies) | none |
 
 It fires often (33 to 39 of 150 per cell): most plans that open a container to take something out never close it. Every passing episode it fired on and whose replay stays in the cache
 keeps its outcome (90 of the 93 passing episodes it fired on; the other three miss the cache). The three passing episodes that now miss the cache (a container closed during a search leg changes the next replan prompt) and the two false successes that
-miss cannot be judged offline. Judge the layer on the paired pilot: the one determined false-success rise (106) is a wrong-recipient plan the gate's give-up had hidden, not a step this option
+miss cannot be judged offline. Judge the layer on the paired pilot: the one determined false-success rise (one task) is a wrong-recipient plan the gate's give-up had hidden, not a step this option
 wrote, but it counts.
 
 Limits: a container opened before the plan the hook sees (a replan's suffix after the Open ran, one opened by an earlier part of the run) is not closed: the gate calls a Close of such a
