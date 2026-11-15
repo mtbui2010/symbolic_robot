@@ -191,6 +191,9 @@ LAYERS = {
     # decision for this robot, not measured, not a rule of any benchmark).
     "question_cap": ({"question_cap": "1", "question_cap_no_repeat": "1"},
                      {"planner": {"options": {"question_cap": {"max_questions": 3, "assumed": True}}}}),
+    # partial_end (L22): a run whose goals hold while a request item stays open (goal_ledger's go goal dropped with no evidence) ends 'partial' and names the
+    # done and the missing items (user decision). No overlay data: the words are the language packs' phrase say_partial (robot_agent lang/en.json, ko.json, assumed).
+    "partial_end": ({"partial_end": "1"}, {}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
@@ -200,7 +203,7 @@ D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "a
 D3_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
 # ``all`` (and unset): the D3 layers, then the D4 layers in their build order. A base_d3 arm must say ``d3``.
 D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger", "answer_align",
-             "question_cap")
+             "question_cap", "partial_end")
 ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
 
