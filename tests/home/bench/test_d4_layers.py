@@ -82,3 +82,15 @@ def test_repair_sync_alone_on_top_of_d3_adds_its_option_and_no_data():
     assert "repair_sync (no overlay data)" in ov["note"]
     ov.pop("note"), base.pop("note")
     assert ov == base and digest(env("d3")) == D3_HASH
+
+
+def test_goal_ledger_alone_on_top_of_d3_adds_its_restore_and_named_keys_no_data_retract_off():
+    on = env(",".join(D3 + ("goal_ledger",)))
+    assert D.selected_layers(on) == D3 + ("goal_ledger",)
+    assert D.layer_options(on) == {**D.layer_options(env("d3")), "goal_ledger": "1", "goal_ledger_named": "1"}
+    assert "goal_ledger" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["goal_ledger"] == "1"
+    assert not any(k.startswith("goal_ledger.retract") for k in D.layer_options(env("all")))      # R4 stays off until measured
+    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
+    assert "goal_ledger (no overlay data)" in ov["note"]
+    ov.pop("note"), base.pop("note")
+    assert ov == base and digest(env("d3")) == D3_HASH

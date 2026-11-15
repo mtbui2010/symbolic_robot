@@ -175,6 +175,10 @@ LAYERS = {
     # dropped), the suffix operator finish passes over a goal done before the replan, a suffix whose last release of a goal's object is elsewhere gets the
     # finding release_off_goal. No pack data (plan structure and the action model's replay only).
     "repair_sync": ({"repair_sync": "1"}, {}),
+    # goal_ledger (L18): a go goal the engine's goal filter (F4.4) would drop is kept at the drop site when a heard word starts with a name of its place (restore,
+    # silent) or kept and named in the read-back with the robot's doubt (named). No pack data: the names are the ENV's heads and aliases; min_share is the option's
+    # own assumed default. The retraction key (retract) stays OFF here until its firing on passing episodes is measured (red team L18).
+    "goal_ledger": ({"goal_ledger": "1", "goal_ledger_named": "1"}, {}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
@@ -183,7 +187,7 @@ D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "a
 # follows replan_block.
 D3_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
 # ``all`` (and unset): the D3 layers, then the D4 layers in their build order. A base_d3 arm must say ``d3``.
-D4_LAYERS = ("plan_release", "effect_check", "repair_sync")
+D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger")
 ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
 
