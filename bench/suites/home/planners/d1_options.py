@@ -180,11 +180,12 @@ LAYERS = {
     # in the read-back), which the offline replay of d3dev fired on as many passing as failing episodes (the kill ratio of the red team), and retract, until its
     # firing on passing episodes is measured.
     "goal_ledger": ({"goal_ledger": "1"}, {}),
-    # answer_align (L19): an answer or a correction is matched to a reading by the words that tell the readings apart: the read-back's either-or of the D3
-    # layer ask_agree (its key distinct), a yes or no to an either-or asked once more naming the options (reask), a correction that names one object leaves
-    # the other goals' destinations as they were (correction). No pack data: the language packs' words (particles, endings, speaker forms, the q_pick_one
-    # phrase, labelled assumed in robot_agent lang/*.json).
-    "answer_align": ({"answer_align": "1", "ask_agree_distinct": "1"}, {}),
+    # answer_align (L19): an answer or a correction is matched to a reading by the words that tell the readings apart: a yes or no to an either-or is asked
+    # once more naming the options (reask), a correction that names one object leaves the other goals' destinations as they were (correction). No pack data:
+    # the language packs' words (particles, endings, speaker forms, the q_pick_one phrase, labelled assumed in robot_agent lang/*.json). OFF here: ask_agree's
+    # key distinct (the read-back's either-or by those words), which the offline replay of d3dev fired on one passing and one failing episode of the same
+    # request (the kill ratio of the red team), until a pilot measures it.
+    "answer_align": ({"answer_align": "1"}, {}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
