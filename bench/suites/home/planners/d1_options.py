@@ -180,6 +180,11 @@ LAYERS = {
     # in the read-back), which the offline replay of d3dev fired on as many passing as failing episodes (the kill ratio of the red team), and retract, until its
     # firing on passing episodes is measured.
     "goal_ledger": ({"goal_ledger": "1"}, {}),
+    # answer_align (L19): an answer or a correction is matched to a reading by the words that tell the readings apart: the read-back's either-or of the D3
+    # layer ask_agree (its key distinct), a yes or no to an either-or asked once more naming the options (reask), a correction that names one object leaves
+    # the other goals' destinations as they were (correction). No pack data: the language packs' words (particles, endings, speaker forms, the q_pick_one
+    # phrase, labelled assumed in robot_agent lang/*.json).
+    "answer_align": ({"answer_align": "1", "ask_agree_distinct": "1"}, {}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
@@ -188,7 +193,7 @@ D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "a
 # follows replan_block.
 D3_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
 # ``all`` (and unset): the D3 layers, then the D4 layers in their build order. A base_d3 arm must say ``d3``.
-D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger")
+D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger", "answer_align")
 ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
 

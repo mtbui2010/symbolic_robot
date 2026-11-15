@@ -94,3 +94,15 @@ def test_goal_ledger_alone_on_top_of_d3_adds_its_restore_no_data_named_and_retra
     assert "goal_ledger (no overlay data)" in ov["note"]
     ov.pop("note"), base.pop("note")
     assert ov == base and digest(env("d3")) == D3_HASH
+
+
+def test_answer_align_alone_on_top_of_d3_turns_on_its_option_and_ask_agree_distinct_no_data():
+    on = env(",".join(D3 + ("answer_align",)))
+    assert D.selected_layers(on) == D3 + ("answer_align",)
+    assert D.layer_options(on) == {**D.layer_options(env("d3")), "answer_align": "1", "ask_agree_distinct": "1"}
+    assert "answer_align" not in D.layer_options(env("d3")) and "ask_agree_distinct" not in D.layer_options(env("d3"))
+    assert D.layer_options(env("all"))["answer_align"] == "1" and D.layer_options(env("all"))["ask_agree_distinct"] == "1"
+    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
+    assert "answer_align (no overlay data)" in ov["note"]
+    ov.pop("note"), base.pop("note")
+    assert ov == base and digest(env("d3")) == D3_HASH
