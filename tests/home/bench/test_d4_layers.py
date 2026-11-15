@@ -149,3 +149,16 @@ def test_safety_profile_alone_on_top_of_d3_adds_its_option_and_a_cited_profile_w
     assert "safety_profile" not in base["planner"]["options"] and "sourced: " + D.FIRE_CLEARANCE_SOURCE in D.layer_note("safety_profile")
     ov.pop("note"), base.pop("note")
     assert ov == base and digest(env("d3")) == D3_HASH
+
+
+def test_close_opened_alone_on_top_of_d3_adds_its_option_no_data_and_the_roles_it_reads_are_declared():
+    on = env(",".join(D3 + ("close_opened",)))
+    assert D.selected_layers(on) == D3 + ("close_opened",)
+    assert D.layer_options(on) == {**D.layer_options(env("d3")), "close_opened": "1"}
+    assert "close_opened" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["close_opened"] == "1"
+    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
+    assert "close_opened (no overlay data)" in ov["note"]
+    roles = ov["planner"]["action_roles"]
+    assert (roles["move"], roles["open"], roles["close"]) == ("MoveTo", "Open", "Close")    # the roles it reads: the d3 layers already declare them
+    ov.pop("note"), base.pop("note")
+    assert ov == base and digest(env("d3")) == D3_HASH
