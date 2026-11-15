@@ -162,3 +162,15 @@ def test_close_opened_alone_on_top_of_d3_adds_its_option_no_data_and_the_roles_i
     assert (roles["move"], roles["open"], roles["close"]) == ("MoveTo", "Open", "Close")    # the roles it reads: the d3 layers already declare them
     ov.pop("note"), base.pop("note")
     assert ov == base and digest(env("d3")) == D3_HASH
+
+
+def test_else_ask_alone_on_top_of_d3_adds_its_option_and_no_data_cond_extract_is_on_in_d3():
+    on = env(",".join(D3 + ("else_ask",)))
+    assert D.selected_layers(on) == D3 + ("else_ask",) and D.selected_layers(env("all"))[-1] == "else_ask"
+    assert D.layer_options(on) == {**D.layer_options(env("d3")), "else_ask": "1"}
+    assert "else_ask" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["else_ask"] == "1"
+    assert D.layer_options(env("d3"))["cond_extract"] == "1" == D.layer_options(env("d3"))["cond_goal"]     # the `when` it reads comes from these
+    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
+    assert "else_ask (no overlay data)" in ov["note"]
+    ov.pop("note"), base.pop("note")
+    assert ov == base and digest(env("d3")) == D3_HASH
