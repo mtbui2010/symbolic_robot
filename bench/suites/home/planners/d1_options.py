@@ -161,6 +161,16 @@ LAYERS = {
                                   "options": {"plan_release": {"needs": {
                                       "rules": {"PutIn": {"achieves": "in"}, "Place": {"achieves": "on"}, "Handover": {"achieves": "hand"}},
                                       "assumed": True}}}}}),
+    # effect_check (L16): a release (the hand-over too) that FAILED while the belief holds an object reads the hand sensor once (empty: let go, refind on the
+    # room's floor; holding or unreadable: keep it); a fault of the sensor is no empty hand; the goal check of an object the run released looks at that room's
+    # floor first. SOURCED data: the mock robot manifest's holding sensor (grasp_check, "isdone = something is held", errors hw_fault / software = cannot read),
+    # its release skills (place / put_in / handover, each verified by grasp_check expect false); the floor head is the map's floor@<room> place names.
+    "effect_check": ({"effect_check": "1"},
+                     {"planner": {"options": {"effect_check": {"effects": {
+                         "sensor": {"skill": "grasp_check", "unknown": ["hw_fault", "software"]},
+                         "releases": ["Place", "PutIn", "Handover"], "floor": "floor",
+                         "source": "mock robot manifest skills[]: grasp_check (Verify, isdone = something is held, errors hw_fault, software), the verify "
+                                   "{sensor grasp_check, expect false} of place / put_in / handover; floor: the ENV's floor@<room> place names"}}}}}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
@@ -169,7 +179,7 @@ D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "a
 # follows replan_block.
 D3_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
 # ``all`` (and unset): the D3 layers, then the D4 layers in their build order. A base_d3 arm must say ``d3``.
-D4_LAYERS = ("plan_release",)
+D4_LAYERS = ("plan_release", "effect_check")
 ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
 
