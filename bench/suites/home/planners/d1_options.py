@@ -180,6 +180,10 @@ LAYERS = {
     # in the read-back), which the offline replay of d3dev fired on as many passing as failing episodes (the kill ratio of the red team), and retract, until its
     # firing on passing episodes is measured.
     "goal_ledger": ({"goal_ledger": "1"}, {}),
+    # close_opened (L24): a container the plan opens is closed again once the robot is done with it (a Close the one hand cannot do while holding goes after the
+    # release, a Close the plan left out is added), unless an ``open`` goal names it. No pack data of its own: it reads the open / close / move roles that the
+    # variant's overlay (ACTION_ROLES_OVERLAY, assumed) and the d3 layers already declare, and the robot's hand count from its manifest capabilities.
+    "close_opened": ({"close_opened": "1"}, {}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
@@ -188,7 +192,8 @@ D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "a
 # follows replan_block.
 D3_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
 # ``all`` (and unset): the D3 layers, then the D4 layers in their build order. A base_d3 arm must say ``d3``.
-D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger")
+D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger",
+             "close_opened")
 ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
 

@@ -31,7 +31,9 @@ def test_d3_alias_is_the_18_d3_layers_and_equals_the_d3_hash_d2_keeps_its_hash()
 
 def test_all_is_d3_then_the_d4_layers_in_build_order_and_the_default():
     allv = D.selected_layers(env("all"))
-    assert allv[:18] == D3 and allv[18:] == D.D4_LAYERS and D.D4_LAYERS == BUILD[:len(D.D4_LAYERS)]
+    # the layers built so far in BUILD's order (layers are built in parallel worktrees: a later one may exist before an earlier one; the merged tree
+    # holds all eleven and the checker's iface part asks for the whole order)
+    assert allv[:18] == D3 and allv[18:] == D.D4_LAYERS and D.D4_LAYERS == tuple(n for n in BUILD if n in D.D4_LAYERS)
     assert D.selected_layers({}) == allv == D.ALL_LAYERS and set(allv) == set(D.LAYERS)
     assert "plan_release" in D.D4_LAYERS and D.layer_options(env("all"))["plan_release"] == "1"
     assert "plan_release" not in D.layer_options(env("d3")) and "plan_release" not in D.d1_overlay({}, MODEL, env("d3"))["planner"]["options"]
@@ -92,5 +94,18 @@ def test_goal_ledger_alone_on_top_of_d3_adds_its_restore_no_data_named_and_retra
     assert not any(k.startswith("goal_ledger_") or k.startswith("goal_ledger.") for k in D.layer_options(env("all")))   # named and retract stay off
     ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
     assert "goal_ledger (no overlay data)" in ov["note"]
+    ov.pop("note"), base.pop("note")
+    assert ov == base and digest(env("d3")) == D3_HASH
+
+
+def test_close_opened_alone_on_top_of_d3_adds_its_option_no_data_and_the_roles_it_reads_are_declared():
+    on = env(",".join(D3 + ("close_opened",)))
+    assert D.selected_layers(on) == D3 + ("close_opened",)
+    assert D.layer_options(on) == {**D.layer_options(env("d3")), "close_opened": "1"}
+    assert "close_opened" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["close_opened"] == "1"
+    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
+    assert "close_opened (no overlay data)" in ov["note"]
+    roles = ov["planner"]["action_roles"]
+    assert (roles["move"], roles["open"], roles["close"]) == ("MoveTo", "Open", "Close")    # the roles it reads: the d3 layers already declare them
     ov.pop("note"), base.pop("note")
     assert ov == base and digest(env("d3")) == D3_HASH
