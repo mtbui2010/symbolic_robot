@@ -76,6 +76,7 @@ REGISTRY = {
     "robot_agent:sage_s8n_ft": ("robot_agent_adapter", "SageS8nFtPlanner", "sage_s8n with a fine-tuned reader for the understand step (labels from the TRAIN split; own row, round 21 lab)", True),
     "robot_agent:sage_s8n_d1": ("robot_agent_adapter", "SageS8nD1Planner", "sage_s8n + new search setup (search_legs, 6 places, no search second look) + retry inside the skill (2 attempts in total, not counted in the call budget); D", True),
     "robot_agent:sage_s8n_ft_d1": ("robot_agent_adapter", "SageS8nFtD1Planner", "sage_s8n_ft + the same new setup; D", True),
+    "robot_agent:sage_s8n_ft_d1_norag": ("robot_agent_adapter", "SageS8nFtD1NoRagPlanner", "sage_s8n_ft_d1 with an empty seed pool (zero-shot SAGE, the RAG ablation of the D arm)", True),
     "robot_agent:sage_s9": ("robot_agent_adapter", "SageS9Planner", "sage_s8n + hazard_receiver (a hazardous product is not handed to a vulnerable person: product class x receiver class from pack data; round 17)", True),
     "robot_agent:sage_s6d": ("robot_agent_adapter", "SageS6dPlanner", "sage_s6 + reach_delivery alone (separates the effect of the round-15 option from dialog_agree2 and relook)", True),
     "robot_agent:sage_gold": ("robot_agent_adapter", "SageGoldPlanner",

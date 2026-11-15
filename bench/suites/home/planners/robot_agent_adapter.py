@@ -1260,6 +1260,12 @@ class SageS8nFtD1Planner(SageS8nFtPlanner):
     skill_attempts = 2
 
 
+class SageS8nFtD1NoRagPlanner(SageS8nFtD1Planner):
+    """``sage_s8n_ft_d1`` with an empty seed pool (zero-shot SAGE): the only difference, the RAG ablation of the D arm."""
+    name = "robot_agent:sage_s8n_ft_d1_norag"
+    seed_pool = False
+
+
 class SageS9Planner(SagePlanner):
     """Round 17: ``sage_s8n`` + ``hazard_receiver`` (a hazardous product is not handed to a vulnerable person: product class x
     receiver class, both from language-pack data and the ENV's names; robot_agent ``core/safety/receiver_class.py``). No new manifest
