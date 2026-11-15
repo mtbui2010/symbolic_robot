@@ -31,7 +31,8 @@ def test_d3_alias_is_the_18_d3_layers_and_equals_the_d3_hash_d2_keeps_its_hash()
 
 def test_all_is_d3_then_the_d4_layers_in_build_order_and_the_default():
     allv = D.selected_layers(env("all"))
-    assert allv[:18] == D3 and allv[18:] == D.D4_LAYERS and D.D4_LAYERS == BUILD[:len(D.D4_LAYERS)]
+    assert allv[:18] == D3 and allv[18:] == D.D4_LAYERS and D.D4_LAYERS == tuple(n for n in BUILD if n in D.D4_LAYERS)   # build order; layers are built in parallel worktrees
+    assert set(D.D4_LAYERS) <= set(BUILD)
     assert D.selected_layers({}) == allv == D.ALL_LAYERS and set(allv) == set(D.LAYERS)
     assert "plan_release" in D.D4_LAYERS and D.layer_options(env("all"))["plan_release"] == "1"
     assert "plan_release" not in D.layer_options(env("d3")) and "plan_release" not in D.d1_overlay({}, MODEL, env("d3"))["planner"]["options"]
@@ -104,5 +105,17 @@ def test_answer_align_alone_on_top_of_d3_turns_on_its_option_no_data_ask_agree_d
     assert not any("distinct" in k or k.startswith("answer_align.") for k in D.layer_options(env("all")))   # reask and correction on with the option
     ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
     assert "answer_align (no overlay data)" in ov["note"]
+    ov.pop("note"), base.pop("note")
+    assert ov == base and digest(env("d3")) == D3_HASH
+
+
+def test_question_cap_alone_on_top_of_d3_adds_its_option_no_repeat_and_its_assumed_cap_only():
+    on = env(",".join(D3 + ("question_cap",)))
+    assert D.selected_layers(on) == D3 + ("question_cap",)
+    assert D.layer_options(on) == {**D.layer_options(env("d3")), "question_cap": "1", "question_cap_no_repeat": "1"}
+    assert "question_cap" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["question_cap"] == "1"
+    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
+    assert ov["planner"]["options"].pop("question_cap") == {"max_questions": 3, "assumed": True}
+    assert "question_cap" not in base["planner"]["options"] and "question_cap (assumed)" in ov["note"]
     ov.pop("note"), base.pop("note")
     assert ov == base and digest(env("d3")) == D3_HASH
