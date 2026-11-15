@@ -246,6 +246,10 @@ LAYERS = {
     # release, a Close the plan left out is added), unless an ``open`` goal names it. No pack data of its own: it reads the open / close / move roles that the
     # variant's overlay (ACTION_ROLES_OVERLAY, assumed) and the d3 layers already declare, and the robot's hand count from its manifest capabilities.
     "close_opened": ({"close_opened": "1"}, {}),
+    # else_ask (L25): a request with an "otherwise" clause whose else branch no goal carries (the reader read only the if branch) asks ONCE what to do
+    # otherwise; the goals the answer adds get the other branch's condition and cond_goal (the d3 layer cond_extract) keeps the branch that holds. No overlay
+    # data: the else words (patterns.otherwise) and the question (speech.q_else) are the language packs' (robot_agent lang/en.json, ko.json, assumed).
+    "else_ask": ({"else_ask": "1"}, {}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
@@ -258,6 +262,7 @@ D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger", "answ
              "question_cap", "partial_end", "safety_profile",
              "fault_ladder",
              "close_opened")
+D4_LAYERS = D4_LAYERS + ("else_ask",)                      # L25 (a line of its own: the layers are merged from parallel worktrees)
 ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
 
