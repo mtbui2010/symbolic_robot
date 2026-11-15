@@ -162,3 +162,23 @@ def test_close_opened_alone_on_top_of_d3_adds_its_option_no_data_and_the_roles_i
     assert (roles["move"], roles["open"], roles["close"]) == ("MoveTo", "Open", "Close")    # the roles it reads: the d3 layers already declare them
     ov.pop("note"), base.pop("note")
     assert ov == base and digest(env("d3")) == D3_HASH
+
+
+def test_fault_ladder_alone_on_top_of_d3_adds_its_option_and_labelled_devices_of_the_robots_own_skills_no_alternative():
+    import pathlib
+    import yaml
+    on = env(",".join(D3 + ("fault_ladder",)))
+    assert D.selected_layers(on) == D3 + ("fault_ladder",)
+    assert D.layer_options(on) == {**D.layer_options(env("d3")), "fault_ladder": "1"}
+    assert "fault_ladder" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["fault_ladder"] == "1"
+    assert D.layer_options(env("all"))["hw_wait"] == "1" and D.layer_options(env("all"))["hw_more_tries"] == "1"     # the wait and tries stay hw_wait's
+    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
+    data = ov["planner"]["options"].pop("fault_ladder")
+    assert set(data) == {"devices"} and data["devices"]["source"].strip() and data["devices"]["assumed"] is True    # no made-up alternative skill
+    root = pathlib.Path(__file__).resolve().parents[3]
+    skills = {s["name"] for s in yaml.safe_load((root / "symbolic_robot/domains/home/configs/manifest.yaml").read_text())["skills"]}
+    named = {k: v for k, v in data["devices"].items() if k not in ("source", "assumed")}
+    assert set(named) <= skills and all(v["en"] and v["ko"] for v in named.values())
+    assert "fault_ladder" not in base["planner"]["options"]
+    ov.pop("note"), base.pop("note")
+    assert ov == base and digest(env("d3")) == D3_HASH
