@@ -31,7 +31,7 @@ def test_d3_alias_is_the_18_d3_layers_and_equals_the_d3_hash_d2_keeps_its_hash()
 
 def test_all_is_d3_then_the_d4_layers_in_build_order_and_the_default():
     allv = D.selected_layers(env("all"))
-    assert allv[:18] == D3 and allv[18:] == D.D4_LAYERS and D.D4_LAYERS == BUILD[:len(D.D4_LAYERS)]
+    assert allv[:18] == D3 and allv[18:] == D.D4_LAYERS and D.D4_LAYERS == tuple(n for n in BUILD if n in D.D4_LAYERS)   # built in parallel: in order
     assert D.selected_layers({}) == allv == D.ALL_LAYERS and set(allv) == set(D.LAYERS)
     assert "plan_release" in D.D4_LAYERS and D.layer_options(env("all"))["plan_release"] == "1"
     assert "plan_release" not in D.layer_options(env("d3")) and "plan_release" not in D.d1_overlay({}, MODEL, env("d3"))["planner"]["options"]
@@ -92,5 +92,24 @@ def test_goal_ledger_alone_on_top_of_d3_adds_its_restore_no_data_named_and_retra
     assert not any(k.startswith("goal_ledger_") or k.startswith("goal_ledger.") for k in D.layer_options(env("all")))   # named and retract stay off
     ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
     assert "goal_ledger (no overlay data)" in ov["note"]
+    ov.pop("note"), base.pop("note")
+    assert ov == base and digest(env("d3")) == D3_HASH
+
+
+def test_safety_profile_alone_on_top_of_d3_adds_its_option_and_a_cited_profile_with_no_rule_for_uncited_heat_sources():
+    import re
+    from robot_agent.core.safety import load_profile
+    on = env(",".join(D3 + ("safety_profile",)))
+    assert D.selected_layers(on) == D3 + ("safety_profile",)
+    assert D.layer_options(on) == {**D.layer_options(env("d3")), "safety_profile": "1"}
+    assert "safety_profile" not in D.layer_options(env("d3")) and D.layer_options(env("all"))["safety_profile"] == "1"
+    ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("d3"))
+    prof, errs = load_profile(ov["planner"]["options"].pop("safety_profile")["profile"])
+    assert not errs and prof.rules and all(r.provenance == "sourced" and r.within_m > 0 for r in prof.rules)
+    assert all(re.search(r"(19|20)\d\d", sid) and s["url"].startswith("https://") and s["quote"] for sid, s in D.FIRE_CLEARANCE["sources"].items())
+    heat = [w for c, ws in prof.place_classes if c == "heat_source" for w in ws]
+    for uncited in ("stove", "gas stove", "oven", "cooktop", "hob", "toaster", "kettle", "iron", "microwave"):   # no cited clearance: no rule
+        assert not any(re.search(w, uncited) for w in heat), uncited
+    assert "safety_profile" not in base["planner"]["options"] and "sourced: " + D.FIRE_CLEARANCE_SOURCE in D.layer_note("safety_profile")
     ov.pop("note"), base.pop("note")
     assert ov == base and digest(env("d3")) == D3_HASH

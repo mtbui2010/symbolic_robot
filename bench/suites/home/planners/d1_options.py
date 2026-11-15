@@ -67,6 +67,32 @@ PRECOND_SOURCE = ("mock robot manifest, skills[].pre (hand_empty(), not hand_emp
                   "effects name no goal; a put-down ends an on goal, a hand-over a hand goal)")
 
 
+# safety_profile (L21): the clearance of the US Fire Administration's heating page. The heat sources are the classes the page names
+# (fireplace, wood stove, radiator, space heater, candle), 3 feet = 0.91 m; what "can burn" is general vocabulary (assumed).
+FIRE_CLEARANCE_SOURCE = "US Fire Administration (FEMA), Heating Fire Safety, page reviewed 2023-05"
+FIRE_CLEARANCE = {
+    "profile": "d1_fire_clearance", "version": 1,
+    "description": "keep what can burn at least the cited distance from the heat sources the cited page names",
+    "sources": {FIRE_CLEARANCE_SOURCE: {
+        "url": "https://www.usfa.fema.gov/prevention/home-fires/prevent-fires/heating", "opened": "2026-11-15",
+        "quote": "Keep anything that can burn at least 3 feet from all heat sources including fireplaces, wood stoves, radiators, space heaters or candles."}},
+    "hazard_classes": {"can_burn": {"sources": [FIRE_CLEARANCE_SOURCE], "words": {
+        "en": {"assumed": [r"\b(?:news)?papers?\b", r"\bmagazines?\b", r"\bbooks?\b", r"\bnotebooks?\b", r"\bcardboard\b", r"\btissues?\b",
+                           r"\bnapkins?\b", r"\btowels?\b", r"\b(?:dish ?)?cloths?\b", r"\brags?\b", r"\bblankets?\b", r"\bcurtains?\b",
+                           r"\bcloth(?:es|ing)\b", r"\bpillows?\b", r"\bcushions?\b", r"\b(?:fire)?wood(?:en)?\b", r"\bmatch(?:es|box)\b",
+                           r"\blighters?\b", r"\blighter fluid\b", r"\baerosols?\b", r"\bspray cans?\b"]},
+        "ko": {"assumed": ["종이", "신문", "잡지", "책(?![상장])", "공책", "골판지", "휴지", "냅킨", "키친타월", "수건", "행주", "걸레", "담요", "이불",
+                           "커튼", "옷(?!걸이)", "베개", "쿠션", "나무", "장작", "성냥", "라이터", "스프레이"]}}}},
+    "place_classes": {"heat_source": {"provenance": {"source": FIRE_CLEARANCE_SOURCE}, "words": {
+        "en": [r"\bfireplaces?\b", r"\bwood(?:-| )?(?:burning )?stoves?\b", r"\bwood ?burners?\b", r"\bradiators?\b", r"\bspace heaters?\b",
+               r"\b(?:portable|electric) heaters?\b", r"\bcandles?\b"],
+        "ko": ["벽난로", "장작 ?난로", "라디에이터", "난로", "온풍기", "전기 ?히터", "촛불", "양초"]}}},
+    "rules": [{"id": "burnable_near_heat", "hazard": "can_burn", "places": ["heat_source"], "within_m": 0.91,
+               "say": "anything that can burn must stay at least three feet (about 0.9 m) away from a heat source",
+               "provenance": {"source": FIRE_CLEARANCE_SOURCE}}],
+}
+
+
 LAYERS = {
     "precond_repair": ({"precond_repair": "1"},
                        {"planner": {"action_roles": {"pick": "Pick"},
@@ -180,6 +206,10 @@ LAYERS = {
     # in the read-back), which the offline replay of d3dev fired on as many passing as failing episodes (the kill ratio of the red team), and retract, until its
     # firing on passing episodes is measured.
     "goal_ledger": ({"goal_ledger": "1"}, {}),
+    # safety_profile (L21): the robot's fire-clearance rule as a safety profile (robot_agent docs/safety.md schema), refused by the hazard gate.
+    # SOURCED rule and heat-source classes (FIRE_CLEARANCE_SOURCE, opened and quoted by the coordinator, BRIEF section 12); ASSUMED words of
+    # "anything that can burn" (general vocabulary, labelled assumed in the profile). No rule for cooking appliances: no cited clearance found.
+    "safety_profile": ({"safety_profile": "1"}, {"planner": {"options": {"safety_profile": {"profile": FIRE_CLEARANCE}}}}),
 }
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
@@ -188,7 +218,8 @@ D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "a
 # follows replan_block.
 D3_LAYERS = D2_LAYERS + ("cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
 # ``all`` (and unset): the D3 layers, then the D4 layers in their build order. A base_d3 arm must say ``d3``.
-D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger")
+D4_LAYERS = ("plan_release", "effect_check", "repair_sync", "goal_ledger",
+             "safety_profile")
 ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
 
