@@ -7,7 +7,7 @@ from tests.home.bench.test_d4_layers import ALL_HASH, D2_HASH, D3, D3_HASH, MODE
 
 
 def test_reach_check_is_selectable_and_not_in_all_d3_or_d2():
-    assert D.SELECTABLE == ("reach_check",) and "reach_check" in D.LAYERS
+    assert "reach_check" in D.SELECTABLE and "reach_check" in D.LAYERS     # the exact SELECTABLE tuple: test_ask_next_layer.py (2026-11-16)
     for alias in ("all", "d3", "d2", "none"):
         assert "reach_check" not in D.selected_layers(env(alias)) and "reach_check" not in D.layer_options(env(alias))
     assert digest(env("all")) == ALL_HASH and digest(env("d3")) == D3_HASH and digest(env("d2")) == D2_HASH
