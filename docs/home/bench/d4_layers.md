@@ -266,6 +266,17 @@ Offline gate (no model): cache-only replays of all 150 d3dev tasks in the four c
 
 Limits: a model-written question that holds the pack's "or" but is no either-or ("is it on the table, or should I look elsewhere?") gets one re-ask after a yes; the options of a question are the robot's English clauses, so in another script only a bare yes or no is re-asked; a correction that names its object only by a word the reader never put in `said` / `name_local` and the catalogue name does not hold decides nothing; the restore keeps the earlier source too, so a source the re-read corrected for the other object is lost; a one-letter speaker form with an ending can still be another word (the Korean first-person form with a topic particle, "as for me", in an answer).
 
+## drop_search and drop_search_goal (selectable layers, not in `all`; classes K4, K6, S2 of the D4 failure analysis)
+
+Status: SELECTABLE, NOT MEASURED - done: robot_agent option `drop_search` (default off, merged 2026-11-16 with the table-driven recovery ladder), D1 entries `drop_search` and `drop_search_goal` (key `goal_check`), tests; missing: any paired measure (the replan after `goal_check` is a model call, so a cache-only replay cannot score it), so neither is in `all`.
+Overlaps: the engine's DROPPED rule (`_refind_dropped`: only the room the robot stands in, only for code `dropped`) and the deleted L16 `effect_check` (91bbced: the same hand-sensor read, current room only, 0 of 600 changed); `drop_search` reuses the engine's REFIND rung (service `refind_on`) instead of a second search. Retired by it: none (candidate: the DROPPED rule's room choice, once measured).
+What (`robot_agent/options/drop_search.py`, hooks `on_step_failed`, `on_goal_missed`; engine services `hand_sensor`, `let_go`, `refind_on`): a failed hand-over while the belief holds an object and the hand sensor READS empty (a sensor call failed for a device reason is no reading): the belief lets go and the REFIND rung looks on the floor places of the person's room, then the rooms passed since the Pick, then the Pick's place, once per object; key `goal_check`: an object this run put at its goal place that the end check misses gets one look at that room's floor, and the replan reason names the goal and the floor.
+Why: a hand-over that failed with an empty hand was repeated as is until "the same failure thrice", and an object lost after a release was never looked for on a floor (the engine's REFIND knows only the room of the place it stands at).
+Data: `planner.options.drop_search.floors` `{head, source | assumed}`, the head of the map's floor places; the D1 overlay declares `head: floor`, `assumed: true` (the robot's ENV lists a `floor@<room>` place per room, brief section 5); `drop_search_goal` also declares the pack's `move` role. None or no label: nothing.
+Tests: `robot_agent/tests/test_option_drop_search.py` (8: `_off`, `_empty`, sensor reading, floor order, two loop-final tests on a made-up house); the ladder: `tests/test_step_ladder.py` (7). Bench: `tests/home/bench/test_d4_layers.py` +1 (both selectable only, labelled, all / d3 / d2 hashes unchanged).
+Ladder (same merge, no new layer): the Pick / MoveTo / release recovery ladders read the declared table (`contract.recovery`, mixin `core/planning/step_ladder.py`); a cache-only replay of d3dev, arm `all`, four cells, was identical in 600 of 600 episodes, 0 misses, before and after (re-proved on the merged trees).
+Limits: the floor-place head is assumed, not read from the map's schema; a hand sensor that only reports through the Pick check reads nothing elsewhere; one look per object.
+
 ## Removed
 
 Decided by the stay gate on d3dev (`d4_measure.md` section 1: 150 tasks x EN/KO x real/ideal = 600 episodes per arm, seed 0, shared prompt cache; optimistic, the layers
@@ -293,6 +304,13 @@ McNemar exact p 0.0005 (the two arms share one prompt cache, so they are not two
 (`test_all_is_the_arm_the_sealed_measure_ran_d3_plus_the_kept_layers_by_name`).
 
 ## Complexity budget
+
+2026-11-16, after the merge of par/ladder (robot_agent b414b36, symbolic_robot b8b6e31; `budget.py all` and `budget.py drop_search_goal`): under `all` nothing
+changed (22 layers, 41 loop keys, 29 options on in 29 modules, 3680 option lines, 51 hooks, 24 services; hashes all 78f601bf, d3 f751d734, d2 64b278b5 unchanged).
+In the tree: 36 modules, 4556 option lines, 63 hooks, 24 option services, 29 hook kinds over 36 registered options (before: 35 / 4429 / 61 / 24 / 28; drop_search
++127 lines, 2 hooks `on_step_failed`, `on_goal_missed`; new hook kind `on_goal_missed`). Engine services +3 (`hand_sensor`, `let_go`, `refind_on`; option_services.py
+280 -> 301, core/options/services.py 38 -> 41); assist_loop.py 4209 -> 4083 (the Pick / MoveTo / release ladders moved to the new step_ladder.py, 173 lines, read from
+the declared table); engine and contract +235 / -144 lines; arch wiring ratchet cfg_keys 65 -> 62, cfg_branches 64 -> 59. Retired: none new.
 
 2026-11-16, after the merges of reach_check, trace and ask_next (robot_agent e9a99a9, recomputed with `budget.py all` and the method below): under `all` nothing
 changed (22 layers, 41 loop keys, 29 options on in 29 modules, 3680 option lines, 51 hooks, 24 services; the three are selectable, not in `all`; hashes all 78f601bf,
