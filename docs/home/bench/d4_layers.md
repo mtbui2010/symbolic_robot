@@ -294,6 +294,13 @@ McNemar exact p 0.0005 (the two arms share one prompt cache, so they are not two
 
 ## Complexity budget
 
+2026-11-16, after the merges of reach_check, trace and ask_next (robot_agent e9a99a9, recomputed with `budget.py all` and the method below): under `all` nothing
+changed (22 layers, 41 loop keys, 29 options on in 29 modules, 3680 option lines, 51 hooks, 24 services; the three are selectable, not in `all`; hashes all 78f601bf,
+d3 f751d734, d2 64b278b5 unchanged). In the tree: 35 modules, 4429 option lines, 61 hooks, 24 option services, 28 hook kinds over 35 registered options (before:
+32 / 3930 / 55 / 24 / 25; reach_check +105 lines, 1 hook `on_step`; trace +206, 4 hooks `on_start`, `on_event`, `on_lab`, `on_step_failed`; ask_next +188, 1 hook
+`on_ask_help`). New hook kinds: `on_event`, `on_lab`, `on_ask_help`. Engine services +4 (`llm_calls`, `retry_here`, `told_at`, `search_on`; option_services.py 245 -> 280);
+engine (core and observe) +130 / -17 lines since 80e266c; assist_loop.py 4209 lines (the hook calls are rewrites in place). Retired: none new.
+
 After the deletion (2026-11-15, recomputed from the tree with the method below, robot_agent e7caf61): the seven retired layers and the engine support only they
 used are deleted (`## Removed`); `all` is the same arm as before the deletion (same hash).
 
