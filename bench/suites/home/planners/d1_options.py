@@ -185,9 +185,19 @@ LAYERS = {
     # and does what the answer says. No overlay data: the menu and its words are robot_agent's language-pack data (assumed). OFF in every arm: the
     # simulated person may not understand a menu question (its answers were not designed for it); to be measured in MuJoCo with a scripted person.
     "ask_next": ({"ask_next": "1"}, {}),
+    # drop_search (robot_agent docs/options.md): a failed hand-over whose hand sensor reads empty looks for the carried object on the floor places of
+    # the person's room, of the rooms passed since the Pick and of the Pick's place (the engine's REFIND rung), then hands it over again. Data: the
+    # head of the map's floor places (the robot's ENV lists a floor@<room> place per room, brief section 5). ASSUMED: that head name.
+    "drop_search": ({"drop_search": "1"}, {"planner": {"options": {"drop_search": {"floors": {"head": "floor", "assumed": True}}}}}),
+    # drop_search_goal: drop_search with its key goal_check: a released object the end check misses gets one look at that room's floor, and the replan
+    # reason names the goal and the floor. The replan after it is an LLM call, so an offline cache-only replay cannot score this part.
+    "drop_search_goal": ({"drop_search": "1", "drop_search_goal": "1"},
+                         {"planner": {"action_roles": {"move": "MoveTo"},
+                                      "options": {"drop_search": {"floors": {"head": "floor", "assumed": True}}}}}),
 }
 SELECTABLE = ("reach_check",)
 SELECTABLE += ("ask_next",)
+SELECTABLE += ("drop_search", "drop_search_goal")
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
 # 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3

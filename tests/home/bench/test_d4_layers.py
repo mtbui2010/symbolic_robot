@@ -111,3 +111,12 @@ def test_a_deleted_layer_name_is_refused_and_d2_d3_keep_their_hashes():
         with pytest.raises(ValueError):
             D.selected_layers(env(",".join(D3 + (n,))))
     assert digest(env("d3")) == D3_HASH and digest(env("d2")) == D2_HASH
+
+
+def test_drop_search_layers_are_selectable_only_labelled_and_leave_the_arm_hashes():
+    for n, keys in (("drop_search", {"drop_search": "1"}), ("drop_search_goal", {"drop_search": "1", "drop_search_goal": "1"})):
+        assert n in D.SELECTABLE and n not in D.ALL_LAYERS and D._labels(D.LAYERS[n][1]) == ["assumed"]
+        on = env(",".join(D3 + (n,)))
+        assert D.layer_options(on) == {**D.layer_options(env("d3")), **keys}
+        assert D.d1_overlay({}, MODEL, on)["planner"]["options"]["drop_search"]["floors"] == {"head": "floor", "assumed": True}
+    assert digest(env("d3")) == D3_HASH and digest(env("all")) == ALL_HASH and digest(env("d2")) == D2_HASH
