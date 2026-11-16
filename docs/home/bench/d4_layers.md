@@ -266,14 +266,14 @@ Offline gate (no model): cache-only replays of all 150 d3dev tasks in the four c
 
 Limits: a model-written question that holds the pack's "or" but is no either-or ("is it on the table, or should I look elsewhere?") gets one re-ask after a yes; the options of a question are the robot's English clauses, so in another script only a bare yes or no is re-asked; a correction that names its object only by a word the reader never put in `said` / `name_local` and the catalogue name does not hold decides nothing; the restore keeps the earlier source too, so a source the re-read corrected for the other object is lost; a one-letter speaker form with an ending can still be another word (the Korean first-person form with a topic particle, "as for me", in an answer).
 
-## drop_search and drop_search_goal (selectable layers, not in `all`; classes K4, K6, S2 of the D4 failure analysis)
+## drop_search (selectable layer, not in `all`; classes K4, K6, S2 of the D4 failure analysis)
 
-Status: SELECTABLE, NOT MEASURED - done: robot_agent option `drop_search` (default off, merged 2026-11-16 with the table-driven recovery ladder), D1 entries `drop_search` and `drop_search_goal` (key `goal_check`), tests; missing: any paired measure (the replan after `goal_check` is a model call, so a cache-only replay cannot score it), so neither is in `all`.
+Status: SELECTABLE, NOT MEASURED - done: robot_agent option `drop_search` (default off, merged 2026-11-16 with the table-driven recovery ladder), D1 entry `drop_search`, tests; missing: a paired measure with a gain, so it is not in `all`. Its second layer `drop_search_goal` (key `goal_check`) was measured on D5 dev and deleted on 2026-11-17 (`## Removed`).
 Overlaps: the engine's DROPPED rule (`_refind_dropped`: only the room the robot stands in, only for code `dropped`) and the deleted L16 `effect_check` (91bbced: the same hand-sensor read, current room only, 0 of 600 changed); `drop_search` reuses the engine's REFIND rung (service `refind_on`) instead of a second search. Retired by it: none (candidate: the DROPPED rule's room choice, once measured).
-What (`robot_agent/options/drop_search.py`, hooks `on_step_failed`, `on_goal_missed`; engine services `hand_sensor`, `let_go`, `refind_on`): a failed hand-over while the belief holds an object and the hand sensor READS empty (a sensor call failed for a device reason is no reading): the belief lets go and the REFIND rung looks on the floor places of the person's room, then the rooms passed since the Pick, then the Pick's place, once per object; key `goal_check`: an object this run put at its goal place that the end check misses gets one look at that room's floor, and the replan reason names the goal and the floor.
-Why: a hand-over that failed with an empty hand was repeated as is until "the same failure thrice", and an object lost after a release was never looked for on a floor (the engine's REFIND knows only the room of the place it stands at).
-Data: `planner.options.drop_search.floors` `{head, source | assumed}`, the head of the map's floor places; the D1 overlay declares `head: floor`, `assumed: true` (the robot's ENV lists a `floor@<room>` place per room, brief section 5); `drop_search_goal` also declares the pack's `move` role. None or no label: nothing.
-Tests: `robot_agent/tests/test_option_drop_search.py` (8: `_off`, `_empty`, sensor reading, floor order, two loop-final tests on a made-up house); the ladder: `tests/test_step_ladder.py` (7). Bench: `tests/home/bench/test_d4_layers.py` +1 (both selectable only, labelled, all / d3 / d2 hashes unchanged).
+What (`robot_agent/options/drop_search.py`, hook `on_step_failed`; engine services `hand_sensor`, `let_go`, `refind_on`): a failed hand-over while the belief holds an object and the hand sensor READS empty (a sensor call failed for a device reason is no reading): the belief lets go and the REFIND rung looks on the floor places of the person's room, then the rooms passed since the Pick, then the Pick's place, once per object.
+Why: a hand-over that failed with an empty hand was repeated as is until "the same failure thrice" (the engine's REFIND knows only the room of the place it stands at).
+Data: `planner.options.drop_search.floors` `{head, source | assumed}`, the head of the map's floor places; the D1 overlay declares `head: floor`, `assumed: true` (the robot's ENV lists a `floor@<room>` place per room, brief section 5). None or no label: nothing.
+Tests: `robot_agent/tests/test_option_drop_search.py` (`_off`, `_empty`, sensor reading, floor order, a loop-final hand-over test on a made-up house; the two `goal_check` tests went with the key); the ladder: `tests/test_step_ladder.py` (7). Bench: `tests/home/bench/test_d4_layers.py` +1 (selectable only, labelled, all / d3 / d2 hashes unchanged).
 Ladder (same merge, no new layer): the Pick / MoveTo / release recovery ladders read the declared table (`contract.recovery`, mixin `core/planning/step_ladder.py`); a cache-only replay of d3dev, arm `all`, four cells, was identical in 600 of 600 episodes, 0 misses, before and after (re-proved on the merged trees).
 Limits: the floor-place head is assumed, not read from the map's schema; a hand sensor that only reports through the Pick check reads nothing elsewhere; one look per object.
 
@@ -297,6 +297,12 @@ Their sections (what, why, tests, offline gates, limits) are in this file's git 
 | L24 | `close_opened` (9fa2ecc) | container left open | harmful: lost 3 tasks (three `conjunction` tasks that close a drawer: give up / budget), won 0 | fired in 33 to 39 of 150 per cell; success 136 / 135, 141 / 139, 89 / 89, 85 / 86; false success 6 / 5, 5 / 4, 9 / 10, 15 / 15 |
 | L25 | `else_ask` (47eeb14) | conditional (else clause served by no goal) | no outcome changed (same evidence as L22) | an estimate from the texts and the D3 lab events, not a replay (one task of eight would ask) |
 
+`drop_search_goal` (a selectable layer, never in `all`: `drop_search` with its key `goal_check`, robot_agent 559ce54, and the engine hook `on_goal_missed`
+only it used, c2b0845) was DELETED on 2026-11-17 with the user's approval, after a paired measure on d5dev (3 arms `all`, `all,drop_search`,
+`all,drop_search,drop_search_goal` x 4 cells x 150 tasks, shared prompt cache): against `all,drop_search` its end-check look fired 9 times and changed no
+outcome (+0 successes, 0 won / 0 lost) and added 2 false successes (task hl-d5dev-000136 in two cells), so it failed the stay rule above. Its D1 entry and
+bench test are in this repo's git history before the deletion; the recorded d5dev results stay as they are. `all` / `d3` / `d2` keep their hashes.
+
 Kept in `all` (in the build order): L15 `plan_release`, L17 `repair_sync`, L18 `goal_ledger`, L19 `answer_align`. On d3dev the kept arm had 459 of 600 (D3 451),
 false success 32 (D3 35), 11 won / 3 lost, p 0.057; it was chosen on those same episodes, so that gain is optimistic. The sealed measure on d4fresh (once, aggregates only,
 design committed before it in `d4_measure.md`) confirmed it: D3 + the four kept layers against D3, success 0.702 -> 0.722 over 600 episodes, 12 tasks won and 0 lost,
@@ -304,6 +310,11 @@ McNemar exact p 0.0005 (the two arms share one prompt cache, so they are not two
 (`test_all_is_the_arm_the_sealed_measure_ran_d3_plus_the_kept_layers_by_name`).
 
 ## Complexity budget
+
+2026-11-17, after the deletion of `drop_search_goal` (`budget.py all` and `budget.py drop_search` before and after, from the trees): under `all` nothing changed
+(22 layers, 41 loop keys, 29 options on in 29 modules, 3680 option lines, 51 hooks, 24 services). Arm `drop_search`: 852 -> 830 option lines, 21 -> 20 hooks.
+In the tree: 37 modules, 4706 -> 4684 option lines (drop_search.py 127 -> 105), 66 -> 65 hooks over 37 registered options, hook kind `on_goal_missed` gone
+(core/options/spec.py -1, assist_loop.py 4083 -> 4082 lines). Retired: drop_search_goal.
 
 2026-11-16, after the merge of par/ladder (robot_agent b414b36 and the fix ddb4f08, symbolic_robot b8b6e31; `budget.py all` and `budget.py drop_search_goal`): under `all` nothing
 changed (22 layers, 41 loop keys, 29 options on in 29 modules, 3680 option lines, 51 hooks, 24 services; hashes all 78f601bf, d3 f751d734, d2 64b278b5 unchanged).

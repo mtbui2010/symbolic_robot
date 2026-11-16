@@ -10,8 +10,8 @@ D3 = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focu
       "cond_extract", "recipient_keep", "plan_complete", "ask_agree", "name_recover", "replan_block", "release_near", "hw_tries")
 D3_HASH = "f751d73417c679250af675869633f8f1278ab7fcfe9127c3c249f53e294beab3"     # the 18 D3 layers: on, loop options, overlay without its note
 D2_HASH = "64b278b5beef2493d675eac77ebd6d10b799e2ce2e307014e56b3f207e356942"
-# deleted on 2026-11-15 after the D4 stay gate (docs/home/bench/d4_layers.md ## Removed): no longer LAYERS names
-DELETED = ("effect_check", "fault_ladder", "safety_profile", "partial_end", "question_cap", "close_opened", "else_ask")
+# deleted on 2026-11-15 after the D4 stay gate, drop_search_goal on 2026-11-17 after the D5 dev measure (docs/home/bench/d4_layers.md ## Removed): no longer LAYERS names
+DELETED = ("effect_check", "fault_ladder", "safety_profile", "partial_end", "question_cap", "close_opened", "else_ask", "drop_search_goal")
 KEPT = ("plan_release", "repair_sync", "goal_ledger", "answer_align")                # in the build order; the arm the sealed d4fresh measure ran
 ALL_HASH = "78f601bfeee57accd86d4d628ce0b9385dca7327c3546944ed18d126fbe6669a"   # d3 + KEPT, as before the deletion (when the seven were LAYERS names)
 MODEL = "hl-understand-p3-s700"
@@ -113,10 +113,10 @@ def test_a_deleted_layer_name_is_refused_and_d2_d3_keep_their_hashes():
     assert digest(env("d3")) == D3_HASH and digest(env("d2")) == D2_HASH
 
 
-def test_drop_search_layers_are_selectable_only_labelled_and_leave_the_arm_hashes():
-    for n, keys in (("drop_search", {"drop_search": "1"}), ("drop_search_goal", {"drop_search": "1", "drop_search_goal": "1"})):
-        assert n in D.SELECTABLE and n not in D.ALL_LAYERS and D._labels(D.LAYERS[n][1]) == ["assumed"]
-        on = env(",".join(D3 + (n,)))
-        assert D.layer_options(on) == {**D.layer_options(env("d3")), **keys}
-        assert D.d1_overlay({}, MODEL, on)["planner"]["options"]["drop_search"]["floors"] == {"head": "floor", "assumed": True}
+def test_drop_search_layer_is_selectable_only_labelled_and_leaves_the_arm_hashes():
+    n = "drop_search"
+    assert n in D.SELECTABLE and n not in D.ALL_LAYERS and D._labels(D.LAYERS[n][1]) == ["assumed"]
+    on = env(",".join(D3 + (n,)))
+    assert D.layer_options(on) == {**D.layer_options(env("d3")), "drop_search": "1"}
+    assert D.d1_overlay({}, MODEL, on)["planner"]["options"]["drop_search"]["floors"] == {"head": "floor", "assumed": True}
     assert digest(env("d3")) == D3_HASH and digest(env("all")) == ALL_HASH and digest(env("d2")) == D2_HASH
