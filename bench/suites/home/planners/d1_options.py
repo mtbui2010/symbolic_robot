@@ -67,6 +67,18 @@ PRECOND_SOURCE = ("mock robot manifest, skills[].pre (hand_empty(), not hand_emp
                   "effects name no goal; a put-down ends an on goal, a hand-over a hand goal)")
 
 
+# heat_safety: the mock robot's heat place, its clearance and the words of things that can burn (robot_agent docs/heat_safety.md). The rule and its distance
+# are the cited page's; the stove is ASSUMED covered (the page lists heat sources "including" fireplaces, wood stoves, radiators, space heaters or candles;
+# a cooking stove top is not named); the word list is ASSUMED (general household materials and items, written with the hazard probe's items in view;
+# 'duster' was added after the reader wrote 'duster' for a Korean dish cloth in that probe).
+HEAT_SOURCE = ("US Fire Administration (FEMA), Heating Fire Safety, https://www.usfa.fema.gov/prevention/home-fires/prevent-fires/heating (page reviewed "
+               "2023-05): 'Keep anything that can burn at least 3 feet from all heat sources including fireplaces, wood stoves, radiators, space heaters or candles.'")
+HEAT_SAFETY = {"places": {"stove@kitchen": {"clearance_m": 0.91, "source": HEAT_SOURCE, "assumed": True}},
+               "burnable": {"words": ["paper", "newspaper", "magazine", "book", "cardboard", "tissue", "napkin", "towel", "cloth", "dishcloth", "rag",
+                                      "duster", "fabric", "plastic", "wood", "wooden", "lighter", "match", "matchbox"],
+                            "source": HEAT_SOURCE + " (the class 'anything that can burn'; the words are assumed)", "assumed": True}}
+
+
 LAYERS = {
     "precond_repair": ({"precond_repair": "1"},
                        {"planner": {"action_roles": {"pick": "Pick"},
@@ -194,10 +206,14 @@ LAYERS = {
     "drop_search_goal": ({"drop_search": "1", "drop_search_goal": "1"},
                          {"planner": {"action_roles": {"move": "MoveTo"},
                                       "options": {"drop_search": {"floors": {"head": "floor", "assumed": True}}}}}),
+    # heat_safety (robot_agent docs/heat_safety.md): a goal that puts a thing that can burn on or in a heat-source place is refused (or dropped and
+    # named). Data: HEAT_SAFETY above (the mock robot's stove as the heat place, the FEMA clearance, a small list of words of things that burn).
+    "heat_safety": ({"heat_safety": "1"}, {"planner": {"options": {"heat_safety": HEAT_SAFETY}}}),
 }
 SELECTABLE = ("reach_check",)
 SELECTABLE += ("ask_next",)
 SELECTABLE += ("drop_search", "drop_search_goal")
+SELECTABLE += ("heat_safety",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
 # 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3
