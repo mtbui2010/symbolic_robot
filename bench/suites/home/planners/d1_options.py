@@ -185,9 +185,14 @@ LAYERS = {
     # and does what the answer says. No overlay data: the menu and its words are robot_agent's language-pack data (assumed). OFF in every arm: the
     # simulated person may not understand a menu question (its answers were not designed for it); to be measured in MuJoCo with a scripted person.
     "ask_next": ({"ask_next": "1"}, {}),
+    # single_goals (robot_agent docs/options.md): a request for one action with no destination (find, pick up, put it down here) is read and done as
+    # that action (goal kinds find / pick / put_here; a find says where it saw the object). No overlay data: the reader's rule lines and the phrase
+    # are robot_agent's language-pack data (assumed). OFF in every arm: d3dev has no single-action task; reader probe in the robot_agent change card.
+    "single_goals": ({"single_goals": "1"}, {}),
 }
 SELECTABLE = ("reach_check",)
 SELECTABLE += ("ask_next",)
+SELECTABLE += ("single_goals",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
 # 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3

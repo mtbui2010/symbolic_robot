@@ -8,7 +8,7 @@ from tests.home.bench.test_d4_layers import ALL_HASH, D2_HASH, D3, D3_HASH, MODE
 
 
 def test_ask_next_is_selectable_and_not_in_all_d3_or_d2():
-    assert D.SELECTABLE == ("reach_check", "ask_next") and "ask_next" in D.LAYERS
+    assert D.SELECTABLE[:2] == ("reach_check", "ask_next") and "ask_next" in D.LAYERS     # later selectable layers follow (single_goals, 2026-11-16)
     for alias in ("all", "d3", "d2", "none"):
         assert "ask_next" not in D.selected_layers(env(alias)) and "ask_next" not in D.layer_options(env(alias))
     assert digest(env("all")) == ALL_HASH and digest(env("d3")) == D3_HASH and digest(env("d2")) == D2_HASH
