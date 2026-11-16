@@ -305,12 +305,12 @@ McNemar exact p 0.0005 (the two arms share one prompt cache, so they are not two
 
 ## Complexity budget
 
-2026-11-16, after the merge of par/ladder (robot_agent b414b36, symbolic_robot b8b6e31; `budget.py all` and `budget.py drop_search_goal`): under `all` nothing
+2026-11-16, after the merge of par/ladder (robot_agent b414b36 and the fix ddb4f08, symbolic_robot b8b6e31; `budget.py all` and `budget.py drop_search_goal`): under `all` nothing
 changed (22 layers, 41 loop keys, 29 options on in 29 modules, 3680 option lines, 51 hooks, 24 services; hashes all 78f601bf, d3 f751d734, d2 64b278b5 unchanged).
 In the tree: 36 modules, 4556 option lines, 63 hooks, 24 option services, 29 hook kinds over 36 registered options (before: 35 / 4429 / 61 / 24 / 28; drop_search
 +127 lines, 2 hooks `on_step_failed`, `on_goal_missed`; new hook kind `on_goal_missed`). Engine services +3 (`hand_sensor`, `let_go`, `refind_on`; option_services.py
-280 -> 301, core/options/services.py 38 -> 41); assist_loop.py 4209 -> 4083 (the Pick / MoveTo / release ladders moved to the new step_ladder.py, 173 lines, read from
-the declared table); engine and contract +235 / -144 lines; arch wiring ratchet cfg_keys 65 -> 62, cfg_branches 64 -> 59. Retired: none new.
+280 -> 301, core/options/services.py 38 -> 41); assist_loop.py 4209 -> 4083 (the Pick / MoveTo / release ladders moved to the new step_ladder.py, 174 lines, read from
+the declared table; its two help sentences in speech.py, +3, where the sim's question-parser test anchors on them); engine and contract +239 / -144 lines; arch wiring ratchet cfg_keys 65 -> 62, cfg_branches 64 -> 59. Retired: none new.
 
 2026-11-16, after the merges of reach_check, trace and ask_next (robot_agent e9a99a9, recomputed with `budget.py all` and the method below): under `all` nothing
 changed (22 layers, 41 loop keys, 29 options on in 29 modules, 3680 option lines, 51 hooks, 24 services; the three are selectable, not in `all`; hashes all 78f601bf,
