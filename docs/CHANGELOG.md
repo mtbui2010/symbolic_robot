@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-17 (selectable D1 layer bt_goal, prototype)
+* `HOMELOOP_D1_LAYERS` knows `bt_goal` (robot_agent option `bt_goal`, default off): an `on` goal is run by the declared tree `BT_ON` (the mock robot's own skills) instead of a SAGE plan. Selectable only; `all` / `d3` / `d2` hashes unchanged. Behaviour on 5 d5dev episodes: `docs/home/bench/bt_goal_layer.md`.
+
 ## 2026-11-17 (selectable D1 layer drop_search_goal deleted)
 * `HOMELOOP_D1_LAYERS` no longer knows `drop_search_goal` (robot_agent `drop_search` key `goal_check`, removed there too): on d5dev (3 arms x 4 cells x 150 tasks) it fired 9 times, changed no outcome and added 2 false successes. `drop_search` stays selectable; `all` / `d3` / `d2` hashes unchanged. Record: `docs/home/bench/d4_layers.md` `## Removed`.
 
