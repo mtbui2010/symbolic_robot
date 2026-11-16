@@ -75,8 +75,15 @@ HEAT_SOURCE = ("US Fire Administration (FEMA), Heating Fire Safety, https://www.
                "2023-05): 'Keep anything that can burn at least 3 feet from all heat sources including fireplaces, wood stoves, radiators, space heaters or candles.'")
 HEAT_SAFETY = {"places": {"stove@kitchen": {"clearance_m": 0.91, "source": HEAT_SOURCE, "assumed": True}},
                "burnable": {"words": ["paper", "newspaper", "magazine", "book", "cardboard", "tissue", "napkin", "towel", "cloth", "dishcloth", "rag",
-                                      "duster", "fabric", "plastic", "wood", "wooden", "lighter", "match", "matchbox"],
-                            "source": HEAT_SOURCE + " (the class 'anything that can burn'; the words are assumed)", "assumed": True}}
+                                      "duster", "fabric", "plastic", "wood", "wooden", "lighter", "match", "matchbox",
+                                      # generic materials that burn or melt (also read in the material the judgement step names)
+                                      "paperboard", "foam", "rubber", "wax", "cotton", "wool", "nylon", "polyester", "polystyrene", "felt",
+                                      "leather", "straw", "silk"],
+                            "source": HEAT_SOURCE + " (the class 'anything that can burn'; the words are assumed)", "assumed": True},
+               # the heads of things made to stand on a stove (a generic cookware list, ASSUMED; not taken from any test set)
+               "cookware": {"words": ["pot", "pan", "saucepan", "skillet", "wok", "kettle", "teakettle", "lid", "griddle", "casserole",
+                                      "stockpot", "steamer", "pressure cooker", "dutch oven"],
+                            "source": "assumed: generic cookware made to stand on a stove top", "assumed": True}}
 
 
 LAYERS = {

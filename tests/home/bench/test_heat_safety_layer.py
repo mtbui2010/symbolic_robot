@@ -48,3 +48,9 @@ def test_heat_safety_every_entry_is_labelled_and_cites_the_fema_page():
 def test_heat_safety_word_list_is_generic_no_cookware_empty():
     words = set(D.HEAT_SAFETY["burnable"]["words"])
     assert not words & {"pot", "pan", "kettle", "frying pan", "wok"}          # the stove's own things pass (fail open)
+
+
+def test_heat_safety_cookware_heads_are_labelled_assumed_and_never_burnable():
+    cook = D.HEAT_SAFETY["cookware"]
+    assert cook.get("assumed") is True and cook["source"].startswith("assumed")
+    assert {"pot", "pan", "kettle", "lid"} <= set(cook["words"]) and not set(cook["words"]) & set(D.HEAT_SAFETY["burnable"]["words"])
