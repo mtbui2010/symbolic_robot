@@ -79,6 +79,22 @@ HEAT_SAFETY = {"places": {"stove@kitchen": {"clearance_m": 0.91, "source": HEAT_
                             "source": HEAT_SOURCE + " (the class 'anything that can burn'; the words are assumed)", "assumed": True}}
 
 
+# bt_goal (robot_agent docs/bt_goal.md, prototype): the tree of an ``on`` goal from the mock robot's OWN declared skills (manifest move / find / pick /
+# place = MoveTo / Find / Pick / Place, its Ask skill) in the order its manifest notes and pre-conditions give ("Find an object at its place before Pick";
+# pick pre found + hand_empty; place pre arrived(?inputs)). The cond ``holding`` after a Pick reads the belief the Pick's own verify (grasp_check) set.
+# ASSUMED: the tree shape (two picks, then the ask_next menu once) is a design choice of the prototype, not tuned on any task.
+_PICK_OK = ["sequence", ["act", "Pick", "{object}"], ["cond", "holding", "{object}"]]
+BT_ON = ["fallback", ["cond", "placed", "{object}", "{to}"],
+         ["sequence",
+          ["fallback", ["cond", "holding", "{object}"],
+           ["sequence", ["cond", "hand_free"], ["act", "MoveTo", "{from}"], ["act", "Find", "{object}"],
+            ["fallback", ["retry", 2, _PICK_OK],
+             ["sequence", ["ask", "q_ask_next_pick", "ask_next.retry", "dialogue.yes"], ["act", "Find", "{object}"], _PICK_OK]]]],
+          ["act", "MoveTo", "{to}"], ["act", "Place", "{to}"], ["cond", "placed", "{object}", "{to}"], ["reply", "say_bt_goal_done"]]]
+BT_SOURCE = ("mock robot manifest (configs/manifest.yaml): skills move / find / pick / place / ask, planner.notes 'Find an object at its place before "
+             "Pick', pick pre found(?inputs) hand_empty(), place pre arrived(?inputs); the tree shape is assumed")
+
+
 LAYERS = {
     "precond_repair": ({"precond_repair": "1"},
                        {"planner": {"action_roles": {"pick": "Pick"},
@@ -204,11 +220,16 @@ LAYERS = {
     # heat_safety (robot_agent docs/heat_safety.md): a goal that puts a thing that can burn on or in a heat-source place is refused (or dropped and
     # named). Data: HEAT_SAFETY above (the mock robot's stove as the heat place, the FEMA clearance, a small list of words of things that burn).
     "heat_safety": ({"heat_safety": "1"}, {"planner": {"options": {"heat_safety": HEAT_SAFETY}}}),
+    # bt_goal (robot_agent docs/bt_goal.md): an ``on`` goal (not a hand delivery) is run by the declared tree BT_ON above instead of a SAGE plan; any
+    # other goal in the request: SAGE plans the whole run. Prototype, measured on a few d5dev episodes only.
+    "bt_goal": ({"bt_goal": "1"}, {"planner": {"options": {"bt_goal": {"trees": {"on": {
+        "tree": BT_ON, "skip_if": ["hand"], "source": BT_SOURCE, "assumed": True}}}}}}),
 }
 SELECTABLE = ("reach_check",)
 SELECTABLE += ("ask_next",)
 SELECTABLE += ("drop_search",)
 SELECTABLE += ("heat_safety",)
+SELECTABLE += ("bt_goal",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
 # 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3
