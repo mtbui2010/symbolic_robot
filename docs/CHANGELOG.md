@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-17 (selectable D1 layer drop_search_goal deleted)
+* `HOMELOOP_D1_LAYERS` no longer knows `drop_search_goal` (robot_agent `drop_search` key `goal_check`, removed there too): on d5dev (3 arms x 4 cells x 150 tasks) it fired 9 times, changed no outcome and added 2 false successes. `drop_search` stays selectable; `all` / `d3` / `d2` hashes unchanged. Record: `docs/home/bench/d4_layers.md` `## Removed`.
+
 ## 2026-11-13 (D1 turns on the failure-class options)
 * `robot_agent:sage_s8n_d1` and `robot_agent:sage_s8n_ft_d1` turn on five robot_agent options (all default off there): `search_per_object` (each object has its own `search_total` budget), `place_find` (a Find of a place the robot moves to is dropped), `reopen_on_miss` (a Find that misses right after an Open closes and opens the container once, then looks again), `end_state` (a go goal for the dock is made true, go and Dock, before done), `object_words` (the goal's 'phone' and the plan's 'cell phone' are one object for the goal checks). The pack data they read is a manifest overlay (`find` role, `recovery.reopen_on_miss: [Close, Open]`, `end_state: {places: [dock], action: Dock}`), recorded in the run config as `manifest_overlay` with `assumed: true`; the last two match the simulator's partial-open and `docked()` rules, so read them as an ablation. Declared in `bench/suites/home/planners/d1_options.py` (the adapter file is at its size limit; it got shorter). Other planners are untouched. The simulator, the judge and the scoring are not changed. D1 results made before this date are not comparable.
 

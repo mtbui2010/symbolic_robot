@@ -201,18 +201,13 @@ LAYERS = {
     # the person's room, of the rooms passed since the Pick and of the Pick's place (the engine's REFIND rung), then hands it over again. Data: the
     # head of the map's floor places (the robot's ENV lists a floor@<room> place per room, brief section 5). ASSUMED: that head name.
     "drop_search": ({"drop_search": "1"}, {"planner": {"options": {"drop_search": {"floors": {"head": "floor", "assumed": True}}}}}),
-    # drop_search_goal: drop_search with its key goal_check: a released object the end check misses gets one look at that room's floor, and the replan
-    # reason names the goal and the floor. The replan after it is an LLM call, so an offline cache-only replay cannot score this part.
-    "drop_search_goal": ({"drop_search": "1", "drop_search_goal": "1"},
-                         {"planner": {"action_roles": {"move": "MoveTo"},
-                                      "options": {"drop_search": {"floors": {"head": "floor", "assumed": True}}}}}),
     # heat_safety (robot_agent docs/heat_safety.md): a goal that puts a thing that can burn on or in a heat-source place is refused (or dropped and
     # named). Data: HEAT_SAFETY above (the mock robot's stove as the heat place, the FEMA clearance, a small list of words of things that burn).
     "heat_safety": ({"heat_safety": "1"}, {"planner": {"options": {"heat_safety": HEAT_SAFETY}}}),
 }
 SELECTABLE = ("reach_check",)
 SELECTABLE += ("ask_next",)
-SELECTABLE += ("drop_search", "drop_search_goal")
+SELECTABLE += ("drop_search",)
 SELECTABLE += ("heat_safety",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
@@ -225,6 +220,8 @@ D4_LAYERS = ("plan_release", "repair_sync", "goal_ledger", "answer_align")
 # Deleted on 2026-11-15 after the D4 stay gate (d4_layers.md ## Removed; robot_agent commit that added each option): effect_check (91bbced),
 # question_cap (2ab4c9c), partial_end (ac322b9), safety_profile (e329a71), fault_ladder (0e4a112), close_opened (9fa2ecc), else_ask (47eeb14); their
 # D1 entries (and the overlay data FIRE_CLEARANCE, FAULT_DEVICES) are in this file's git history before the deletion (symbolic_robot efdd8d8).
+# Deleted on 2026-11-17 (d4_layers.md ## Removed): the selectable drop_search_goal (robot_agent drop_search key goal_check, 559ce54); D5 dev, 3 arms x 4
+# cells x 150 tasks: 9 fires, 0 outcomes changed, +0 successes, +2 false successes; its D1 entry is in this file's git history before the deletion.
 ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
 
