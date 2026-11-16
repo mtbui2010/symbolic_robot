@@ -185,9 +185,9 @@ LAYERS = {
     # and does what the answer says. No overlay data: the menu and its words are robot_agent's language-pack data (assumed). OFF in every arm: the
     # simulated person may not understand a menu question (its answers were not designed for it); to be measured in MuJoCo with a scripted person.
     "ask_next": ({"ask_next": "1"}, {}),
-    # single_goals (robot_agent docs/options.md): a request for one action with no destination (find, pick up, put it down here) is read and done as
-    # that action (goal kinds find / pick / put_here; a find says where it saw the object). No overlay data: the reader's rule lines and the phrase
-    # are robot_agent's language-pack data (assumed). OFF in every arm: d3dev has no single-action task; reader probe in the robot_agent change card.
+    # single_goals (robot_agent docs/options.md): a request only to find an object is read and done as a find (the robot says where it saw it); the
+    # option's default kinds are find only (pick / put_here need the key single_goals.kinds). No overlay data: the rule line and the phrase are
+    # robot_agent's language-pack data (assumed). OFF in every arm: d3dev has no find-only task; reader probe in the robot_agent change card.
     "single_goals": ({"single_goals": "1"}, {}),
 }
 SELECTABLE = ("reach_check",)
