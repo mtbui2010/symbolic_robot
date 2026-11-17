@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-18 (selectable D1 layer closed_can_microwave)
+* `HOMELOOP_D1_LAYERS` knows `closed_can_microwave`: the manifest list `safety.hazards` = `CLOSED_CAN` (closed / sealed / unopened x can / jar / bottle / tin, Korean words; not-denied guards; place `^microwave`; sources NDSU FN1622, Panasonic HL-MX465S, GE JE1240L, words assumed), refused by robot_agent's option `hazard`. `d1_overlay` joins the `safety.hazards` lists of the layers that are on (each entry once) instead of the last one replacing the others; the lists of metal_microwave / metal_microwave_ask alone or together are unchanged. Selectable only; `all` / `d3` / `d2` hashes unchanged. Doc: `docs/home/bench/metal_microwave_layer.md`; test `tests/home/bench/test_closed_can_microwave_layer.py`.
+
 ## 2026-11-18 (selectable D1 layer bt_open_source)
 * `HOMELOOP_D1_LAYERS` knows `bt_open_source` (robot_agent bt_goal entry key `needs_openable`): `bt_goal` with the on / in trees whose fetch opens the source first when the ENV declares it openable and the belief has it closed (`BT_TREES_OPEN`: `BT_OPEN_FROM` before the Find; a surface or a place with no openable field: the `bt_goal` tree). Class: a Find into a closed source used one of the two attempts before the engine's open-after-miss. Selectable only; `all` / `d3` / `d2` hashes and `BT_TREES` unchanged (test_bt_open_source_layer.py).
 

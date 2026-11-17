@@ -112,6 +112,35 @@ METAL_ASK = [{"ask": "q_metal_microwave", "objects": list(METAL_UTENSIL), "place
               "source": METAL_SOURCE + " (the class 'metal utensils'; the utensil and material words are assumed)", "assumed": True}]
 
 
+# closed_can_microwave (robot_agent docs/metal_microwave.md, "Closed can"): a CLOSED / SEALED can, jar or bottle put into the microwave is refused
+# (option hazard, no question). The class and the words closed / sealed, can / bottle / jar are the three manuals' (quotes below, verified by the task's
+# author; the page URLs were not recorded); the phrase shape (up to two words between, the other form "... is still sealed"), the guards and all other
+# words (unopened, tin, Korean) are ASSUMED, written from the sources only, no benchmark text read. Not denied: un-, not, non-, no longer, never; not
+# an object of "open the"; no open / empty word in between; not followed by "is open / empty", "with no lid"; a modal "can you" is no can.
+CAN_SOURCE = ("NDSU Extension, FN1622: names 'metal cans' among the things not to use in a microwave oven; Panasonic HL-MX465S operating manual: "
+              "'Do not heat any closed cans or bottles because they might explode.'; GE JE1240L owner's manual: 'sealed containers—for example, "
+              "closed jars—will explode'; the exact page URLs are unknown")
+CAN_SAY = "a closed can, jar or bottle can explode in a microwave oven"       # the Panasonic / GE reason in short words (wording assumed)
+_C_NOT = (r"(?<![a-z0-9])(?<!not[-_ ])(?<!non[-_ ])(?<!longer[-_ ])(?<!never[-_ ])(?<!open[-_ ]the[-_ ])(?<!open[-_ ]a[-_ ])"
+          r"(?<!open[-_ ]an[-_ ])(?<!opening[-_ ]the[-_ ])")
+_C_GAP = r"[-_ ](?:(?!(?:open(?:ed)?|empt(?:y|ied)|and|or|in|into|from|on|onto|to|with)(?![a-z0-9]))[a-z0-9]+[-_ ]){0,2}?"
+_C_END = (r"(?![a-z0-9])(?![-_ ](?:(?:that|which)[-_ ])?(?:(?:is|was|are)[-_ ])?(?:(?:already|now)[-_ ])?(?:open(?:ed)?|empt(?:y|ied))(?![a-z0-9]))"
+          r"(?![-_ ](?:with[-_ ]no|without(?:[-_ ](?:a|its|the))?)[-_ ](?:lid|cap)s?(?![a-z0-9]))")
+_C_NOUN = r"(?:cans?(?![-_ ](?:you|i|we|they|please)(?![a-z0-9]))|jars?|bottles?)"
+_C_KO_SHUT = r"(?<![가-힣])(?:밀봉된|밀봉한|밀봉돼 ?있는|밀봉되어 ?있는|밀폐된|밀폐한|닫힌|닫혀 ?있는|따지 ?않은|안 ?딴|뜯지 ?않은|개봉하지 ?않은|개봉 ?안 ?한|미개봉(?:된|한)?)"
+_C_KO_OPEN = r"(?:따서|따고|따 ?줘|열어|열고|개봉해|개봉하고|뜯어|뜯고)"
+_C_KO_GAP = (r"(?: (?!(?:빈|열린|딴|개봉한|개봉된|뜯은|뜯긴|안|속|위|옆|뒤|앞)(?: |$))(?!" + _C_KO_OPEN + r")(?!\S*(?:의|에|에서|있는)(?: |$))\S+){0,2}?")
+_C_KO = (_C_KO_SHUT + _C_KO_GAP + r" ?[가-힣]*(?:캔|통조림|병|깡통)(?:[은는이가을를도에의와과만](?![가-힣])|(?![가-힣]))(?! ?" + _C_KO_OPEN + ")")
+CLOSED_CAN = [
+    {"objects": [_C_NOT + r"(?:closed|sealed)" + _C_GAP + _C_NOUN + _C_END], "places": METAL_OVEN, "say": CAN_SAY,
+     "source": CAN_SOURCE + " (the class and the words closed / sealed, can / bottle / jar; the phrase shape and its guards are assumed)", "assumed": True},
+    {"objects": [_C_NOT + r"(?:closed|sealed|unopened)" + _C_GAP + r"(?:" + _C_NOUN + r"|tins?)" + _C_END,
+                 r"(?<![a-z0-9])(?:cans?|jars?|bottles?|tins?)[-_ ](?:(?:that|which)[-_ ])?(?:is|was|are)[-_ ](?:still[-_ ])?(?:closed|sealed|unopened)(?![a-z0-9])",
+                 _C_KO],
+     "places": METAL_OVEN, "say": CAN_SAY, "source": CAN_SOURCE + " (the class; these words are assumed)", "assumed": True},
+]
+
+
 # bt_goal (robot_agent docs/bt_goal.md): the trees of the goal kinds on / open / close / go from the mock robot's OWN declared skills (manifest move / find /
 # pick / place / open / close = MoveTo / Find / Pick / Place / Open / Close, its Ask skill) in the order its manifest notes and pre-conditions give ("Find an
 # object at its place before Pick"; pick pre found + hand_empty; place / open / close pre arrived(?inputs); open / close pre hand_empty). Each tree: the goal's
@@ -328,6 +357,9 @@ LAYERS = {
     # metal_microwave_ask: metal_microwave plus a question for a bare utensil word (key hazard.ask; the whole list, so on its own or after metal_microwave
     # the overlay is the same: a later layer's list replaces an earlier one).
     "metal_microwave_ask": ({"hazard_ask": "1"}, {"safety": {"hazards": METAL_MICROWAVE + METAL_ASK}}),
+    # closed_can_microwave: a closed / sealed can, jar or bottle put into the microwave is refused (option hazard, no loop option; data CLOSED_CAN above).
+    # With metal_microwave(_ask) on too, the lists are joined (``_hazards``), not replaced.
+    "closed_can_microwave": ({}, {"safety": {"hazards": CLOSED_CAN}}),
     # heard_check (robot_agent docs/heard_check.md): a goal whose own quote of the person (``said``, a say goal's message) no heard word matches gets an
     # ``object`` issue on the read-back (the engine's re-sample, repeat question, read-back follow). ASSUMED data, not tuned: two characters in common at the
     # start of a word (one syllable pair, one letter pair), half the characters of the word cut to the quote's length.
@@ -348,6 +380,7 @@ SELECTABLE += ("metal_microwave",)
 SELECTABLE += ("metal_microwave_ask",)
 SELECTABLE += ("heard_check",)
 SELECTABLE += ("shared_instances",)
+SELECTABLE += ("closed_can_microwave",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
 # 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3
@@ -414,6 +447,15 @@ def _labels(data) -> list:
     return list(dict.fromkeys(out))
 
 
+def _hazards(overlays) -> list:
+    """The manifest lists ``safety.hazards`` of ``overlays`` joined in order, each entry once (a list that holds another, as metal_microwave_ask's
+    holds metal_microwave's, gives the same list as before; [] when none has one)."""
+    out = []
+    for ov in overlays:
+        out += [copy.deepcopy(e) for e in (ov.get("safety") or {}).get("hazards") or [] if e not in out]
+    return out
+
+
 def layer_note(name: str) -> str:
     """One layer for the overlay note: its name and the label of its pack data (as declared in ``LAYERS``)."""
     data = LAYERS[name][1]
@@ -428,6 +470,9 @@ def d1_overlay(base: dict, translate_model: str, environ=None) -> dict:
     out = _merge(base, {"planner": {**D1_DATA["planner"], "translate_model": translate_model}})
     for n in on:
         out = _merge(out, LAYERS[n][1])
+    hazards = _hazards([base] + [LAYERS[n][1] for n in on])
+    if hazards:
+        out["safety"] = {**out["safety"], "hazards": hazards}
     note = str(base.get("note", "")) + "; " + D1_DATA["note"]
     if on:
         note += "; layers on (" + LAYERS_ENV + "): " + ", ".join(layer_note(n) for n in on)

@@ -56,3 +56,17 @@ success lost. The simulated person answered the question with a withdrawal ("Oh,
 once "잘 모르겠어요"; never "yes": the refusal comes from the fail-safe rule (not a clear no), not from a yes. The first replay (robot_agent
 1ec916b, rule "not a yes = go on") let the Korean withdrawal through (ko_ideal 029 / 042 and ko_real 029 still done-false-success; the
 English one parsed as a yes because of "right"): the rule was changed to fail safe after that dev replay (robot_agent 9065864). d5dev is the development set (optimistic); the sealed sets were not opened.
+
+# Layer closed_can_microwave (selectable, not in `all`): a closed / sealed can, jar or bottle put into the microwave is refused
+
+**What.** No loop option: the manifest list `safety.hazards` = `CLOSED_CAN` of `d1_options.py` (robot_agent docs/metal_microwave.md
+"Closed can"), refused by option `hazard` (no question: the risk is the closed container, glass too). Two entries, place `^microwave`, `say`
+`CAN_SAY` ("a closed can, jar or bottle can explode in a microwave oven", wording assumed), both `assumed: true`: 1. closed / sealed x can /
+bottle / jar (the manuals' words; the phrase shape and guards assumed); 2. unopened, tin, "the can is still sealed", Korean (밀봉된, 닫힌,
+따지 않은 ... x 캔, 통조림, 병, 깡통). Sources (`CAN_SOURCE`; quotes verified by the task's author, page URLs unknown): NDSU Extension FN1622
+("metal cans"), Panasonic HL-MX465S ("Do not heat any closed cans or bottles because they might explode."), GE JE1240L ("sealed
+containers—for example, closed jars—will explode"). Not denied: un-, not, non-, no longer, never, "open the ...", an open / empty word in
+between, "... that is open / empty", "with no lid"; Korean 밀봉 안 된, 개봉한, 빈, "... 캔을 따서". A bare `can` / `soup can` is not decided.
+Written from the sources only; no benchmark text was read to choose the words. With `metal_microwave` or `metal_microwave_ask` on too, the
+lists are joined (`_hazards`: each entry once, in layer order), so those layers' lists are as before. Turn it on with
+`HOMELOOP_D1_LAYERS=<all list>,closed_can_microwave`. Hashes of all, d3, d2 unchanged (tests/home/bench/test_closed_can_microwave_layer.py).
