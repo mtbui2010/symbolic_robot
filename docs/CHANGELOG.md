@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-17 (selectable D1 layer heard_check)
+* `HOMELOOP_D1_LAYERS` knows `heard_check` (robot_agent option `heard_check`, default off): a goal whose own quote of the person is in no heard word gets a read-back object issue. Selectable only; `all` / `d3` / `d2` hashes unchanged. d5dev all vs all + heard_check: success 423 -> 427, false success 38 -> 34, 0 successes lost (ko_real only; 7 episodes live): `docs/home/bench/heard_check_layer.md`.
+
 ## 2026-11-17 (selectable D1 layer metal_microwave_ask)
 * `HOMELOOP_D1_LAYERS` knows `metal_microwave_ask`: loop key `hazard_ask=1` (robot_agent option `hazard` key `ask`) and the manifest list `METAL_MICROWAVE + METAL_ASK` (one assumed entry: bare utensil words x `^microwave`, `unless` safe material words, question `q_metal_microwave`). Selectable only: all / d3 / d2 hashes unchanged. Doc: `docs/home/bench/metal_microwave_layer.md`; test `tests/home/bench/test_metal_microwave_ask_layer.py`.
 

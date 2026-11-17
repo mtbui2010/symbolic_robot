@@ -165,6 +165,8 @@ BT_TREES = {"on": {"tree": BT_ON, "skip_if": ["hand"], "source": BT_SOURCE, "ass
             "in": {"tree": BT_IN, "source": BT_SOURCE_3, "assumed": True},
             "say": [{"tree": BT_SAY_AT, "source": BT_SOURCE_3, "assumed": True},
                     {"tree": BT_SAY_HERE, "skip_if": ["to"], "source": BT_SOURCE_3, "assumed": True}]}
+# heard_check: robot_agent's starting values (docs/heard_check.md), ASSUMED, not measured or tuned on this benchmark
+HEARD_MATCH = {"min_prefix": 2, "min_ratio": 0.5, "assumed": True}
 
 
 LAYERS = {
@@ -304,6 +306,10 @@ LAYERS = {
     # metal_microwave_ask: metal_microwave plus a question for a bare utensil word (key hazard.ask; the whole list, so on its own or after metal_microwave
     # the overlay is the same: a later layer's list replaces an earlier one).
     "metal_microwave_ask": ({"hazard_ask": "1"}, {"safety": {"hazards": METAL_MICROWAVE + METAL_ASK}}),
+    # heard_check (robot_agent docs/heard_check.md): a goal whose own quote of the person (``said``, a say goal's message) no heard word matches gets an
+    # ``object`` issue on the read-back (the engine's re-sample, repeat question, read-back follow). ASSUMED data, not tuned: two characters in common at the
+    # start of a word (one syllable pair, one letter pair), half the characters of the word cut to the quote's length.
+    "heard_check": ({"heard_check": "1"}, {"planner": {"options": {"heard_check": {"match": HEARD_MATCH}}}}),
 }
 SELECTABLE = ("reach_check",)
 SELECTABLE += ("ask_next",)
@@ -313,6 +319,7 @@ SELECTABLE += ("bt_goal",)
 SELECTABLE += ("bt_goal_sage",)
 SELECTABLE += ("metal_microwave",)
 SELECTABLE += ("metal_microwave_ask",)
+SELECTABLE += ("heard_check",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
 # 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3
