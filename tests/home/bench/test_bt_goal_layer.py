@@ -78,3 +78,21 @@ def test_the_say_trees_are_the_engine_template_and_the_in_tree_opens_before_the_
     assert here["tree"] == ["act", "Say", "{object}"] and here["skip_if"] == ["to"]
     order = [leaf[1] for leaf in leaves(D.BT_TREES["in"]["tree"]) if leaf[0] == "act"]
     assert order == ["MoveTo", "Open", "MoveTo", "Find", "Pick", "MoveTo", "PutIn"]
+
+
+def guarded(node) -> tuple:
+    """(MoveTo leaves, MoveTo leaves guarded as ``fallback [cond at P] [act MoveTo P]``) in a tree."""
+    if node[0] == "fallback" and len(node) == 3 and node[1][:2] == ["cond", "at"] and node[2][:2] == ["act", "MoveTo"] and node[1][2] == node[2][2]:
+        return 1, 1
+    kids = node[1:] if node[0] in ("sequence", "fallback") else [node[2]] if node[0] == "retry" else []
+    if not kids:
+        return int(node[:2] == ["act", "MoveTo"]), 0
+    sums = [guarded(c) for c in kids]
+    return sum(a for a, _ in sums), sum(b for _, b in sums)
+
+
+def test_regression_no_tree_moves_to_the_place_the_robot_is_at_already():
+    """The class (bt_goal 3 pilot, d5dev in-goal): after opening the container the fetch moved to the same place again (SAGE never does)."""
+    for t in entries(D.BT_TREES):
+        n, ok = guarded(t["tree"])
+        assert n == ok, t["tree"]
