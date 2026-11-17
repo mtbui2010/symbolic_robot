@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-17 (selectable D1 layer metal_microwave)
+* `HOMELOOP_D1_LAYERS` knows `metal_microwave`: the overlay adds the manifest list `safety.hazards` (`METAL_MICROWAVE`: metal words from three cited pages, assumed materials and Korean words, place `^microwave`), read by robot_agent's option `hazard` (robot_agent docs/metal_microwave.md). No loop option, no simulator change. Selectable only; `all` / `d3` / `d2` hashes unchanged. `_labels` also reads the labels of list entries (no other layer's note changes). Doc: docs/home/bench/metal_microwave_layer.md.
+
 ## 2026-11-17 (selectable D1 layer bt_goal, prototype)
 * `HOMELOOP_D1_LAYERS` knows `bt_goal` (robot_agent option `bt_goal`, default off): an `on` goal is run by the declared tree `BT_ON` (the mock robot's own skills) instead of a SAGE plan. Selectable only; `all` / `d3` / `d2` hashes unchanged. Behaviour on 5 d5dev episodes: `docs/home/bench/bt_goal_layer.md`.
 
