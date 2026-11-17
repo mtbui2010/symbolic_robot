@@ -310,6 +310,10 @@ LAYERS = {
     # ``object`` issue on the read-back (the engine's re-sample, repeat question, read-back follow). ASSUMED data, not tuned: two characters in common at the
     # start of a word (one syllable pair, one letter pair), half the characters of the word cut to the quote's length.
     "heard_check": ({"heard_check": "1"}, {"planner": {"options": {"heard_check": {"match": HEARD_MATCH}}}}),
+    # shared_instances (robot_agent docs/options.md, class C1): a goal object named exactly like a memory record with no instance id, while the records
+    # with an id that hold the name are two or more instances, is asked about (inventory_ask's which-question; a read-back choice issue). No overlay data:
+    # the records are the robot's own object memory (the seed writes no id for a name two objects share).
+    "shared_instances": ({"shared_instances": "1"}, {}),
 }
 SELECTABLE = ("reach_check",)
 SELECTABLE += ("ask_next",)
@@ -320,6 +324,7 @@ SELECTABLE += ("bt_goal_sage",)
 SELECTABLE += ("metal_microwave",)
 SELECTABLE += ("metal_microwave_ask",)
 SELECTABLE += ("heard_check",)
+SELECTABLE += ("shared_instances",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
 # 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3

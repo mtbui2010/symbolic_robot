@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-17 (selectable D1 layer shared_instances, class C1)
+* `HOMELOOP_D1_LAYERS` knows `shared_instances` (robot_agent option `shared_instances`, default off): a goal object named exactly like a bare memory record that two remembered instances share is asked about. Selectable only; `all` / `d3` / `d2` hashes unchanged. Trigger analysis and cache-only replay on d5dev: `docs/home/bench/shared_instances_layer.md`.
+
 ## 2026-11-17 (selectable D1 layer heard_check)
 * `HOMELOOP_D1_LAYERS` knows `heard_check` (robot_agent option `heard_check`, default off): a goal whose own quote of the person is in no heard word gets a read-back object issue. Selectable only; `all` / `d3` / `d2` hashes unchanged. d5dev all vs all + heard_check: success 423 -> 427, false success 38 -> 34, 0 successes lost (ko_real only; 7 episodes live): `docs/home/bench/heard_check_layer.md`.
 
