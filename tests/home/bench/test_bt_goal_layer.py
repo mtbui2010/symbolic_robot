@@ -3,6 +3,7 @@ robot's own declared skills, the arm hashes unchanged. Pure data: no run, no mod
 import hashlib
 import json
 
+import pytest
 import yaml
 
 from bench.suites.home.planners import d1_options as D
@@ -35,25 +36,30 @@ def leaves(node):
 
 
 def test_bt_goal_is_selectable_only_and_leaves_the_arm_hashes():
-    assert "bt_goal" in D.SELECTABLE and "bt_goal" not in D.ALL_LAYERS
+    assert {"bt_goal", "bt_goal_sage"} <= set(D.SELECTABLE) and not {"bt_goal", "bt_goal_sage"} & set(D.ALL_LAYERS)
     assert digest(env("d3")) == D3_HASH and digest(env("all")) == ALL_HASH and digest(env("d2")) == D2_HASH
 
 
-def test_bt_goal_on_top_of_all_adds_its_option_and_its_tree_only():
-    on = env(",".join(D.ALL_LAYERS + ("bt_goal",)))
-    assert D.selected_layers(on) == D.ALL_LAYERS + ("bt_goal",)
-    assert D.layer_options(on) == {**D.layer_options(env("all")), "bt_goal": "1"}
+@pytest.mark.parametrize("layer,opts", [("bt_goal", {"bt_goal": "1"}), ("bt_goal_sage", {"bt_goal": "1", "bt_goal.exhausted": "sage_once"})])
+def test_bt_goal_on_top_of_all_adds_its_option_and_its_trees_only(layer, opts):
+    on = env(",".join(D.ALL_LAYERS + (layer,)))
+    assert D.selected_layers(on) == D.ALL_LAYERS + (layer,)
+    assert D.layer_options(on) == {**D.layer_options(env("all")), **opts}
     ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("all"))
-    trees = ov["planner"]["options"].pop("bt_goal")["trees"]
-    assert set(trees) == {"on"} and trees["on"]["tree"] == D.BT_ON and trees["on"]["assumed"] is True and trees["on"]["source"]
+    data = ov["planner"]["options"].pop("bt_goal")
+    assert set(data["trees"]) == {"on", "open", "close", "go"} and all(t["assumed"] is True and t["source"] for t in data["trees"].values())
+    assert data["menu"] == D.BT_MENU and data["menu"]["assumed"] is True
     ov.pop("note"), base.pop("note")
     assert ov == base
 
 
-def test_bt_goal_tree_names_only_actions_the_mock_robot_declares():
+def test_bt_goal_trees_name_only_actions_the_mock_robot_declares():
     import symbolic_robot.domains.home.configs as cfg
     from pathlib import Path
     man = yaml.safe_load((Path(cfg.__file__).parent / "manifest.yaml").read_text(encoding="utf-8"))
     declared = {s["action"] for s in man["skills"]}
-    acts = {leaf[1] for leaf in leaves(D.BT_ON) if leaf[0] == "act"}
-    assert acts == {"MoveTo", "Find", "Pick", "Place"} and acts <= declared and "Ask" in declared
+    acts = {leaf[1] for t in D.BT_TREES.values() for leaf in leaves(t["tree"]) if leaf[0] == "act"}
+    assert acts == {"MoveTo", "Find", "Pick", "Place", "Open", "Close"} and acts <= declared and "Ask" in declared
+    assert set(D.BT_MENU["phrases"]) <= declared
+    first = {k: t["tree"][1] for k, t in D.BT_TREES.items()}               # the goal's condition comes first: an achieved goal does nothing
+    assert {k: f[0] for k, f in first.items()} == {k: "cond" for k in first}
