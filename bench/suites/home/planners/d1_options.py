@@ -165,6 +165,25 @@ BT_TREES = {"on": {"tree": BT_ON, "skip_if": ["hand"], "source": BT_SOURCE, "ass
             "in": {"tree": BT_IN, "source": BT_SOURCE_3, "assumed": True},
             "say": [{"tree": BT_SAY_AT, "source": BT_SOURCE_3, "assumed": True},
                     {"tree": BT_SAY_HERE, "skip_if": ["to"], "source": BT_SOURCE_3, "assumed": True}]}
+# bt_open_source: the fetch of ``on`` / ``in`` opens the SOURCE first when the ENV declares it openable (robot_agent bt_goal entry key needs_openable;
+# a surface, a place with no openable field: the tree above). Open only when not open in the belief, at the source (open pre arrived, hand_empty), before
+# the Find. ASSUMED: the shape (the manifest's Find has no opened pre; SAGE's plans open first, bt_goal_layer.md measure 1), not tuned on any task.
+BT_OPEN_FROM = ["fallback", ["cond", "opened", "{from}"], ["sequence", ["act", "Open", "{from}"], ["cond", "opened", "{from}"]]]
+
+
+def _open_source(entry: dict) -> list:
+    """[the entry with BT_OPEN_FROM right before its Find (used for an openable source only), the entry as it is]."""
+    def put(node):
+        if not isinstance(node, list) or node[0] not in ("sequence", "fallback"):
+            return node
+        kids = [put(c) for c in node[1:]]
+        at = next((i for i, c in enumerate(kids) if c[:2] == ["act", "Find"] and node[0] == "sequence"), None)
+        return [node[0], *(kids if at is None else kids[:at] + [BT_OPEN_FROM] + kids[at:])]
+    src = entry["source"] + "; the Open of an openable source before Find is assumed (layer bt_open_source)"
+    return [{**entry, "tree": put(entry["tree"]), "needs_openable": ["from"], "source": src}, entry]
+
+
+BT_TREES_OPEN = {**BT_TREES, "on": _open_source(BT_TREES["on"]), "in": _open_source(BT_TREES["in"])}
 # heard_check: robot_agent's starting values (docs/heard_check.md), ASSUMED, not measured or tuned on this benchmark
 HEARD_MATCH = {"min_prefix": 2, "min_ratio": 0.5, "assumed": True}
 
@@ -300,6 +319,9 @@ LAYERS = {
     # policy B (``sage_once``: the remaining goals to the SAGE replan once).
     "bt_goal": ({"bt_goal": "1"}, {"planner": {"options": {"bt_goal": {"trees": BT_TREES, "menu": BT_MENU}}}}),
     "bt_goal_sage": ({"bt_goal": "1", "bt_goal.exhausted": "sage_once"}, {"planner": {"options": {"bt_goal": {"trees": BT_TREES, "menu": BT_MENU}}}}),
+    # bt_open_source: bt_goal (policy A unless bt_goal_sage is on too) with the on / in trees that open an openable closed source before the Find
+    # (BT_TREES_OPEN above). On its own or after bt_goal / bt_goal_sage the overlay is the same (its trees replace theirs key by key).
+    "bt_open_source": ({"bt_goal": "1"}, {"planner": {"options": {"bt_goal": {"trees": BT_TREES_OPEN, "menu": BT_MENU}}}}),
     # metal_microwave (robot_agent docs/metal_microwave.md): a goal that puts a thing with a metal word into the microwave is refused by option hazard
     # (on in every arm; its rules key core reads the manifest list). No loop option; data: METAL_MICROWAVE above.
     "metal_microwave": ({}, {"safety": {"hazards": METAL_MICROWAVE}}),
@@ -321,6 +343,7 @@ SELECTABLE += ("drop_search",)
 SELECTABLE += ("heat_safety",)
 SELECTABLE += ("bt_goal",)
 SELECTABLE += ("bt_goal_sage",)
+SELECTABLE += ("bt_open_source",)
 SELECTABLE += ("metal_microwave",)
 SELECTABLE += ("metal_microwave_ask",)
 SELECTABLE += ("heard_check",)

@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-18 (selectable D1 layer bt_open_source)
+* `HOMELOOP_D1_LAYERS` knows `bt_open_source` (robot_agent bt_goal entry key `needs_openable`): `bt_goal` with the on / in trees whose fetch opens the source first when the ENV declares it openable and the belief has it closed (`BT_TREES_OPEN`: `BT_OPEN_FROM` before the Find; a surface or a place with no openable field: the `bt_goal` tree). Class: a Find into a closed source used one of the two attempts before the engine's open-after-miss. Selectable only; `all` / `d3` / `d2` hashes and `BT_TREES` unchanged (test_bt_open_source_layer.py).
+
 ## 2026-11-17 (selectable D1 layer shared_instances, class C1)
 * `HOMELOOP_D1_LAYERS` knows `shared_instances` (robot_agent option `shared_instances`, default off): a goal object named exactly like a bare memory record that two remembered instances share is asked about. Selectable only; `all` / `d3` / `d2` hashes unchanged. Trigger analysis and cache-only replay on d5dev: `docs/home/bench/shared_instances_layer.md`.
 

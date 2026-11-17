@@ -7,6 +7,16 @@ by the trees (each step with the engine's own ladder: retry, wait schedule, sear
 plans the whole run. A tree with no way left: `bt_goal` asks once (menu) or stops; `bt_goal_sage` hands the remaining goals to SAGE once.
 Turn on with `HOMELOOP_D1_LAYERS=<all list>,bt_goal` (or `,bt_goal_sage`). The hashes of all, d3, d2 are unchanged (test_bt_goal_layer.py).
 
+**Layer bt_open_source (2026-11-18, selectable).** `bt_goal` with `BT_TREES_OPEN`: the `on` / `in` kinds get a first entry whose fetch, at the
+source and before the Find, opens it when not open in the belief (`BT_OPEN_FROM`), used only when the source is declared openable (robot_agent
+entry key `needs_openable`: an ENV entry with an `openable` field that is true); a surface, a place without the field: the `bt_goal` tree as
+it is. Class: a Find into a closed source container saw nothing (one of the two attempts) before the engine's open-after-miss opened it. Add
+`,bt_open_source` (with or without `bt_goal` / `bt_goal_sage`); `BT_TREES` and the all / d3 / d2 hashes are unchanged (test_bt_open_source_layer.py).
+Replay 2026-11-18 (d5dev = dev set; cache-only CPU replay of the live Z arm's caches, HEAD robot_agent 8f34735 / symbolic_robot f2cc07b plus the
+uncommitted change; Z replayed at that code = live Z in 600 of 600 episodes): Z + bt_open_source vs live Z, 600 episodes: 64 fewer Finds, 0 more;
+success 445 / 446 (+1 en_real, an injected-fault draw that moved), 0 lost; false success unchanged (18); 53 fewer LLM calls; 8 runs one more
+search leg (the object was not in the opened source); 2 replay misses (a new question, unknown; both failures in live Z).
+
 **Measure 2026-11-17 (d5dev = dev set, optimistic; snapshot robot_agent 257c165, symbolic_robot e8b51fc, embodiplan 4bfa87a; a COPY of
 shared_cache_D5, cache-only replay, misses live: 23 live calls).** Tasks: the 30 of 150 d5dev tasks whose gold goals are all on / open / go
 (24 on, 5 go, 1 open), 4 cells. SAGE = the existing `DEV_all_<cell>` episodes (a replay of `all` at this snapshot gives the same 120 results).
