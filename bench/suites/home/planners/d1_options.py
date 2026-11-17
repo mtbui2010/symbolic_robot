@@ -84,17 +84,23 @@ HEAT_SAFETY = {"places": {"stove@kitchen": {"clearance_m": 0.91, "source": HEAT_
 # object at its place before Pick"; pick pre found + hand_empty; place / open / close pre arrived(?inputs); open / close pre hand_empty). Each tree: the goal's
 # condition first (already achieved: nothing to do), the steps, the goal's condition and an empty hand last. The engine's own ladder runs inside each step
 # (retries, waits, search, its help question): no Retry or Ask node here. ASSUMED: the tree shapes are a design choice, not tuned on any task.
+# Every MoveTo of a tree goes only when the robot is not at the place already (``_go``): a move to where the robot stands is a robot call SAGE's plan
+# never makes (the engine's plan tidy drops it), and on the real profile one more chance of an injected fault (bt_goal 3 pilot, class "move to here").
+def _go(slot: str) -> list:
+    return ["fallback", ["cond", "at", slot], ["act", "MoveTo", slot]]
+
+
 BT_ON = ["fallback", ["cond", "placed", "{object}", "{to}"],
          ["sequence",
           ["fallback", ["cond", "holding", "{object}"],
-           ["sequence", ["cond", "hand_free"], ["act", "MoveTo", "{from}"], ["act", "Find", "{object}"], ["act", "Pick", "{object}"],
+           ["sequence", ["cond", "hand_free"], _go("{from}"), ["act", "Find", "{object}"], ["act", "Pick", "{object}"],
             ["cond", "holding", "{object}"]]],
-          ["act", "MoveTo", "{to}"], ["act", "Place", "{to}"], ["cond", "placed", "{object}", "{to}"], ["cond", "hand_free"]]]
+          _go("{to}"), ["act", "Place", "{to}"], ["cond", "placed", "{object}", "{to}"], ["cond", "hand_free"]]]
 BT_OPEN = ["fallback", ["cond", "opened", "{object}"],
-           ["sequence", ["cond", "hand_free"], ["act", "MoveTo", "{object}"], ["act", "Open", "{object}"], ["cond", "opened", "{object}"]]]
+           ["sequence", ["cond", "hand_free"], _go("{object}"), ["act", "Open", "{object}"], ["cond", "opened", "{object}"]]]
 BT_CLOSE = ["fallback", ["cond", "closed", "{object}"],
-            ["sequence", ["cond", "hand_free"], ["act", "MoveTo", "{object}"], ["act", "Close", "{object}"], ["cond", "closed", "{object}"]]]
-BT_GO = ["fallback", ["cond", "at", "{to}"], ["act", "MoveTo", "{to}"]]
+            ["sequence", ["cond", "hand_free"], _go("{object}"), ["act", "Close", "{object}"], ["cond", "closed", "{object}"]]]
+BT_GO = _go("{to}")
 BT_SOURCE = ("mock robot manifest (configs/manifest.yaml): skills move / find / pick / place / open / close / ask, planner.notes 'Find an object at its "
              "place before Pick', pick pre found(?inputs) hand_empty(), place pre arrived(?inputs), open / close pre arrived(?inputs) hand_empty(); the tree "
              "shapes are assumed")
@@ -102,10 +108,30 @@ BT_SOURCE = ("mock robot manifest (configs/manifest.yaml): skills move / find / 
 BT_MENU = {"phrases": {"Find": "q_ask_next_find", "Pick": "q_ask_next_pick", "MoveTo": "q_ask_next_move"},
            "retry": ["ask_next.retry", "ask_next.elsewhere", "dialogue.yes"], "stop": ["ask_next.stop", "dialogue.stop"],
            "source": "robot_agent option ask_next: its menu phrases q_ask_next_* and word lists (lang/*.json); the action map is the mock robot's", "assumed": True}
+# in / say (robot_agent bt_goal 3): ``in`` = the container opened first while the hand is empty (open pre hand_empty(); put_in pre opened(?inputs),
+# the manifest note "Open a container before PutIn"), then the fetch of ``on``, then PutIn and the goal's condition; the note's "close it after" is a
+# later ``close`` goal's (data), not this tree's. ``say`` = the engine's own template (goals.compile_steps: MoveTo the place when not there, Say the
+# sentence as the reader wrote it), with a place and without one; no condition after (nothing reads "said"). No ``deliver`` tree: this robot's
+# WaitForUnload is only an alias of handover (manifest comment: the deliver goal does not fit an arm robot) and its reader is offered no deliver
+# kind. No ``give`` tree: understand_give_kind is off in the D1 planners.
+BT_IN = ["fallback", ["cond", "placed", "{object}", "{to}"],
+         ["sequence",
+          ["fallback", ["cond", "opened", "{to}"],
+           ["sequence", ["cond", "hand_free"], _go("{to}"), ["act", "Open", "{to}"], ["cond", "opened", "{to}"]]],
+          ["fallback", ["cond", "holding", "{object}"],
+           ["sequence", ["cond", "hand_free"], _go("{from}"), ["act", "Find", "{object}"], ["act", "Pick", "{object}"],
+            ["cond", "holding", "{object}"]]],
+          _go("{to}"), ["act", "PutIn", "{to}"], ["cond", "placed", "{object}", "{to}"], ["cond", "hand_free"]]]
+BT_SAY_AT = ["sequence", _go("{to}"), ["act", "Say", "{object}"]]
+BT_SAY_HERE = ["act", "Say", "{object}"]
+BT_SOURCE_3 = BT_SOURCE + "; put_in pre arrived(?inputs) opened(?inputs), say: robot_agent goals.compile_steps (the say template)"
 BT_TREES = {"on": {"tree": BT_ON, "skip_if": ["hand"], "source": BT_SOURCE, "assumed": True},
             "open": {"tree": BT_OPEN, "source": BT_SOURCE, "assumed": True},
             "close": {"tree": BT_CLOSE, "source": BT_SOURCE, "assumed": True},
-            "go": {"tree": BT_GO, "source": BT_SOURCE, "assumed": True}}
+            "go": {"tree": BT_GO, "source": BT_SOURCE, "assumed": True},
+            "in": {"tree": BT_IN, "source": BT_SOURCE_3, "assumed": True},
+            "say": [{"tree": BT_SAY_AT, "source": BT_SOURCE_3, "assumed": True},
+                    {"tree": BT_SAY_HERE, "skip_if": ["to"], "source": BT_SOURCE_3, "assumed": True}]}
 
 
 LAYERS = {
@@ -233,7 +259,7 @@ LAYERS = {
     # heat_safety (robot_agent docs/heat_safety.md): a goal that puts a thing that can burn on or in a heat-source place is refused (or dropped and
     # named). Data: HEAT_SAFETY above (the mock robot's stove as the heat place, the FEMA clearance, a small list of words of things that burn).
     "heat_safety": ({"heat_safety": "1"}, {"planner": {"options": {"heat_safety": HEAT_SAFETY}}}),
-    # bt_goal (robot_agent docs/bt_goal.md): when EVERY goal of a request is of a kind with a tree above (an ``on`` goal not a hand delivery, open, close, go),
+    # bt_goal (robot_agent docs/bt_goal.md): when EVERY goal of a request is of a kind with a tree above (an ``on`` goal not a hand delivery, in, open, close, go, say),
     # the trees run the goals with the engine's own recovery, no plan call; any other goal in the request: SAGE plans the whole run. A tree with no way left:
     # policy A (robot_agent default ``exhausted`` = ask_or_stop: the menu question once when a person can help, else stop). bt_goal_sage: the same with
     # policy B (``sage_once``: the remaining goals to the SAGE replan once).

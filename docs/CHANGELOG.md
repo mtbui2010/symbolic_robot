@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-17 (bt_goal 3: in / say trees)
+* Layers `bt_goal` / `bt_goal_sage` declare trees for `in` (open the container first, then fetch, PutIn) and `say` (the engine's template, with and without a place); every tree MoveTo goes only when the robot is not there. No deliver / give tree (why: d1_options.py). d5dev, 61 covered tasks x 4 cells: +2 successes, +0 false successes vs `all` (`docs/home/bench/bt_goal_layer.md`). `all` / `d3` / `d2` hashes unchanged.
+
 ## 2026-11-17 (selectable D1 layer bt_goal, prototype)
 * `HOMELOOP_D1_LAYERS` knows `bt_goal` (robot_agent option `bt_goal`, default off): an `on` goal is run by the declared tree `BT_ON` (the mock robot's own skills) instead of a SAGE plan. Selectable only; `all` / `d3` / `d2` hashes unchanged. Behaviour on 5 d5dev episodes: `docs/home/bench/bt_goal_layer.md`.
 
