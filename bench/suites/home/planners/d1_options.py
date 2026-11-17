@@ -79,6 +79,35 @@ HEAT_SAFETY = {"places": {"stove@kitchen": {"clearance_m": 0.91, "source": HEAT_
                             "source": HEAT_SOURCE + " (the class 'anything that can burn'; the words are assumed)", "assumed": True}}
 
 
+# bt_goal (robot_agent docs/bt_goal.md): the trees of the goal kinds on / open / close / go from the mock robot's OWN declared skills (manifest move / find /
+# pick / place / open / close = MoveTo / Find / Pick / Place / Open / Close, its Ask skill) in the order its manifest notes and pre-conditions give ("Find an
+# object at its place before Pick"; pick pre found + hand_empty; place / open / close pre arrived(?inputs); open / close pre hand_empty). Each tree: the goal's
+# condition first (already achieved: nothing to do), the steps, the goal's condition and an empty hand last. The engine's own ladder runs inside each step
+# (retries, waits, search, its help question): no Retry or Ask node here. ASSUMED: the tree shapes are a design choice, not tuned on any task.
+BT_ON = ["fallback", ["cond", "placed", "{object}", "{to}"],
+         ["sequence",
+          ["fallback", ["cond", "holding", "{object}"],
+           ["sequence", ["cond", "hand_free"], ["act", "MoveTo", "{from}"], ["act", "Find", "{object}"], ["act", "Pick", "{object}"],
+            ["cond", "holding", "{object}"]]],
+          ["act", "MoveTo", "{to}"], ["act", "Place", "{to}"], ["cond", "placed", "{object}", "{to}"], ["cond", "hand_free"]]]
+BT_OPEN = ["fallback", ["cond", "opened", "{object}"],
+           ["sequence", ["cond", "hand_free"], ["act", "MoveTo", "{object}"], ["act", "Open", "{object}"], ["cond", "opened", "{object}"]]]
+BT_CLOSE = ["fallback", ["cond", "closed", "{object}"],
+            ["sequence", ["cond", "hand_free"], ["act", "MoveTo", "{object}"], ["act", "Close", "{object}"], ["cond", "closed", "{object}"]]]
+BT_GO = ["fallback", ["cond", "at", "{to}"], ["act", "MoveTo", "{to}"]]
+BT_SOURCE = ("mock robot manifest (configs/manifest.yaml): skills move / find / pick / place / open / close / ask, planner.notes 'Find an object at its "
+             "place before Pick', pick pre found(?inputs) hand_empty(), place pre arrived(?inputs), open / close pre arrived(?inputs) hand_empty(); the tree "
+             "shapes are assumed")
+# the question when a tree has no way left: robot_agent's ask_next menu phrases and answer words (language-pack data), per action of the mock robot
+BT_MENU = {"phrases": {"Find": "q_ask_next_find", "Pick": "q_ask_next_pick", "MoveTo": "q_ask_next_move"},
+           "retry": ["ask_next.retry", "ask_next.elsewhere", "dialogue.yes"], "stop": ["ask_next.stop", "dialogue.stop"],
+           "source": "robot_agent option ask_next: its menu phrases q_ask_next_* and word lists (lang/*.json); the action map is the mock robot's", "assumed": True}
+BT_TREES = {"on": {"tree": BT_ON, "skip_if": ["hand"], "source": BT_SOURCE, "assumed": True},
+            "open": {"tree": BT_OPEN, "source": BT_SOURCE, "assumed": True},
+            "close": {"tree": BT_CLOSE, "source": BT_SOURCE, "assumed": True},
+            "go": {"tree": BT_GO, "source": BT_SOURCE, "assumed": True}}
+
+
 LAYERS = {
     "precond_repair": ({"precond_repair": "1"},
                        {"planner": {"action_roles": {"pick": "Pick"},
@@ -204,11 +233,19 @@ LAYERS = {
     # heat_safety (robot_agent docs/heat_safety.md): a goal that puts a thing that can burn on or in a heat-source place is refused (or dropped and
     # named). Data: HEAT_SAFETY above (the mock robot's stove as the heat place, the FEMA clearance, a small list of words of things that burn).
     "heat_safety": ({"heat_safety": "1"}, {"planner": {"options": {"heat_safety": HEAT_SAFETY}}}),
+    # bt_goal (robot_agent docs/bt_goal.md): when EVERY goal of a request is of a kind with a tree above (an ``on`` goal not a hand delivery, open, close, go),
+    # the trees run the goals with the engine's own recovery, no plan call; any other goal in the request: SAGE plans the whole run. A tree with no way left:
+    # policy A (robot_agent default ``exhausted`` = ask_or_stop: the menu question once when a person can help, else stop). bt_goal_sage: the same with
+    # policy B (``sage_once``: the remaining goals to the SAGE replan once).
+    "bt_goal": ({"bt_goal": "1"}, {"planner": {"options": {"bt_goal": {"trees": BT_TREES, "menu": BT_MENU}}}}),
+    "bt_goal_sage": ({"bt_goal": "1", "bt_goal.exhausted": "sage_once"}, {"planner": {"options": {"bt_goal": {"trees": BT_TREES, "menu": BT_MENU}}}}),
 }
 SELECTABLE = ("reach_check",)
 SELECTABLE += ("ask_next",)
 SELECTABLE += ("drop_search",)
 SELECTABLE += ("heat_safety",)
+SELECTABLE += ("bt_goal",)
+SELECTABLE += ("bt_goal_sage",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
 # 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3
