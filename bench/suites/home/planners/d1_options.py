@@ -61,6 +61,23 @@ COND_PROMPT = ("A household robot request may hold a condition: something is to 
                "do when it does not hold (the 'otherwise' part). drop: the numbers of goals that only restate the condition and are no request. A number is in at most one list; "
                "leave a goal out of all lists when it is to be done in every case. unsure: true when you cannot tell.")
 
+# the extraction prompt of layer cond_schema (robot_agent cond_extract key kinds, schema SCHEMA_KINDS): COND_PROMPT's keys plus kind, always and question.
+# ASSUMED text, general (no task text): the robot's look settles only whether an object is at a place; any other condition is asked as one yes / no question.
+COND_PROMPT_KINDS = ("A household robot request may hold a condition: something is to be done only if the condition holds, and perhaps something else otherwise.\n"
+                     "Request: {request}\nThe goals already read from it, numbered:\n{goals}\n"
+                     "Answer in JSON. conditional: true only when the request really makes a goal depend on a condition, else false with empty lists. "
+                     "kind: presence when the condition is whether an object is (or is not) at a place, which the robot can go and look at; state when it is "
+                     "whether something is open, closed, on or off; unobservable when nothing the robot can see settles it. object and at: for presence, the object "
+                     "and the place the condition looks at, in the words of the request; else empty. question: for state and unobservable, one short yes / no "
+                     "question to the person, in the language of the request, whose answer yes means the condition holds; else empty. present: true when the "
+                     "condition holds if the object IS at that place or the answer is yes, false when it holds if the object is NOT there or the answer is no. "
+                     "if_goals: the numbers of the goals to do when the condition holds. else_goals: the numbers of the goals to do when it does not hold (the "
+                     "'otherwise' part). always: the numbers of the goals to do in every case, whatever the condition. drop: the numbers of goals that only restate "
+                     "the condition and are no request. A number is in at most one list. unsure: true when you cannot tell.")
+# A Korean conditional ending neither clause above reads (cond20 dev analysis: a clause "...들어오면" never started the extraction): the verb stem 오- "come"
+# (and its compounds 들어오-, 돌아오-, 나오-) + "myeon". ASSUMED, general grammar; "오면" ends no common noun. The request forms are excluded as above.
+KO_COND_COME = r"(?:(?:만약|혹시)\s+)?(?:[^\s,;.!?]+\s+){0,3}\S*오면(?![가-힣])(?!\s*(?:돼|되|좋겠|괜찮|충분|고맙|감사))(?=\s|[,;.!?]|$)"
+
 
 # precond_repair's label; the replan_block layer extends it with the ``near`` need of the two releases (a second source of the same manifest)
 PRECOND_SOURCE = ("mock robot manifest, skills[].pre (hand_empty(), not hand_empty()); achieves: assumed (the manifest "
@@ -379,6 +396,14 @@ LAYERS = {
     # the cond_extract layer (it turns cond_goal on). Data: ANSWER_NEGATION above and the open role of the mock robot's own Open skill (assumed).
     "cond_answer": ({"cond_goal.answer": "1", "cond_goal.open_closed": "1", "cond_goal.confirm_none": "1"},
                     {"planner": {"action_roles": {"open": "Open"}, "options": {"cond_goal": {"clauses": ANSWER_NEGATION, "assumed": True}}}}),
+    # cond_schema (robot_agent cond_extract keys kinds / heard_match; classes A and I of the cond20 dev analysis): the extraction also says the kind of the
+    # condition, the goals to do in every case (always) and, for a condition no look settles, one yes / no question that cond_goal asks and reads (needs the
+    # cond_answer layer: without it nothing is asked); a condition object no heard word matches is UNKNOWN (the run ends failed), an unheard place is asked.
+    # Data (assumed): COND_PROMPT_KINDS, HEARD_MATCH (heard_check's numbers, not tuned) and the clause list of cond_extract plus KO_COND_COME.
+    "cond_schema": ({"cond_extract.kinds": "1"},
+                    {"planner": {"options": {"cond_extract": {
+                        "prompt": COND_PROMPT_KINDS, "heard_match": HEARD_MATCH, "assumed": True,
+                        "clauses": {"ko": {"condition": [KO_CONDITION, KO_COND_MORE, KO_COND_COME], "assumed": True}}}}}}),
 }
 SELECTABLE = ("reach_check",)
 SELECTABLE += ("ask_next",)
@@ -393,6 +418,7 @@ SELECTABLE += ("heard_check",)
 SELECTABLE += ("shared_instances",)
 SELECTABLE += ("closed_can_microwave",)
 SELECTABLE += ("cond_answer",)
+SELECTABLE += ("cond_schema",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
 # 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3

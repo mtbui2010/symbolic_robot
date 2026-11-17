@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-18 (selectable D1 layer cond_schema, classes A and I of the cond20 analysis)
+* `HOMELOOP_D1_LAYERS` knows `cond_schema` (robot_agent option `cond_extract` keys `kinds`, `heard_match`, default off; robot_agent fdfc9cd): the extraction says the condition's `kind` (presence / state / unobservable), the `always` goals and, for a condition no look settles, a yes / no `question` that `cond_goal` asks and reads (needs `cond_answer`); a condition object no heard word matches ends the run failed (UNKNOWN), an unheard place is asked. Overlay (assumed): `COND_PROMPT_KINDS`, `HEARD_MATCH`, the Korean clause `KO_COND_COME` (-오면). Selectable only; `all` / `d3` / `d2` hashes unchanged. Not measured live. Doc: docs/home/bench/cond_schema_layer.md.
+
 ## 2026-11-18 (selectable D1 layer cond_answer, class B of the cond20 analysis)
 * `HOMELOOP_D1_LAYERS` knows `cond_answer` (robot_agent option `cond_goal` keys `answer`, `open_closed`, `confirm_none`, default off): the answer to the condition question is read by itself (a place named, a negation; "I don't know" is UNKNOWN), a closed openable place is opened before the look, a "nothing to do" decided on a blind look is asked once more. Overlay `ANSWER_NEGATION` (assumed) and the `open` role. Needs the `cond_extract` layer. Selectable only; `all` / `d3` / `d2` hashes unchanged. Not measured live. Doc: docs/home/bench/cond_answer_layer.md.
 
