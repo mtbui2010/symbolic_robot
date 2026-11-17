@@ -79,6 +79,28 @@ HEAT_SAFETY = {"places": {"stove@kitchen": {"clearance_m": 0.91, "source": HEAT_
                             "source": HEAT_SOURCE + " (the class 'anything that can burn'; the words are assumed)", "assumed": True}}
 
 
+# metal_microwave (robot_agent docs/metal_microwave.md): no metal into a microwave oven, as data of option hazard (the manifest list safety.hazards: the frozen
+# pack's profile file cannot take a rule). The rule and its English words are the three pages' (opened by the task's author, 2026-11-17); the place is the
+# mock robot's ENV key head 'microwave' (ASSUMED); the other materials and the Korean words are ASSUMED. A word counts whole and when not denied (non-, no,
+# without, -free); no material exemption (the pages name metal trim, no safe material). Written from the pages only, before any d5dev replay.
+METAL_SOURCE = ("NIH ORS, Fire Safety Tips for Using Microwave Ovens (News2Use, 2016-03-01), https://news2use.ors.nih.gov/Pages/Fire-Safety-Tips-for-Using-"
+                "Microwave-Ovens.aspx: 'Never use metallic articles and aluminum foil in a microwave oven.'; UC Berkeley EH&S, Microwave Oven Safety Guidelines, "
+                "https://ehs.berkeley.edu/node/1128: 'Do not use aluminum foil or any metal containers, metal utensils, metal objects, or objects with metal or "
+                "foil trim in the oven.' 'Such items can cause arcing, damaging the oven and creating a fire or burn hazard.'; Hoover UK advice centre, "
+                "https://service.hoover.co.uk/advice-centre/sparks-and-blue-flashes-inside-the-microwave-oven/143-ensure-that-no-metal-cooking-trays-or-foil-is-"
+                "used-to-contain-the-food: 'When placing food in the microwave ensure the cooking tray is not metallic or has metal trims.'")
+METAL_NOT_DENIED = r"(?<!non[-_ ])(?<!\bno[ _])(?<!without[ _])(?<![a-z0-9])"
+METAL_END = r"(?![a-z0-9])(?![-_ ]?free(?![a-z0-9]))"
+METAL_OVEN = [r"^microwave(?:@|$)"]
+METAL_SAY = "metal in a microwave oven can cause sparks and a fire"      # the Berkeley page's reason in short words (wording assumed)
+METAL_MICROWAVE = [
+    {"objects": [METAL_NOT_DENIED + r"(?:metal(?:s|lic)?|foils?|alumin(?:um|ium))" + METAL_END], "places": METAL_OVEN, "say": METAL_SAY,
+     "source": METAL_SOURCE},
+    {"objects": [METAL_NOT_DENIED + r"(?:steel|stainless|irons?|tins?|tinfoils?)" + METAL_END, r"(?<!비)금속|알루미늄|호일|포일|은박|스테인리스|양철|무쇠"],
+     "places": METAL_OVEN, "say": METAL_SAY, "source": METAL_SOURCE + " (the class; these words are assumed)", "assumed": True},
+]
+
+
 # bt_goal (robot_agent docs/bt_goal.md): the trees of the goal kinds on / open / close / go from the mock robot's OWN declared skills (manifest move / find /
 # pick / place / open / close = MoveTo / Find / Pick / Place / Open / Close, its Ask skill) in the order its manifest notes and pre-conditions give ("Find an
 # object at its place before Pick"; pick pre found + hand_empty; place / open / close pre arrived(?inputs); open / close pre hand_empty). Each tree: the goal's
@@ -265,6 +287,9 @@ LAYERS = {
     # policy B (``sage_once``: the remaining goals to the SAGE replan once).
     "bt_goal": ({"bt_goal": "1"}, {"planner": {"options": {"bt_goal": {"trees": BT_TREES, "menu": BT_MENU}}}}),
     "bt_goal_sage": ({"bt_goal": "1", "bt_goal.exhausted": "sage_once"}, {"planner": {"options": {"bt_goal": {"trees": BT_TREES, "menu": BT_MENU}}}}),
+    # metal_microwave (robot_agent docs/metal_microwave.md): a goal that puts a thing with a metal word into the microwave is refused by option hazard
+    # (on in every arm; its rules key core reads the manifest list). No loop option; data: METAL_MICROWAVE above.
+    "metal_microwave": ({}, {"safety": {"hazards": METAL_MICROWAVE}}),
 }
 SELECTABLE = ("reach_check",)
 SELECTABLE += ("ask_next",)
@@ -272,6 +297,7 @@ SELECTABLE += ("drop_search",)
 SELECTABLE += ("heat_safety",)
 SELECTABLE += ("bt_goal",)
 SELECTABLE += ("bt_goal_sage",)
+SELECTABLE += ("metal_microwave",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
 # 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3
@@ -328,6 +354,8 @@ def _merge(base: dict, add: dict) -> dict:
 def _labels(data) -> list:
     """The labels found anywhere in a layer's pack data: ``sourced: <source>`` for a ``source`` string, ``assumed`` for ``assumed: true``."""
     out = []
+    if isinstance(data, list):
+        return list(dict.fromkeys(x for v in data for x in _labels(v)))
     if isinstance(data, dict):
         out += ["sourced: " + data["source"]] if isinstance(data.get("source"), str) and data["source"].strip() else []
         out += ["assumed"] if data.get("assumed") is True else []
