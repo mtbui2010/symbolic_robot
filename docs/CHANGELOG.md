@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-17 (selectable D1 layer metal_microwave_ask)
+* `HOMELOOP_D1_LAYERS` knows `metal_microwave_ask`: loop key `hazard_ask=1` (robot_agent option `hazard` key `ask`) and the manifest list `METAL_MICROWAVE + METAL_ASK` (one assumed entry: bare utensil words x `^microwave`, `unless` safe material words, question `q_metal_microwave`). Selectable only: all / d3 / d2 hashes unchanged. Doc: `docs/home/bench/metal_microwave_layer.md`; test `tests/home/bench/test_metal_microwave_ask_layer.py`.
+
 ## 2026-11-17 (selectable D1 layer metal_microwave)
 * `HOMELOOP_D1_LAYERS` knows `metal_microwave`: the overlay adds the manifest list `safety.hazards` (`METAL_MICROWAVE`: metal words from three cited pages, assumed materials and Korean words, place `^microwave`), read by robot_agent's option `hazard` (robot_agent docs/metal_microwave.md). No loop option, no simulator change. Selectable only; `all` / `d3` / `d2` hashes unchanged. `_labels` also reads the labels of list entries (no other layer's note changes). Doc: docs/home/bench/metal_microwave_layer.md.
 

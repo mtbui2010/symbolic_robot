@@ -101,6 +101,17 @@ METAL_MICROWAVE = [
 ]
 
 
+# metal_microwave_ask (robot_agent docs/metal_microwave.md, "Ask"): a BARE utensil word (no material word) put into the microwave makes the robot ASK
+# "is it metal?" (robot_agent option hazard, key ask; question: the language-pack phrase q_metal_microwave). The UC Berkeley page names "metal utensils"
+# a risk; it does not say that a spoon is metal, so the utensil words, the safe material words and the Korean words are ASSUMED. A material word decides
+# without a question: the metal words above run first (steel spoon: refused), METAL_SAFE (plastic spoon) skips it. No can, no container (not in the pages).
+METAL_UTENSIL = (r"(?<![a-z0-9])(?:(?:tea|table)?spoons?|forks?|knife|knives|cutlery|utensils?|ladles?|whisks?|tongs|chopsticks?)(?![a-z0-9])",
+                 r"(?<![가-힣])(?:숟가락|티스푼|포크|칼|나이프|수저|젓가락|국자|거품기|집게)(?:[은는이가을를도]|(?![가-힣]))")     # a noun alone or + one particle
+METAL_SAFE = (r"(?<![a-z0-9])(?:plastics?|wood(?:en)?|silicone|glass|ceramic)(?![a-z0-9])", r"플라스틱|나무|원목|실리콘|유리|도자기|세라믹")
+METAL_ASK = [{"ask": "q_metal_microwave", "objects": list(METAL_UTENSIL), "places": METAL_OVEN, "unless": list(METAL_SAFE), "say": METAL_SAY,
+              "source": METAL_SOURCE + " (the class 'metal utensils'; the utensil and material words are assumed)", "assumed": True}]
+
+
 # bt_goal (robot_agent docs/bt_goal.md): the trees of the goal kinds on / open / close / go from the mock robot's OWN declared skills (manifest move / find /
 # pick / place / open / close = MoveTo / Find / Pick / Place / Open / Close, its Ask skill) in the order its manifest notes and pre-conditions give ("Find an
 # object at its place before Pick"; pick pre found + hand_empty; place / open / close pre arrived(?inputs); open / close pre hand_empty). Each tree: the goal's
@@ -290,6 +301,9 @@ LAYERS = {
     # metal_microwave (robot_agent docs/metal_microwave.md): a goal that puts a thing with a metal word into the microwave is refused by option hazard
     # (on in every arm; its rules key core reads the manifest list). No loop option; data: METAL_MICROWAVE above.
     "metal_microwave": ({}, {"safety": {"hazards": METAL_MICROWAVE}}),
+    # metal_microwave_ask: metal_microwave plus a question for a bare utensil word (key hazard.ask; the whole list, so on its own or after metal_microwave
+    # the overlay is the same: a later layer's list replaces an earlier one).
+    "metal_microwave_ask": ({"hazard_ask": "1"}, {"safety": {"hazards": METAL_MICROWAVE + METAL_ASK}}),
 }
 SELECTABLE = ("reach_check",)
 SELECTABLE += ("ask_next",)
@@ -298,6 +312,7 @@ SELECTABLE += ("heat_safety",)
 SELECTABLE += ("bt_goal",)
 SELECTABLE += ("bt_goal_sage",)
 SELECTABLE += ("metal_microwave",)
+SELECTABLE += ("metal_microwave_ask",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
 # 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3
