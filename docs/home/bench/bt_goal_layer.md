@@ -1,22 +1,24 @@
-# Layer bt_goal (selectable, not in `all`; prototype): an `on` goal run by a declared behaviour tree, not a SAGE plan
+# Layers bt_goal (policy A) and bt_goal_sage (policy B): goals run by declared trees with the engine's own recovery (selectable, not in `all`)
 
-**What.** It turns on robot_agent's option `bt_goal` (robot_agent docs/bt_goal.md) with the overlay tree `BT_ON` of `d1_options.py`: placed already?
-else (holding it? else hand free, MoveTo its place, Find, Pick twice, then the ask_next menu once and Find + Pick), MoveTo the destination, Place,
-placed?, a reply. Built from the mock robot's own manifest skills (move / find / pick / place / ask); the shape is assumed. Any goal in the request
-that is not an `on` goal with a known source place: SAGE plans the whole run. Turn it on with `HOMELOOP_D1_LAYERS=<all list>,bt_goal`; the hashes of
-all, d3 and d2 are unchanged (tests/home/bench/test_bt_goal_layer.py).
+**What.** They turn on robot_agent's option `bt_goal` (robot_agent docs/bt_goal.md) with the trees `BT_ON`, `BT_OPEN`, `BT_CLOSE`, `BT_GO` and the
+menu `BT_MENU` of `d1_options.py` (built from the mock robot's own skills, shapes assumed). A request whose goals are ALL of a kind with a tree runs
+by the trees (each step with the engine's own ladder: retry, wait schedule, search legs, its help question; no plan call); any other goal: SAGE
+plans the whole run. A tree with no way left: `bt_goal` asks once (menu) or stops; `bt_goal_sage` hands the remaining goals to SAGE once.
+Turn on with `HOMELOOP_D1_LAYERS=<all list>,bt_goal` (or `,bt_goal_sage`). The hashes of all, d3, d2 are unchanged (test_bt_goal_layer.py).
 
-**Behaviour test (pre-registered 2026-11-17, 5 d5dev episodes, `all` vs `all + bt_goal`, one snapshot: robot_agent 0a8a7e8, symbolic_robot a77b739,
-embodiplan 4bfa87a; cache-only replay of a copy of shared_cache_D5, then the 3 episodes with misses live on the local reader, 22 new calls).**
+**Measure 2026-11-17 (d5dev = dev set, optimistic; snapshot robot_agent 257c165, symbolic_robot e8b51fc, embodiplan 4bfa87a; a COPY of
+shared_cache_D5, cache-only replay, misses live: 23 live calls).** Tasks: the 30 of 150 d5dev tasks whose gold goals are all on / open / go
+(24 on, 5 go, 1 open), 4 cells. SAGE = the existing `DEV_all_<cell>` episodes (a replay of `all` at this snapshot gives the same 120 results).
 
-| episode | success A / B | LLM calls A / B | robot calls A / B | what the tree did |
-|---|---|---|---|---|
-| 000114 en_ideal, 1 goal | yes / yes | 2 / 1 | 11 / 11 | ran the goal; same skill calls |
-| 000119 en_real, 2 goals | yes / yes | 6 / 4 | 24 / 24 | ran both goals in order; same skill calls |
-| 000002 ko_real, blocked move | yes / yes | 10 / 16 | 14 / 14 | first MoveTo blocked, the tree has no move retry: failed, SAGE replanned from scratch |
-| 000143 ko_real, 2 goals, hw_fault | yes / yes | 7 / 14 | 30 / 30 | Place hw_fault, no wait in the tree: failed, SAGE replanned |
-| 000095 ko_ideal, search | yes / yes | 8 / 10 | 25 / 28 | object not at the remembered place: failed, two extra looks, SAGE searched |
+| cell | success SAGE / A / B | false success | LLM calls mean SAGE / A | sim time s SAGE / A | questions SAGE / A |
+|---|---|---|---|---|---|
+| en_real | 19 / 19 / 19 | 1 / 1 / 1 | 5.27 / 2.90 | 185 / 195 | 47 / 49 |
+| en_ideal | 28 / 28 / 28 | 0 / 0 / 0 | 5.13 / 2.43 | 156 / 165 | 25 / 26 |
+| ko_real | 20 / 20 / 20 | 1 / 1 / 1 | 8.57 / 6.50 | 188 / 190 | 59 / 60 |
+| ko_ideal | 27 / 27 / 27 | 1 / 1 / 1 | 7.63 / 5.00 | 165 / 165 | 27 / 27 |
 
-Five episodes show behaviour, not rates. The ask menu was never reached (no pick failed). The reply is an event `say`, not a robot Say skill, so the
-simulated person never hears it. Reading: the tree saves the plan calls only when nothing fails; a failed tree costs MORE calls than the plan it
-replaced (the replan decomposes from scratch). Not in `all`; a larger measure would need trees with move / hardware retries and a search leaf first.
+Paired vs SAGE: 0 wins, 0 losses in every cell (exact McNemar p = 1; common random numbers: not independent runs). The trees claimed 118 of
+120 episodes; 91 of 120 made the same robot calls as SAGE. B made the same runs as A: the policy's last step (stop / SAGE) was never reached
+(29 trees went on from a place the person named to the engine's own where-question, 2 from the menu answer, 8 runs ended by the engine's own
+ladder stop as with SAGE, 8 gave a correction back to the engine). Before the correction fix one pilot episode was lost (the tree finished the
+old goal). A tree that fails with an object in a closed source container looks once before it opens (one extra Find; SAGE plans the Open first).
