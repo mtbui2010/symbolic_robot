@@ -47,10 +47,16 @@ def test_bt_goal_on_top_of_all_adds_its_option_and_its_trees_only(layer, opts):
     assert D.layer_options(on) == {**D.layer_options(env("all")), **opts}
     ov, base = D.d1_overlay({}, MODEL, on), D.d1_overlay({}, MODEL, env("all"))
     data = ov["planner"]["options"].pop("bt_goal")
-    assert set(data["trees"]) == {"on", "open", "close", "go"} and all(t["assumed"] is True and t["source"] for t in data["trees"].values())
+    assert set(data["trees"]) == {"on", "in", "open", "close", "go", "say"}
+    assert all(t["assumed"] is True and t["source"] for t in entries(data["trees"]))
     assert data["menu"] == D.BT_MENU and data["menu"]["assumed"] is True
     ov.pop("note"), base.pop("note")
     assert ov == base
+
+
+def entries(trees):
+    """Every declared entry (a kind may declare a list of them, the first usable one runs)."""
+    return [e for v in trees.values() for e in (v if isinstance(v, list) else [v])]
 
 
 def test_bt_goal_trees_name_only_actions_the_mock_robot_declares():
@@ -58,8 +64,17 @@ def test_bt_goal_trees_name_only_actions_the_mock_robot_declares():
     from pathlib import Path
     man = yaml.safe_load((Path(cfg.__file__).parent / "manifest.yaml").read_text(encoding="utf-8"))
     declared = {s["action"] for s in man["skills"]}
-    acts = {leaf[1] for t in D.BT_TREES.values() for leaf in leaves(t["tree"]) if leaf[0] == "act"}
-    assert acts == {"MoveTo", "Find", "Pick", "Place", "Open", "Close"} and acts <= declared and "Ask" in declared
-    assert set(D.BT_MENU["phrases"]) <= declared
-    first = {k: t["tree"][1] for k, t in D.BT_TREES.items()}               # the goal's condition comes first: an achieved goal does nothing
+    acts = {leaf[1] for t in entries(D.BT_TREES) for leaf in leaves(t["tree"]) if leaf[0] == "act"}
+    assert acts == {"MoveTo", "Find", "Pick", "Place", "PutIn", "Open", "Close", "Say"} and acts <= declared and "Ask" in declared
+    assert set(D.BT_MENU["phrases"]) <= declared and "deliver" not in D.BT_TREES and "give" not in D.BT_TREES
+    first = {k: t["tree"][1] for k, t in D.BT_TREES.items() if k != "say"}  # the goal's condition comes first: an achieved goal does nothing
     assert {k: f[0] for k, f in first.items()} == {k: "cond" for k in first}
+
+
+def test_the_say_trees_are_the_engine_template_and_the_in_tree_opens_before_the_fetch():
+    """say: robot_agent goals.compile_steps (MoveTo when not there, Say the sentence; without a place only Say). in: Open while the hand is empty."""
+    at, here = D.BT_TREES["say"]
+    assert at["tree"] == ["sequence", ["fallback", ["cond", "at", "{to}"], ["act", "MoveTo", "{to}"]], ["act", "Say", "{object}"]]
+    assert here["tree"] == ["act", "Say", "{object}"] and here["skip_if"] == ["to"]
+    order = [leaf[1] for leaf in leaves(D.BT_TREES["in"]["tree"]) if leaf[0] == "act"]
+    assert order == ["MoveTo", "Open", "MoveTo", "Find", "Pick", "MoveTo", "PutIn"]
