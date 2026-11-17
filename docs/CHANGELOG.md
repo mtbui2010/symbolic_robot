@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-17 (selectable D1 layer shared_instances, class C1)
+* `HOMELOOP_D1_LAYERS` knows `shared_instances` (robot_agent option `shared_instances`, default off): a goal object named exactly like a bare memory record that two remembered instances share is asked about. Selectable only; `all` / `d3` / `d2` hashes unchanged. Trigger analysis and cache-only replay on d5dev: `docs/home/bench/shared_instances_layer.md`.
+
 ## 2026-11-17 (selectable D1 layer bt_goal, prototype)
 * `HOMELOOP_D1_LAYERS` knows `bt_goal` (robot_agent option `bt_goal`, default off): an `on` goal is run by the declared tree `BT_ON` (the mock robot's own skills) instead of a SAGE plan. Selectable only; `all` / `d3` / `d2` hashes unchanged. Behaviour on 5 d5dev episodes: `docs/home/bench/bt_goal_layer.md`.
 
