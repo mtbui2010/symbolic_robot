@@ -215,6 +215,11 @@ def _open_source(entry: dict) -> list:
 BT_TREES_OPEN = {**BT_TREES, "on": _open_source(BT_TREES["on"]), "in": _open_source(BT_TREES["in"])}
 # heard_check: robot_agent's starting values (docs/heard_check.md), ASSUMED, not measured or tuned on this benchmark
 HEARD_MATCH = {"min_prefix": 2, "min_ratio": 0.5, "assumed": True}
+# cond_answer: the words that negate an ANSWER ("it isn't there", "없어요"), added by robot_agent cond_goal key ``clauses`` to the language packs' negation
+# patterns (English: not / don't / never ...). ASSUMED, general grammar, not measured or taken from any task text: English be / do / have / modal + n't; Korean
+# 없- (not there), 않- (not), 아니 (no, not), 안 / 못 as a separate word (not / cannot; "안에", inside, is a noun + particle and does not match).
+ANSWER_NEGATION = {"en": {"negation": r"\b(?:is|are|was|were|do|does|did|has|have|had|ca|could|wo|would|should)n'?t\b", "assumed": True},
+                   "ko": {"negation": r"없|않|아니|(?<![가-힣])(?:안|못)(?=\s)", "assumed": True}}
 
 
 LAYERS = {
@@ -368,6 +373,12 @@ LAYERS = {
     # with an id that hold the name are two or more instances, is asked about (inventory_ask's which-question; a read-back choice issue). No overlay data:
     # the records are the robot's own object memory (the seed writes no id for a name two objects share).
     "shared_instances": ({"shared_instances": "1"}, {}),
+    # cond_answer (robot_agent cond_goal keys answer / open_closed / confirm_none; class B of the cond20 dev analysis): the answer to "is the X at P?" is read
+    # by itself (a yes, a no, a negation, or the place it names; "I don't know" or nothing usable: UNKNOWN, the run ends failed with the question), a closed
+    # place the ENV declares openable is opened before the look, and a "nothing to do" decided on a look that could not see inside is asked once more. Needs
+    # the cond_extract layer (it turns cond_goal on). Data: ANSWER_NEGATION above and the open role of the mock robot's own Open skill (assumed).
+    "cond_answer": ({"cond_goal.answer": "1", "cond_goal.open_closed": "1", "cond_goal.confirm_none": "1"},
+                    {"planner": {"action_roles": {"open": "Open"}, "options": {"cond_goal": {"clauses": ANSWER_NEGATION, "assumed": True}}}}),
 }
 SELECTABLE = ("reach_check",)
 SELECTABLE += ("ask_next",)
@@ -381,6 +392,7 @@ SELECTABLE += ("metal_microwave_ask",)
 SELECTABLE += ("heard_check",)
 SELECTABLE += ("shared_instances",)
 SELECTABLE += ("closed_can_microwave",)
+SELECTABLE += ("cond_answer",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
 # ``d3``: the D2 layers, then every D3 layer in this order (the D3 arm; its loop options, overlay and on tuple hash to f751d734..., the D3 snapshot). Until
 # 2026-11-15 the D3 part held only cond_extract, recipient_keep, name_recover, replan_block (an interface criterion written before L13 / L14 existed), so a D3

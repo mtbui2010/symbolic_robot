@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-18 (selectable D1 layer cond_answer, class B of the cond20 analysis)
+* `HOMELOOP_D1_LAYERS` knows `cond_answer` (robot_agent option `cond_goal` keys `answer`, `open_closed`, `confirm_none`, default off): the answer to the condition question is read by itself (a place named, a negation; "I don't know" is UNKNOWN), a closed openable place is opened before the look, a "nothing to do" decided on a blind look is asked once more. Overlay `ANSWER_NEGATION` (assumed) and the `open` role. Needs the `cond_extract` layer. Selectable only; `all` / `d3` / `d2` hashes unchanged. Not measured live. Doc: docs/home/bench/cond_answer_layer.md.
+
 ## 2026-11-18 (selectable D1 layer closed_can_microwave)
 * `HOMELOOP_D1_LAYERS` knows `closed_can_microwave`: the manifest list `safety.hazards` = `CLOSED_CAN` (closed / sealed / unopened x can / jar / bottle / tin, Korean words; not-denied guards; place `^microwave`; sources NDSU FN1622, Panasonic HL-MX465S, GE JE1240L, words assumed), refused by robot_agent's option `hazard`. `d1_overlay` joins the `safety.hazards` lists of the layers that are on (each entry once) instead of the last one replacing the others; the lists of metal_microwave / metal_microwave_ask alone or together are unchanged. Selectable only; `all` / `d3` / `d2` hashes unchanged. Doc: `docs/home/bench/metal_microwave_layer.md`; test `tests/home/bench/test_closed_can_microwave_layer.py`.
 
