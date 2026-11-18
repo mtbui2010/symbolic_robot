@@ -15,15 +15,17 @@ Failure classes (found on the D1 dev pilot, fixed as classes, never as tasks):
   remedy above it matches the simulator's ``docked()`` condition: read it as an ablation.
 * ``object_words``: the goal's 'phone' and the plan's 'Pick cell phone' are one object for the goal checks.
 
-Round D2 (one layer per failure class, each a robot_agent option, default off): ``LAYERS`` below. The environment variable ``HOMELOOP_D1_LAYERS`` picks
-which layers D1 turns on: ``all`` (default; the ``d3`` layers + the four D4 layers), ``d3`` (the 18 layers of the D3 arm), ``d2`` (the ten D2 layers only), ``none`` (D1 exactly as in experiment D: the baseline arm) or a comma list of layer names (the ``SELECTABLE`` layers only so). It is read when
+Round D2 (one layer per failure class, each a robot_agent option, default off): ``LAYERS`` below. The environment variable ``SYMBOLIC_D1_LAYERS`` (formerly
+``HOMELOOP_D1_LAYERS``, still accepted: ``layers_value``) picks which layers D1 turns on: ``all`` (default; the ``d3`` layers + the four D4 layers), ``d3`` (the 18 layers of the D3 arm), ``d2`` (the ten D2 layers only), ``none`` (D1 exactly as in experiment D: the baseline arm) or a comma list of layer names (the ``SELECTABLE`` layers only so). It is read when
 this module is imported (the planner classes are built then); the layers on are recorded in the run config (``loop_options``) and in the overlay note.
 """
 
 from __future__ import annotations
 
 import copy
+import functools
 import os
+import sys
 
 # search legs, at most 6 places per search, no search second look (robot_agent: planner.search_legs / search_total / detector_miss_rate)
 D1_SEARCH = {"search_legs": 1, "search_total": 6, "detector_miss_rate": 0}
@@ -33,7 +35,7 @@ D1_CONFIRM = {"confirm_look": "1"}
 # the failure-class options of the 2026-11-13 round (all default off in robot_agent)
 D1_CLASSES_D = {"search_per_object": "1", "place_find": "1", "reopen_on_miss": "1", "end_state": "1", "object_words": "1"}
 
-LAYERS_ENV = "HOMELOOP_D1_LAYERS"
+LAYERS_ENV = "SYMBOLIC_D1_LAYERS"
 # D2 layers: name -> (loop options, pack data), in the order they were added. The data is the mock robot pack's own, with its source.
 # Korean clause words, ASSUMED (general grammar, not measured). A condition is a predicate (stem: be / not be / do / become / open or closed / on or off)
 # ending in a conditional (-(eu)myeon, -damyeon), up to three words of its own clause before it (none that ends a clause with a comma: the words before
@@ -465,10 +467,26 @@ D4_LAYERS = ("plan_release", "repair_sync", "goal_ledger", "answer_align")
 ALL_LAYERS = D3_LAYERS + D4_LAYERS
 
 
+@functools.lru_cache(maxsize=None)
+def _warn_both(new: str, old_name: str, old: str) -> None:
+    print(f"warning: {LAYERS_ENV}={new!r} and {old_name}={old!r} differ; {LAYERS_ENV} is used", file=sys.stderr)
+
+
+def layers_value(environ=None):
+    """The raw layer list: ``LAYERS_ENV``, else (unset or empty) the former name ``HOMELOOP_D1_LAYERS`` (renamed 2026-11-18, still accepted);
+    None when neither is set. Both set and different: the new name wins, with one stderr line per pair of values."""
+    env = environ if environ is not None else os.environ
+    old_name = "HOMELOOP_D1_LAYERS"
+    new, old = env.get(LAYERS_ENV), env.get(old_name)
+    if new and old and new.strip().lower() != old.strip().lower():
+        _warn_both(new, old_name, old)
+    return new or old
+
+
 def selected_layers(environ=None) -> tuple:
     """The layers that are on: ``all`` (unset too: ``ALL_LAYERS``, d3 + the D4 layers), ``d3`` (exactly the 18 D3 layers), ``d2`` (exactly the ten D2
     layers), ``none``, or a comma list of names of ``LAYERS``; an unknown name is an error."""
-    raw = ((environ if environ is not None else os.environ).get(LAYERS_ENV) or "all").strip().lower()
+    raw = (layers_value(environ) or "all").strip().lower()
     aliases = {"all": ALL_LAYERS, "d3": D3_LAYERS, "d2": D2_LAYERS}
     if raw in aliases:
         return aliases[raw]
@@ -492,7 +510,7 @@ D1_DATA = {"planner": {"action_roles": {"find": "Find"},
                    "the mock robot's partial-open and docked() rules, read them as an ablation"}
 
 
-D1_CLASSES = {**D1_CLASSES_D, **layer_options()}          # D's options + the layers that are on (HOMELOOP_D1_LAYERS)
+D1_CLASSES = {**D1_CLASSES_D, **layer_options()}          # D's options + the layers that are on (LAYERS_ENV)
 
 
 def _merge(base: dict, add: dict) -> dict:

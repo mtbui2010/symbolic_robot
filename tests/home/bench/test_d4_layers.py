@@ -1,4 +1,4 @@
-"""D4: the D1 layer switch with the ``d3`` alias and the D4 layers (``HOMELOOP_D1_LAYERS``). Pure data: no run, no model."""
+"""D4: the D1 layer switch with the ``d3`` alias and the D4 layers (``SYMBOLIC_D1_LAYERS``). Pure data: no run, no model."""
 import hashlib
 import json
 
