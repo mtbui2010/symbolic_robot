@@ -6,7 +6,7 @@ usable is UNKNOWN and the run ends failed saying the question, never a default),
 holds closed is opened with the mock robot's `Open` before the look) and `confirm_none` (every goal dropped on a look that could not see inside: the
 question once more). Overlay: `ANSWER_NEGATION` of `d1_options.py` (English `n't` forms, Korean 없 / 않 / 아니 / 안 / 못; assumed, general grammar) and
 the `open` role. It needs the `cond_extract` layer (that turns `cond_goal` on); alone it is on and inert. Turn it on with
-`HOMELOOP_D1_LAYERS=<all list>,cond_answer`. The hashes of all, d3 and d2 are unchanged (tests/home/bench/test_cond_answer_layer.py).
+`SYMBOLIC_D1_LAYERS=<all list>,cond_answer` (formerly `HOMELOOP_D1_LAYERS`, still accepted). The hashes of all, d3 and d2 are unchanged (tests/home/bench/test_cond_answer_layer.py).
 
 **Why (class B of the cond20 dev analysis, 2026-11-18).** The robot went to the condition's place, looked into a CLOSED container (a fridge: the look
 cannot see inside), missed twice, asked "Is the milk carton at the kitchen fridge?", got an answer with no yes / no word (per the analysis, the simulated person answers it with a location; the answer text was not logged), and

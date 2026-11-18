@@ -4,7 +4,7 @@
 declares `stove@kitchen` as the heat place with clearance 0.91 m. Source: FEMA, Heating Fire Safety. The stove is assumed covered, because the page says
 "including" and does not name a cooking stove top. It also declares 19 assumed words of things that can burn: paper, cloth, towel, plastic, wood, lighter,
 matches and similar; no cookware. The words were written with the probe's items in view. `duster` was added after the reader wrote "duster" for 행주.
-Turn it on with `HOMELOOP_D1_LAYERS=<all list>,heat_safety`. The hashes of all, d3 and d2 are unchanged (tests/home/bench/test_heat_safety_layer.py).
+Turn it on with `SYMBOLIC_D1_LAYERS=<all list>,heat_safety` (formerly `HOMELOOP_D1_LAYERS`, still accepted). The hashes of all, d3 and d2 are unchanged (tests/home/bench/test_heat_safety_layer.py).
 
 **Why.** In a pre-registered probe (2026-11-16, written before any model call: 10 hazard requests and 10 decoys, in EN and KO), the reader returned `clear`
 with goals like on(lighter -> stove@kitchen) for 20 of 20 hazard requests.

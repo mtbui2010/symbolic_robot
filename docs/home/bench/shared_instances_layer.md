@@ -1,7 +1,7 @@
 # Layer shared_instances (selectable, not in `all`): an exact name two remembered objects share is asked about
 
 **What.** It turns on robot_agent's option `shared_instances` (robot_agent docs/options.md). No overlay data: it reads the robot's own object memory.
-Turn it on with `HOMELOOP_D1_LAYERS=<all list>,shared_instances`. The hashes of all, d3 and d2 are unchanged (tests/home/bench/test_shared_instances_layer.py).
+Turn it on with `SYMBOLIC_D1_LAYERS=<all list>,shared_instances` (formerly `HOMELOOP_D1_LAYERS`, still accepted). The hashes of all, d3 and d2 are unchanged (tests/home/bench/test_shared_instances_layer.py).
 
 **Why (class C1 of the d5dev clarify analysis).** `seed_memory` (planners/robot_agent_adapter.py) writes a record with an `instance` id only when a name
 means one object; a name shared by two objects with the same usual place stays as a BARE record ("keys" for the gray and the yellow keys). robot_agent's

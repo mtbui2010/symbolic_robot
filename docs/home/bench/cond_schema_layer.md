@@ -9,7 +9,7 @@ request, its English reading, the person's answers): no object word heard is UNK
 place word heard asks `q_unclear`. Overlay (all `assumed`): `COND_PROMPT_KINDS` (replaces `COND_PROMPT`), `HEARD_MATCH` (the numbers of `heard_check`,
 not tuned) and the `cond_extract` Korean clause list plus `KO_COND_COME` (the verb stem 오- "come" and its compounds + "myeon", which `KO_COND_MORE`
 leaves out with the plain vowel stems). It needs the `cond_extract` and `cond_answer` layers; without `cond_answer` the question is not asked (the
-goals run as read); without `cond_extract` it does nothing. Turn it on with `HOMELOOP_D1_LAYERS=<base list>,cond_answer,cond_schema`. The hashes of
+goals run as read); without `cond_extract` it does nothing. Turn it on with `SYMBOLIC_D1_LAYERS=<base list>,cond_answer,cond_schema` (formerly `HOMELOOP_D1_LAYERS`, still accepted). The hashes of
 all, d3 and d2 are unchanged (tests/home/bench/test_cond_schema_layer.py).
 
 **Why (classes A and I of the cond20 dev analysis, 2026-11-18).** The extraction put goals that hold in every case into the else branch; it took an

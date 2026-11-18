@@ -3,7 +3,7 @@
 **What.** It turns on robot_agent's option `heard_check` (robot_agent docs/heard_check.md) with the overlay `HEARD_MATCH` of `d1_options.py`
 (`min_prefix 2`, `min_ratio 0.5`, assumed: robot_agent's starting values, not tuned here). A goal whose `said` (or a say goal's message) no heard
 word matches gets an `object` issue on the read-back; the engine re-samples, asks its repeat question and reads back. Turn it on with
-`HOMELOOP_D1_LAYERS=<all list>,heard_check`. The hashes of all, d3 and d2 are unchanged (tests/home/bench/test_heard_check_layer.py).
+`SYMBOLIC_D1_LAYERS=<all list>,heard_check` (formerly `HOMELOOP_D1_LAYERS`, still accepted). The hashes of all, d3 and d2 are unchanged (tests/home/bench/test_heard_check_layer.py).
 
 **Why (class B of the D5 false-success analysis).** The reader filled an ASR gap with content the person never said: `책` for a garbled `호일`
 (039) or `안경` (133), a garbled "go and charge" read as a new say goal that replaced the dock goal (080, 130), a correction read as a new task with `책`

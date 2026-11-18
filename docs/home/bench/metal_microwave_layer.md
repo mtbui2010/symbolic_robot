@@ -6,7 +6,7 @@ entries, the same place (`^microwave(@|$)`, the mock robot's ENV key head, assum
 1. sourced: metal, metallic, foil, aluminum / aluminium (NIH ORS, UC Berkeley EH&S, Hoover UK; quotes in `METAL_SOURCE`);
 2. assumed: steel, stainless, iron, tin, tinfoil and Korean words (금속, 알루미늄, 호일, 포일, 은박, 스테인리스, 양철, 무쇠).
 A word counts whole and when not denied (non-, no, without, -free). No material exemption; no utensil or container noun. The data was written
-from the pages only, before any replay, and is not changed after it. Turn it on with `HOMELOOP_D1_LAYERS=<all list>,metal_microwave`. The
+from the pages only, before any replay, and is not changed after it. Turn it on with `SYMBOLIC_D1_LAYERS=<all list>,metal_microwave` (formerly `HOMELOOP_D1_LAYERS`, still accepted). The
 hashes of all, d3 and d2 are unchanged (tests/home/bench/test_metal_microwave_layer.py).
 
 **Why.** An earlier analysis of d5dev found five requests whose reading puts a metal thing into the microwave, carried out by the robot.
@@ -37,7 +37,7 @@ whisk / tongs / chopsticks and Korean 숟가락 / 티스푼 / 포크 / 칼 / 나
 `unless` plastic / wood / wooden / silicone / glass / ceramic and 플라스틱 / 나무 / 원목 / 실리콘 / 유리 / 도자기 / 세라믹; `ask` the language-pack
 phrase `q_metal_microwave`; `say` the metal sentence. A material word decides without a question (the metal entries run first: `steel
 spoon` refused; `plastic spoon` passes). Not covered: a sealed metal can (not in the cited pages), containers, a reading without the noun.
-Turn it on with `HOMELOOP_D1_LAYERS=<all list>,metal_microwave_ask`. Hashes of all, d3, d2 unchanged (tests/home/bench/test_metal_microwave_ask_layer.py).
+Turn it on with `SYMBOLIC_D1_LAYERS=<all list>,metal_microwave_ask`. Hashes of all, d3, d2 unchanged (tests/home/bench/test_metal_microwave_ask_layer.py).
 
 **Acceptance (pre-registered 2026-11-17, before any replay; CPU only, no model call).** (B) Trigger analysis on the recorded d5dev readings
 of arm `all` (the reader goals of the cache): every episode whose reader goal puts a bare utensil word into a microwave place, per cell;
@@ -69,7 +69,7 @@ containers—for example, closed jars—will explode"). Not denied: un-, not, no
 between, "... that is open / empty", "with no lid"; Korean 밀봉 안 된, 개봉한, 빈, "... 캔을 따서". A bare `can` / `soup can` is not decided.
 Written from the sources only; no benchmark text was read to choose the words. With `metal_microwave` or `metal_microwave_ask` on too, the
 lists are joined (`_hazards`: each entry once, in layer order), so those layers' lists are as before. Turn it on with
-`HOMELOOP_D1_LAYERS=<all list>,closed_can_microwave`. Hashes of all, d3, d2 unchanged (tests/home/bench/test_closed_can_microwave_layer.py).
+`SYMBOLIC_D1_LAYERS=<all list>,closed_can_microwave`. Hashes of all, d3, d2 unchanged (tests/home/bench/test_closed_can_microwave_layer.py).
 
 # Layer closed_can_ask (selectable, not in `all`): a bare can into the microwave makes the robot ask "is it still sealed?"
 
@@ -89,7 +89,7 @@ So the question is asked so that NO is the safe answer: "no", "no, it's open", "
 있어요 go on; "yes", 네, "it is closed", "it's not open", "I haven't opened it", 안 땄어요, "never mind", "I don't know", 됐어요 are refused
 with `CAN_SAY`; silence ends as an unanswered question. A closed word decides without a question (`closed_can_microwave`'s entries run first:
 "sealed can", "unopened tin", 밀봉된 / 안 딴 캔 are refused). Words assumed, written from the manuals' class only; no benchmark text was read to
-choose them. Turn it on with `HOMELOOP_D1_LAYERS=<all list>,closed_can_ask`. Hashes of all, d3, d2 unchanged
+choose them. Turn it on with `SYMBOLIC_D1_LAYERS=<all list>,closed_can_ask`. Hashes of all, d3, d2 unchanged
 (tests/home/bench/test_closed_can_ask_layer.py: the word table and the answers through robot_agent's own matcher and rule, the three layers
 together, made-up objects).
 
