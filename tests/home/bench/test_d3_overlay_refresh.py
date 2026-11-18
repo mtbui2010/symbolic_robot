@@ -17,7 +17,7 @@ from bench.suites.home.runner import run_episode  # noqa: E402
 
 TASKS = {t["id"]: t for t in fixture_tasks()}
 D1 = "robot_agent:sage_s8n_ft_d1"
-needs_l9 = pytest.mark.skipif("cond_extract" not in A.SageS8nFtD1Planner.loop_options, reason="layer cond_extract not selected (HOMELOOP_D1_LAYERS)")
+needs_l9 = pytest.mark.skipif("cond_extract" not in A.SageS8nFtD1Planner.loop_options, reason="layer cond_extract not selected (SYMBOLIC_D1_LAYERS)")
 
 
 def _capture(monkeypatch):

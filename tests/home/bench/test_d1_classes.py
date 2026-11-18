@@ -37,7 +37,7 @@ def test_every_option_exists_in_robot_agent_and_is_off_by_default_there():
         assert owners and owners[0].default is False, name
 
 
-# ---- round D2: the layer switch (HOMELOOP_D1_LAYERS) ----
+# ---- round D2: the layer switch (SYMBOLIC_D1_LAYERS) ----
 D_LOOP_OPTIONS = {"search_per_object": "1", "place_find": "1", "reopen_on_miss": "1", "end_state": "1", "object_words": "1"}
 BASE_OV = {"planner": {"action_roles": {"move": "MoveTo", "put_down": "Place"}, "recovery": {"wait": 3}}, "assumed": True, "note": "base"}
 
