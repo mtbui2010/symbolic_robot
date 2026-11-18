@@ -5,7 +5,7 @@
 the robot is not there; no deliver tree: WaitForUnload is only a handover alias here; no give tree: understand_give_kind is off in D1). A request whose goals are ALL of a kind with a tree runs
 by the trees (each step with the engine's own ladder: retry, wait schedule, search legs, its help question; no plan call); any other goal: SAGE
 plans the whole run. A tree with no way left: `bt_goal` asks once (menu) or stops; `bt_goal_sage` hands the remaining goals to SAGE once.
-Turn on with `HOMELOOP_D1_LAYERS=<all list>,bt_goal` (or `,bt_goal_sage`). The hashes of all, d3, d2 are unchanged (test_bt_goal_layer.py).
+Turn on with `SYMBOLIC_D1_LAYERS=<all list>,bt_goal` (formerly `HOMELOOP_D1_LAYERS`, still accepted) (or `,bt_goal_sage`). The hashes of all, d3, d2 are unchanged (test_bt_goal_layer.py).
 
 **Layer bt_open_source (2026-11-18, selectable).** `bt_goal` with `BT_TREES_OPEN`: the `on` / `in` kinds get a first entry whose fetch, at the
 source and before the Find, opens it when not open in the belief (`BT_OPEN_FROM`), used only when the source is declared openable (robot_agent

@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-18 (the D1 layer switch renamed)
+* The environment variable that picks the D1 layers is `SYMBOLIC_D1_LAYERS` (`bench/suites/home/planners/d1_options.py`, helper `layers_value`); the former `HOMELOOP_D1_LAYERS` is still read when the new one is unset or empty; both set and different: the new one wins and one line goes to stderr. Layer lists and the all / d3 / d2 hashes unchanged; the overlay note of a new run names `SYMBOLIC_D1_LAYERS`. Live docs (the per-layer docs' switch-on commands) use the new name; finished records keep the name they were run with (note in docs/home/bench/README.md). Test `tests/home/bench/test_d1_layers_env_name.py`.
+
 ## 2026-11-18 (layer cond_answer, round 3: the third and last)
 * robot_agent only (8bfc245; key `answer`, default off; `HOMELOOP_D1_LAYERS=<base list>,cond_answer,cond_schema` and the all / d3 / d2 hashes unchanged): an answer to "Is the X at P?" that says no and more ("No, the red mug.": no yes, no doubt, no place named), after looks that all missed at a place neither blind nor opened by the option, reads False instead of UNKNOWN (lab `answer_look_agree`); a yes is never overridden, `confirm_none`'s question stays strict. Kept false-success risk (a missed look and a "no, ..." that was a new request) and the known cross-language gap (names compared by words only): docs/home/bench/cond_answer_layer.md "Round 3". Not measured.
 

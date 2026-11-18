@@ -1,5 +1,7 @@
 # HomeLoop-Bench
 
+> **Renamed 2026-11-18:** the D1 layer switch is `SYMBOLIC_D1_LAYERS` (formerly `HOMELOOP_D1_LAYERS`, still accepted when the new name is unset; both set and different: the new name wins, with a warning). Records of finished rounds and measures (d2_layers.md, d3_layers.md, d4_layers.md, d4_measure.md, d5_final_measure.md, d5_final_result.md, the dated round notes, docs/CHANGELOG.md before that date) keep the name they were run with; read it as `SYMBOLIC_D1_LAYERS`.
+
 > Moved into symbolic_robot (docs/migration_home.md). Paths and commands in this file are those of the standalone `homeloop_bench` repository: read `homeloop_bench/...` as `bench/suites/home/...`, `python -m homeloop_bench.X` / `homeloop-bench X` as `python -m bench.suites.home.X` / `python -m bench.suites.home.cli X`, `tests/` as `tests/home/bench/`, `docs/` as `docs/home/bench/`, `data/quality/` as `bench/suites/home/data/quality/`, `tools/` as `bench/suites/home/tools/`; `results/` is unchanged. The simulator it runs on is `symbolic_robot.domains.home`.
 
 HomeLoop-Bench evaluates household robot task planners in a closed loop: plan, act, check the result,
