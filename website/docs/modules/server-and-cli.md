@@ -51,7 +51,7 @@ domains:
              profiles: ideal, real, stress
 ```
 
-The word before the colon in "floors:" and "houses:" is the domain's world label. A domain that is not importable prints "not loadable", one that is unavailable prints "not available: <reason>".
+The word before the colon in "floors:" and "houses:" is the domain's world label. A domain that is not importable prints "not loadable", one that is unavailable prints `not available: <reason>`.
 
 `python -m symbolic_robot run --robot <domain>` serves a domain. Flags ([cli.py:57-79](https://github.com/mtbui2010/symbolic_robot/blob/a5cc7a4943aa/symbolic_robot/cli.py#L57-L79)):
 

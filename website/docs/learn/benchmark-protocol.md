@@ -12,9 +12,9 @@ verified_at: a5cc7a4943aa
 # 5. The benchmark protocol: suites, splits, arms, runner, judge
 
 !!! abstract "In this chapter"
-    - A **suite** is a set of tasks plus the rules to run and judge them. There are two kinds, and only one of them compares planners.
-    - A planner never grades itself. The runner plays the task, then the **judge** reads the true world. The planner's claim (`done`) is only one of four conditions.
-    - The **test split** is closed on the front end, and a run with `--limit` is a **smoke run**, not a result. This page shows no task data.
+    - A **suite** ([glossary](../reference/glossary.md#suite)) is a set of tasks plus the rules to run and judge them. There are two kinds, and only one of them compares planners.
+    - A planner never grades itself. The runner plays the task, then the **judge** ([glossary](../reference/glossary.md#judge)) reads the true world. The planner's claim (`done`) is only one of four conditions.
+    - The **test split** is closed on the front end, and a run with `--limit` is a **smoke run** ([glossary](../reference/glossary.md#smoke-run)), not a result. This page shows no task data.
 
 ## The question
 
@@ -41,14 +41,14 @@ suites (make bench ROBOT=<domain> SUITE=<name> [ARGS=...]):
 
 | kind | suites | what it compares | how it runs |
 |---|---|---|---|
-| campaign | `factory/protocol`, `factory/messy`, `factory/messy_fix` | **arms**: run options of one planning engine, on the same tasks | the runner starts the simulator server and drives it over HTTP and WebSocket ([campaign runner](../modules/campaign-runner.md)). Not run for this page: it needs the hub and an LLM. Only `--dry-run` was |
+| campaign | `factory/protocol`, `factory/messy`, `factory/messy_fix` | **arms** ([glossary](../reference/glossary.md#arm)): run options of one planning engine, on the same tasks | the runner starts the simulator server and drives it over HTTP and WebSocket ([campaign runner](../modules/campaign-runner.md)). Not run for this page: it needs the hub and an LLM. Only `--dry-run` was |
 | delegate | `home/planners`, `home/run`, `home/compare`, `home/report` | any planner, one result folder each | the suite hands the command line to its own program, in the same process, no server ([household runner](../modules/home-runner.md)) |
 
 To compare task planners, use the household suites. The factory suites test one engine's options; they are not a planner leaderboard.
 
 ### Splits
 
-The household task set has three splits. Line counts of the files at the pin: `train.jsonl` 4,000, `dev.jsonl` 1,000, `test.jsonl` 5,000. Development uses `dev`. The test split is never read outside the benchmark's own protocol (rule 4 of the repo's `CLAUDE.md`).
+The household task set has three splits ([glossary](../reference/glossary.md#split)). Line counts of the files at the pin: `train.jsonl` 4,000, `dev.jsonl` 1,000, `test.jsonl` 5,000. Development uses `dev`. The test split is never read outside the benchmark's own protocol (rule 4 of the repo's `CLAUDE.md`).
 
 The label mix of `dev` is public information about the data, not the data. Counted on 2026-11-19 from `bench/suites/home/data/tasks/dev.jsonl` at the pin (1,000 records):
 
@@ -146,12 +146,12 @@ Claim and truth make four cells. The counts are from the offline smoke run below
 | **claimed `done`** | success: oracle 31, naive 20 | **false success**: oracle 0, naive 1 |
 | **not claimed** | right without a claim: oracle 2, naive 5 | give-up or wrong refusal: oracle 7, naive 14 |
 
-The two "right without a claim" cells are a correct refusal of a refuse task and a scripted stop with no motion after it; the judge needs no `done` there. The **false success** is the cell a household robot must be judged on: it says it finished and the world says it did not. The counts come from the [episode page](../modules/episode-env-and-judge.md), which ran the same smoke runs.
+The two "right without a claim" cells are a correct refusal of a refuse task and a scripted stop with no motion after it; the judge needs no `done` there. The **false success** ([glossary](../reference/glossary.md#false-success)) is the cell a household robot must be judged on: it says it finished and the world says it did not. The counts come from the [episode page](../modules/episode-env-and-judge.md), which ran the same smoke runs.
 
 ### Pre-registration and infrastructure failures
 
-- **A rule fixed before the run.** A campaign suite can name a protocol file. `register` hashes it with SHA-256 before the first episode and writes `PROTOCOL_SHA256` into the results folder; a later run into that folder refuses a changed file (`bench/protocol.py:15-28`). The details and a real run are in [campaign statistics](../modules/campaign-statistics.md).
-- **A failure of the infrastructure is not a score.** If the LLM server fails or a planner's code cannot be imported, the runner raises `InfraError` and the whole run stops without a summary (`runner.py:43-45`, raised at `:79-80` and `:85-89`). A planner that raises an ordinary exception only fails its own episode (status `error`). If more than 5 % of the episodes crash (`ERROR_RATE_MAX`, `runner.py:27`), the command exits non-zero and says the scores are not a planner result.
+- **A rule fixed before the run.** A campaign suite can name a protocol file. `register` hashes it with SHA-256 before the first episode and writes `PROTOCOL_SHA256` ([glossary](../reference/glossary.md#protocol-sha256)) into the results folder; a later run into that folder refuses a changed file (`bench/protocol.py:15-28`). The details and a real run are in [campaign statistics](../modules/campaign-statistics.md).
+- **A failure of the infrastructure is not a score.** If the LLM server fails or a planner's code cannot be imported, the runner raises `InfraError` ([glossary](../reference/glossary.md#infraerror)) and the whole run stops without a summary (`runner.py:43-45`, raised at `:79-80` and `:85-89`). A planner that raises an ordinary exception only fails its own episode (status `error`). If more than 5 % of the episodes crash (`ERROR_RATE_MAX`, `runner.py:27`), the command exits non-zero and says the scores are not a planner result.
 - **A smoke run is not a result.** `--limit N` takes the first N tasks of a split, in file order. Its `summary.json` has `"smoke": true`. Compare only runs of the same split, profile, seeds, language and budgets.
 
 ### One run, offline

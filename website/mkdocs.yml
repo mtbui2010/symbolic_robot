@@ -4,7 +4,7 @@ site_url: https://mtbui2010.github.io/symbolic_robot/
 repo_url: https://github.com/mtbui2010/symbolic_robot
 repo_name: mtbui2010/symbolic_robot
 edit_uri: edit/main/website/docs/
-copyright: "symbolic_robot documentation (code: MIT)"
+copyright: "symbolic_robot documentation (licences: see Versions and licences)"
 
 theme:
   name: material
@@ -120,7 +120,7 @@ nav:
           - Episode environment and the judge: modules/episode-env-and-judge.md
           - Metrics, report and compare: modules/home-metrics-and-report.md
           - Planner interface and registry: modules/planner-interface.md
-          - Reference planners: oracle and naive: modules/reference-planners.md
+          - "Reference planners: oracle and naive": modules/reference-planners.md
           - LLM baselines and clients: modules/llm-baselines.md
           - robot_agent planners and the adapter: modules/robot-agent-planners.md
           - Task data and its generation: modules/task-data.md
