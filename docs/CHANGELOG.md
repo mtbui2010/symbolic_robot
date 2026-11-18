@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-18 (layers cond_answer / cond_schema, round 1 fixes)
+* d5dev with `<base list>,cond_answer,cond_schema`: 3 losses, 0 wins, false successes 18 -> 19. Two general defects fixed (selectable only; `all` / `d3` / `d2` hashes and `COND_PROMPT` unchanged): (1) `cond_answer`: the place `open_closed` opened is marked opened just now (robot_agent cf72893, engine service `opened_now`), so a later miss of another object there no longer clears the fresh open as a stale belief; (2) `cond_schema`: `COND_PROMPT_KINDS` says the base prompt's own `present` sentence (`COND_PRESENT`, cut from `COND_PROMPT`) for a presence condition and a separate polarity sentence for a question kind (the shared "or the answer is yes" clause flipped `present` on Korean 'X가 있으면 ..., 없으면 ...' requests). robot_agent 4802594: the `cond_extract` lab entry carries `present` / `kind`. Docs: cond_answer_layer.md, cond_schema_layer.md; test tests/home/bench/test_cond_schema_polarity.py. Not re-measured live.
+
 ## 2026-11-18 (selectable D1 layer cond_schema, classes A and I of the cond20 analysis)
 * `HOMELOOP_D1_LAYERS` knows `cond_schema` (robot_agent option `cond_extract` keys `kinds`, `heard_match`, default off; robot_agent fdfc9cd): the extraction says the condition's `kind` (presence / state / unobservable), the `always` goals and, for a condition no look settles, a yes / no `question` that `cond_goal` asks and reads (needs `cond_answer`); a condition object no heard word matches ends the run failed (UNKNOWN), an unheard place is asked. Overlay (assumed): `COND_PROMPT_KINDS`, `HEARD_MATCH`, the Korean clause `KO_COND_COME` (-오면). Selectable only; `all` / `d3` / `d2` hashes unchanged. Not measured live. Doc: docs/home/bench/cond_schema_layer.md.
 

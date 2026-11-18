@@ -61,16 +61,21 @@ COND_PROMPT = ("A household robot request may hold a condition: something is to 
                "do when it does not hold (the 'otherwise' part). drop: the numbers of goals that only restate the condition and are no request. A number is in at most one list; "
                "leave a goal out of all lists when it is to be done in every case. unsure: true when you cannot tell.")
 
+# COND_PROMPT's own `present` sentence, cut from it (not retyped): the kinds prompt below says it for a presence condition word for word, so the field
+# means what the base prompt means. (Round 1, d5dev: one clause "... or the answer is yes" shared with the question kinds flipped `present` to false on
+# Korean "X-ga iss-eumyeon ..., eops-eumyeon ..." requests, which dropped the if branch.)
+COND_PRESENT = COND_PROMPT[COND_PROMPT.index("present: true"):COND_PROMPT.index("if_goals:")]
 # the extraction prompt of layer cond_schema (robot_agent cond_extract key kinds, schema SCHEMA_KINDS): COND_PROMPT's keys plus kind, always and question.
 # ASSUMED text, general (no task text): the robot's look settles only whether an object is at a place; any other condition is asked as one yes / no question.
+# A question kind gets its own polarity sentence (its question is phrased so that yes means the condition holds), apart from COND_PRESENT.
 COND_PROMPT_KINDS = ("A household robot request may hold a condition: something is to be done only if the condition holds, and perhaps something else otherwise.\n"
                      "Request: {request}\nThe goals already read from it, numbered:\n{goals}\n"
                      "Answer in JSON. conditional: true only when the request really makes a goal depend on a condition, else false with empty lists. "
                      "kind: presence when the condition is whether an object is (or is not) at a place, which the robot can go and look at; state when it is "
                      "whether something is open, closed, on or off; unobservable when nothing the robot can see settles it. object and at: for presence, the object "
-                     "and the place the condition looks at, in the words of the request; else empty. question: for state and unobservable, one short yes / no "
-                     "question to the person, in the language of the request, whose answer yes means the condition holds; else empty. present: true when the "
-                     "condition holds if the object IS at that place or the answer is yes, false when it holds if the object is NOT there or the answer is no. "
+                     "and the place the condition looks at, in the words of the request; else empty. " + COND_PRESENT +
+                     "question: for state and unobservable, one short yes / no question to the person, in the language of the request, phrased so that the "
+                     "answer yes means the condition holds; else empty. For state and unobservable, present is true: the answer yes is the condition holding. "
                      "if_goals: the numbers of the goals to do when the condition holds. else_goals: the numbers of the goals to do when it does not hold (the "
                      "'otherwise' part). always: the numbers of the goals to do in every case, whatever the condition. drop: the numbers of goals that only restate "
                      "the condition and are no request. A number is in at most one list. unsure: true when you cannot tell.")
