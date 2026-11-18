@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 2026-11-18 (layer cond_answer, round 3: the third and last)
+* robot_agent only (8bfc245; key `answer`, default off; `HOMELOOP_D1_LAYERS=<base list>,cond_answer,cond_schema` and the all / d3 / d2 hashes unchanged): an answer to "Is the X at P?" that says no and more ("No, the red mug.": no yes, no doubt, no place named), after looks that all missed at a place neither blind nor opened by the option, reads False instead of UNKNOWN (lab `answer_look_agree`); a yes is never overridden, `confirm_none`'s question stays strict. Kept false-success risk (a missed look and a "no, ..." that was a new request) and the known cross-language gap (names compared by words only): docs/home/bench/cond_answer_layer.md "Round 3". Not measured.
+
 ## 2026-11-18 (layers cond_answer / cond_schema, round 2: new candidate after a failed blind look)
 * robot_agent only (same keys, default off; `HOMELOOP_D1_LAYERS=<base list>,cond_answer,cond_schema` and the all / d3 / d2 hashes unchanged): `open_closed` does not open a goal's destination on the condition's object (or the condition's object itself); `confirm_none` asks once before "nothing to do" whenever no sighting decided; `answer` lets a yes / no decide only a bare answer or one that names a place; `kinds` reads a presence condition that only restates its branch goals' end as none. Dev evidence and risks: docs/home/bench/cond_answer_layer.md and cond_schema_layer.md "Round 2". Not measured.
 
