@@ -163,6 +163,27 @@ CLOSED_CAN = [
 ]
 
 
+# closed_can_ask (robot_agent docs/metal_microwave.md, "Ask: a bare can"): a BARE can / tin / canned food (no closed, open or bowl word) put into the
+# microwave makes the robot ASK "is it still sealed?" (option hazard key ask, phrase q_closed_can_microwave): yes refuses with CAN_SAY, only a clear no
+# or an open word goes on (robot_agent's fail-safe answer rule). All words ASSUMED (from the manuals' class only, no benchmark text read). An open /
+# empty / poured / no-lid / in-a-bowl word skips the question unless a negation is anywhere in the text (then it asks; an answer with one refuses).
+CAN_WORD = (r"(?<![a-z0-9])(?<!trash[-_ ])(?<!garbage[-_ ])(?<!waste[-_ ])(?<!watering[-_ ])(?:cans?(?![-_ ](?:you|please)(?![a-z0-9]))"
+            r"|tins?(?![-_ ]?foils?(?![a-z0-9]))|canned)(?![a-z0-9])(?![-_ ]?openers?(?![a-z0-9]))",
+            r"(?<![가-힣])(?:[가-힣]*(?<!스)캔|[가-힣]*(?:통조림|깡통))(?:[은는이가을를도에의와과만](?![가-힣])|(?![가-힣]))")   # a noun alone or + one particle
+_A_NEG = (r"(?s)^(?!.*(?:(?<![a-z0-9])(?:not|never|nor|neither|cannot|no[-_ ]longer)(?![a-z0-9])|n't(?![a-z0-9])"
+          r"|않|못|(?<![가-힣])안 ?(?=[땄따딴열뜯개비부덜])|미개봉|아니(?=에|야|라|고|다|었)|아닌|아닙|그대로)).*")     # no negation anywhere
+_A_PUT, _A_DONE = r"(?:bowls?|plates?|dish(?:es)?|mugs?)", r"[-_ ]?(?:놓|놨|둔|뒀)"
+CAN_OPEN = (_A_NEG + r"(?:(?<![a-z0-9])(?:open(?![-_ ](?:the|a|an|it|up|this|that|my|your|its)(?![a-z0-9]))|opened(?![-_ ](?:the|a|an|my|your|this|"
+            r"that)(?![a-z0-9]))|unsealed|empty|emptied|poured)(?![a-z0-9])|(?<![a-z0-9])(?:with[-_ ]no|without(?:[-_ ](?:a|its|the))?)[-_ ](?:lid|cap|top)"
+            r"s?(?![a-z0-9])|(?<![a-z0-9])(?:lid|cap|top)[-_ ](?:is[-_ ])?(?:off|removed)(?![a-z0-9])|(?<![a-z0-9])(?:in|into|on)[-_ ](?:(?:a|the|my|its|"
+            r"his|her|their)[-_ ])?(?:[a-z0-9]+[-_ ]){0,2}" + _A_PUT + r"(?![a-z0-9])|(?<![a-z0-9])" + _A_PUT + r"[-_ ]of(?![a-z0-9]))",
+            _A_NEG + r"(?:열린|열려 ?있|열었|열어" + _A_DONE + r"|땄|따" + _A_DONE + r"|(?<!미)개봉(?:한|된|했|돼|되어)|뜯은|뜯었|뜯어" + _A_DONE
+            + r"|(?<![가-힣])빈(?![가-힣])|비어 ?있|비었|부은|부었|부어" + _A_DONE + r"|덜어" + _A_DONE + r"|덜었|뚜껑(?:이|을|은)? ?(?:없|열려|열린|뗀|뗐)"
+            r"|(?:그릇|접시|머그(?:컵)?|대접|사발)(?:에|에다|에다가)(?![가-힣]))")
+CAN_ASK = [{"ask": "q_closed_can_microwave", "objects": list(CAN_WORD), "places": METAL_OVEN, "unless": list(CAN_OPEN), "say": CAN_SAY,
+            "source": CAN_SOURCE + " (the class 'closed cans'; the can, open and bowl words and the question are assumed)", "assumed": True}]
+
+
 # bt_goal (robot_agent docs/bt_goal.md): the trees of the goal kinds on / open / close / go from the mock robot's OWN declared skills (manifest move / find /
 # pick / place / open / close = MoveTo / Find / Pick / Place / Open / Close, its Ask skill) in the order its manifest notes and pre-conditions give ("Find an
 # object at its place before Pick"; pick pre found + hand_empty; place / open / close pre arrived(?inputs); open / close pre hand_empty). Each tree: the goal's
@@ -387,6 +408,9 @@ LAYERS = {
     # closed_can_microwave: a closed / sealed can, jar or bottle put into the microwave is refused (option hazard, no loop option; data CLOSED_CAN above).
     # With metal_microwave(_ask) on too, the lists are joined (``_hazards``), not replaced.
     "closed_can_microwave": ({}, {"safety": {"hazards": CLOSED_CAN}}),
+    # closed_can_ask: closed_can_microwave plus a question for a bare can word (key hazard.ask; the whole list, so on its own or after closed_can_microwave
+    # the overlay is the same; joined with metal_microwave(_ask) by ``_hazards``).
+    "closed_can_ask": ({"hazard_ask": "1"}, {"safety": {"hazards": CLOSED_CAN + CAN_ASK}}),
     # heard_check (robot_agent docs/heard_check.md): a goal whose own quote of the person (``said``, a say goal's message) no heard word matches gets an
     # ``object`` issue on the read-back (the engine's re-sample, repeat question, read-back follow). ASSUMED data, not tuned: two characters in common at the
     # start of a word (one syllable pair, one letter pair), half the characters of the word cut to the quote's length.
@@ -422,6 +446,7 @@ SELECTABLE += ("metal_microwave_ask",)
 SELECTABLE += ("heard_check",)
 SELECTABLE += ("shared_instances",)
 SELECTABLE += ("closed_can_microwave",)
+SELECTABLE += ("closed_can_ask",)
 SELECTABLE += ("cond_answer",)
 SELECTABLE += ("cond_schema",)
 D2_LAYERS = ("precond_repair", "gate_prune", "dedupe_keep_end", "goal_words", "ask_focus", "entity_cover", "hazard", "hw_wait", "search_budget", "lang_words")
