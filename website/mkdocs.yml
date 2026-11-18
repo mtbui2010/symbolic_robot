@@ -1,0 +1,136 @@
+site_name: "symbolic_robot"
+site_description: "One engine for symbolic simulated robots and the benchmark for task planners."
+site_url: https://mtbui2010.github.io/symbolic_robot/
+repo_url: https://github.com/mtbui2010/symbolic_robot
+repo_name: mtbui2010/symbolic_robot
+edit_uri: edit/main/website/docs/
+copyright: "symbolic_robot documentation (code: MIT)"
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - navigation.indexes
+    - content.code.copy
+    - content.code.annotate
+    - search.suggest
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - def_list
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra_css:
+  - assets/extra.css
+extra_javascript:
+  - assets/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Get started: start/getting-started.md
+  - How it works:
+      - Overview and one run end to end: how-it-works/index.md
+      - Key ideas: how-it-works/key-ideas.md
+      - Glossary: reference/glossary.md
+  - Learn:
+      - 1. Symbolic worlds and the truth: learn/symbolic-worlds.md
+      - 2. Declared outcomes and profiles: learn/declared-outcomes.md
+      - 3. Determinism by seed: learn/determinism.md
+      - 4. Packs, manifests and the hub: learn/packs-and-manifests.md
+      - 5. The benchmark protocol: learn/benchmark-protocol.md
+      - 6. Paired tests: learn/paired-tests.md
+      - 7. Planners as plug-ins: learn/planners-as-plugins.md
+  - Guides:
+      - Run a benchmark: guides/run-a-benchmark.md
+      - Read a result: guides/read-a-result.md
+      - Add a planner: guides/add-a-planner.md
+      - Add a domain: guides/add-a-domain.md
+      - Add a suite: guides/add-a-suite.md
+  - Modules:
+      - Code map: modules/index.md
+      - Core:
+          - Results, simulated time and seeded draws: modules/results-time-draws.md
+          - Profiles (core): modules/profiles.md
+          - The domain protocol and the registry: modules/domain-protocol.md
+          - Live backend and sim commands: modules/live-backend-and-sim-commands.md
+      - Server glue:
+          - Server glue and the engine command line: modules/server-and-cli.md
+      - Factory domain:
+          - Factory world and floors: modules/factory-world.md
+          - Factory skills and faults: modules/factory-skills.md
+          - Factory tasks and scripted people: modules/factory-tasks-and-people.md
+          - Factory pack for robot_agent: modules/factory-pack.md
+      - Household domain:
+          - Household domain wrapper and house layouts: modules/home-domain-and-houses.md
+          - Household world state: modules/home-world.md
+          - Household skill dispatch and motion: modules/home-skills.md
+          - Household perception: modules/home-perception.md
+          - Household manipulation: modules/home-manipulation.md
+          - Household failure model and seeded streams: modules/home-outcomes.md
+          - Household profiles and calibration: modules/home-profiles.md
+          - Goals and the oracle solver: modules/home-goals-and-oracle.md
+          - Household pack for robot_agent: modules/home-pack.md
+      - Benchmark (generic):
+          - Suites and the front end: modules/bench-front-end.md
+          - Campaign runner: modules/campaign-runner.md
+          - Campaign statistics and pre-registration: modules/campaign-statistics.md
+          - Factory suites: modules/factory-suites.md
+      - Household benchmark:
+          - Household runner and task loading: modules/home-runner.md
+          - Episode environment and the judge: modules/episode-env-and-judge.md
+          - Metrics, report and compare: modules/home-metrics-and-report.md
+          - Planner interface and registry: modules/planner-interface.md
+          - Reference planners: oracle and naive: modules/reference-planners.md
+          - LLM baselines and clients: modules/llm-baselines.md
+          - robot_agent planners and the adapter: modules/robot-agent-planners.md
+          - Task data and its generation: modules/task-data.md
+      - Rules and parity:
+          - Layering, names and size limits: modules/layering-tests.md
+          - Parity and frozen behaviour: modules/parity.md
+  - Reference:
+      - Make targets: reference/make-targets.md
+      - Command lines: reference/cli.md
+      - sim_command ops and endpoints: reference/sim-command.md
+      - Result files: reference/result-files.md
+      - Known pitfalls: reference/known-pitfalls.md
+      - Versions and licences: reference/versions-and-licences.md

@@ -8,7 +8,7 @@ labels came from (train only; dev for validation; test never read).
 
 | part | where |
 |---|---|
-| generic trainer, merge, GGUF splice, Ollama import, serve check | the lab's `lora-finetune` skill scripts (`train_lora.py`, `merge_lora.py`, `gguf_splice.py`, `ollama_import.sh`, `serve_check.py`); no HomeLoop facts |
+| generic trainer, merge, GGUF splice, Ollama import, serve check | the lab's `llm-finetune` skill scripts (`train_lora.py`, `merge_lora.py`, `gguf_splice.py`, `ollama_import.sh`, `serve_check.py`); no HomeLoop facts |
 | task-specific data builders and configs | `tools/lora/` (this repo) |
 | weights, datasets, runs, GGUF files, the private Ollama store, the venv | `<NAS>/homeloop_lora/` (`HOMELOOP_LORA_DIR` in the configs), never git |
 
