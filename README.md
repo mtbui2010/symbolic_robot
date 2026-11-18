@@ -48,7 +48,7 @@ This repository merges two projects that were licensed separately. Each part kee
 
 | part | where | licence |
 |---|---|---|
-| the engine, the factory domain, the generic benchmark front end | `symbolic_robot/*.py`, `symbolic_robot/domains/factory/`, `bench/*.py`, `bench/suites/factory/` | no licence file yet: the owner has not chosen one for these |
+| the engine, the factory domain, the generic benchmark front end | `symbolic_robot/*.py`, `symbolic_robot/domains/factory/`, `bench/*.py`, `bench/suites/factory/` | MIT, `LICENSE` (root; it covers only these files: the parts below keep their own licence) |
 | the household simulator (code, house and profile data) | `symbolic_robot/domains/home/` | Apache-2.0, `symbolic_robot/domains/home/LICENSE` |
 | the household benchmark (code) | `bench/suites/home/` | Apache-2.0, `bench/suites/home/LICENSE` |
 | the household task data (`bench/suites/home/data/tasks/*.jsonl`, `data/llm_cache/*.jsonl`) | `bench/suites/home/data/` | Apache-2.0 for the English texts, Korean templates, goals and labels; the Korean text written by the EXAONE 3.5 model is NOT Apache-2.0 (research use only, no training of other models on it): read `bench/suites/home/LICENSE-DATA` and `NOTICE` before using or redistributing the data |
