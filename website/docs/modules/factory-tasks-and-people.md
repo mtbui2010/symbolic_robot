@@ -118,8 +118,8 @@ On failure: `script_for(policy, ...)` raises `ValueError(policy)` for an unknown
 ## How it works
 
 1. `generate_tasks` sorts the objects by id, shuffles them with `random.Random(seed)`, and picks one destination per object with the same generator. It loops up to 10 rounds until it has `n` pairs.
-2. Task number `i` (from 0) is `given` when `(i + 1) % given_every == 0`. Its prompt is "Take the X from <true place> to <dest>."
-3. Every other task is an `ask` task; the policies rotate `knows`, `unknown`, `wrong`. The prompt is "Put the X on <dest>." and does not say where X is.
+2. Task number `i` (from 0) is `given` when `(i + 1) % given_every == 0`. Its prompt is `Take the X from <true place> to <dest>.`
+3. Every other task is an `ask` task; the policies rotate `knows`, `unknown`, `wrong`. The prompt is `Put the X on <dest>.` and does not say where X is.
 4. `messy_tasks` calls the same generator with `given_every` huge, then assigns the seven policies in rotation, and for the five new ones calls `script_for` with a second generator seeded from `seed * 7919 + 1`.
 5. At run time `answer_for(task, question, n_where)` reads the question. A question that holds "where" and a verb such as put, bring or take is a destination question; any other "where" question is a source question. A task with a `script` answers the n-th source question with the n-th script entry.
 6. `person.py` is for a person who answers through the HTTP API from outside the server. `user.py` is the same idea inside the simulator. The experiment runner keeps its own copy of the policy for the API, as the `user.py` docstring says.

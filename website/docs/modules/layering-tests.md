@@ -27,7 +27,7 @@ flowchart TD
 
 ## What gets scanned
 
-`files()` asks git: `git ls-files -co --exclude-standard`, which means tracked files plus untracked files, minus ignored ones ([test_layering.py:26-28](https://github.com/mtbui2010/symbolic_robot/blob/a5cc7a4943aa/tests/test_layering.py#L26-L28)). The file `env.local.mk` is skipped. Because untracked files count, **the documentation site under `website/` is scanned too**: every page of this site must pass the name tests below before it is published.
+`files()` asks git: `git ls-files -co --exclude-standard`, which means tracked files plus untracked files, minus ignored ones ([test_layering.py:26-28](https://github.com/mtbui2010/symbolic_robot/blob/a5cc7a4943aa/tests/test_layering.py#L26-L28)). One machine-local settings file is skipped. Because untracked files count, **the documentation site under `website/` is scanned too**: every page of this site must pass the name tests below before it is published.
 
 ## The seven tests
 
